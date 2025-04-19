@@ -1,5 +1,6 @@
 (function ($) {
 	"use strict";
+
 	// Import Stripe.js
 	let stripe = null;
 	if (typeof Stripe === "function") {
@@ -16,33 +17,43 @@
 
 	// Function to cleanup card element
 	const destroyCard = () => {
-		if (card) {
-			card.destroy(); // Use destroy() instead of unmount()
-			card = null;
-			cardDestroyed = true;
+		if (!card) return;
 
-			const errorElement = document.getElementById("card-errors");
-			if (errorElement) {
-				errorElement.textContent = "";
-			}
-		}
+		card.destroy(); // Use destroy() instead of unmount()
+		card = null;
+		cardDestroyed = true;
+
+		const errorElement = $("#card-errors");
+		if (errorElement) errorElement.html("");
 	};
 
 	// Function to create and mount card element
 	const createCard = () => {
-		if (cardDestroyed) {
-			// Only create new card if previous one was destroyed
-			card = elements.create("card");
-			card.mount("#card-element");
-			card.addEventListener("change", function (event) {
-				let displayError = document.getElementById("card-errors");
-				if (displayError) {
-					displayError.textContent = event.error ? event.error.message : "";
-				}
-			});
-			cardDestroyed = false;
-		}
+		// Only create new card if previous one was destroyed
+		if (!cardDestroyed) return;
+
+		card = elements.create("card");
+		card.mount("#card-element");
+		card.addEventListener("change", function (event) {
+			let displayError = $("#card-errors");
+			if (displayError) displayError.html(event.error ? event.error.message : "");
+		});
+		cardDestroyed = false;
 	};
+
+	// Handle plus button click
+	$(".plus-btn").on("click", function () {
+		var input = $(this).siblings(".ticket-quantity");
+		var value = parseInt(input.val());
+		input.val(value + 1).trigger("change");
+	});
+
+	// Handle minus button click
+	$(".minus-btn").on("click", function () {
+		var input = $(this).siblings(".ticket-quantity");
+		var value = parseInt(input.val());
+		if (value > 0) input.val(value - 1).trigger("change");
+	});
 
 	// Calculate the total when quantities change
 	$(".ticket-quantity").on("change", function () {
@@ -61,17 +72,17 @@
 
 		if (totalPrice > 0) {
 			createCard();
-			document.getElementById("obie-events-reserve-button").textContent = "Purchase tickets";
+			$("#obie-events-reserve-button").html("Purchase tickets");
 		} else {
 			destroyCard();
-			document.getElementById("obie-events-reserve-button").textContent = "Reserve now";
+			$("#obie-events-reserve-button").html("Reserve now");
 		}
 	});
 
 	// Manage form submission
-	let form = document.getElementById("obie-events-reservation-form");
+	let form = $("#obie-events-reservation-form");
 	if (form) {
-		form.addEventListener("submit", async function (event) {
+		form.on("submit", async function (event) {
 			event.preventDefault();
 			let tickets = [];
 			let totalTickets = 0;
@@ -103,13 +114,11 @@
 						customer_name: $('input[name="customer_name"]').val(),
 						customer_email: $('input[name="customer_email"]').val(),
 						tickets: JSON.stringify(tickets),
-						obie_event_reservation_nonce: $('input[name="obie_event_reservation_nonce"]').val(),
+						oe_reservation_nonce: $('input[name="oe_reservation_nonce"]').val(),
 					},
 				});
 
-				if (!response.success) {
-					throw new Error(response.data.error);
-				}
+				if (!response.success) throw new Error(response.data.error);
 
 				if (totalPrice > 0) {
 					// Confirm Payment
@@ -123,18 +132,16 @@
 						},
 					});
 
-					if (result.error) {
-						throw new Error(result.error.message);
-					}
+					if (result.error) throw new Error(result.error.message);
 				}
 
 				// Reserved
 				alert("Your tickets have been reserved.");
 				window.location.reload();
 			} catch (error) {
-				const errorElement = document.getElementById("card-errors");
+				const errorElement = $("#card-errors");
 				if (errorElement) {
-					errorElement.textContent = error.message;
+					errorElement.html(error.message);
 				}
 				console.error("Payment error:", error);
 			}
