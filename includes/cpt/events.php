@@ -6,6 +6,7 @@ class Obie_Events_CPT
     public static function init()
     {
         add_action('init', array(__CLASS__, 'register_post_type'));
+        add_action('init', array(__CLASS__, 'register_taxonomies'));
         add_action('add_meta_boxes', array(__CLASS__, 'add_meta_boxes'));
         add_action('save_post', array(__CLASS__, 'save_meta_box_data'));
     }
@@ -45,6 +46,34 @@ class Obie_Events_CPT
         register_post_type(self::$slug, $args);
 
         flush_rewrite_rules();
+    }
+
+    public static function register_taxonomies()
+    {
+        $labels = array(
+            'name'              => 'Event Categories',
+            'singular_name'     => 'Event Category',
+            'search_items'      => 'Search Event Categories',
+            'all_items'         => 'All Event Categories',
+            'parent_item'       => 'Parent Event Category',
+            'parent_item_colon' => 'Parent Event Category:',
+            'edit_item'         => 'Edit Event Category',
+            'update_item'       => 'Update Event Category',
+            'add_new_item'      => 'Add New Event Category',
+            'new_item_name'     => 'New Event Category Name',
+            'menu_name'         => 'Categories',
+        );
+
+        $args = array(
+            'hierarchical'      => true,
+            'labels'            => $labels,
+            'show_ui'           => true,
+            'show_admin_column' => true,
+            'query_var'         => true,
+            'rewrite'           => array('slug' => 'event-category'),
+        );
+
+        register_taxonomy('event_category', array(self::$slug), $args);
     }
 
     public static function add_meta_boxes()

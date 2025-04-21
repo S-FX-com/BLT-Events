@@ -12,7 +12,7 @@
 }
 
 .status-pending,
-.status-reserved,
+.status-registered,
 .status-cancelled {
 	display: inline-block;
 	padding: 3px 8px;
@@ -25,7 +25,7 @@
 	color: #646970;
 }
 
-.status-reserved {
+.status-registered {
 	background-color: #00a32a;
 	color: #fff;
 }
