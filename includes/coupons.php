@@ -20,8 +20,9 @@ class Obie_Events_Coupons
      *               ['message'] => Error or success message
      *               ['coupon'] => Coupon data on success
      */
-    public static function validate_coupon($coupon_code) {
+    public static function validate_coupon($coupon_code, $event_id) {
         $coupon_code = sanitize_text_field($coupon_code);
+        $event_id = sanitize_text_field($event_id);
         
         $args = array(
             'post_type' => Obie_Events_Coupons_CPT::$slug, 
@@ -67,6 +68,24 @@ class Obie_Events_Coupons
             );
         }
 
+        // Verify if the coupon is applicable to the current event
+        $applicable_events = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'applicable_events', true);
+        if (is_array($applicable_events) && !empty($applicable_events) && !in_array('all', $applicable_events) && !in_array($event_id, $applicable_events)) {
+            return array(
+                'success' => false,
+                'message' => __('Coupon is not applicable to current event.', OBIE_EVENTS_PLUGIN_PATH)
+            );
+        }
+
+        // Check if the coupon is active
+        $coupon_status = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
+        if ($coupon_status !== 'active') {
+            return array(
+                'success' => false,
+                'message' => __('Coupon is not active.', OBIE_EVENTS_PLUGIN_PATH)
+            );
+        }
+
         // Get coupon details
         $discount_type = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'discount_type', true);
         $amount = (float) get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount', true);
@@ -93,7 +112,9 @@ class Obie_Events_Coupons
         check_ajax_referer(self::$nonce, self::$nonce);
 
         $coupon_code = isset($_POST['coupon_code']) ? $_POST['coupon_code'] : '';
-        $result = self::validate_coupon($coupon_code);
+        $event_id = intval($_POST['event_id']);
+
+        $result = self::validate_coupon($coupon_code, $event_id);
         if ($result['success']) {
             wp_send_json_success(array(
                 'message' => $result['message'],

@@ -66,7 +66,7 @@ class Obie_Events_Stripe
             // Verificar coupon
             $coupon_applied = null;
             if (!empty($coupon_code)) {
-                $result = Obie_Events_Coupons::validate_coupon($coupon_code);
+                $result = Obie_Events_Coupons::validate_coupon($coupon_code, $event_id);
                 if ($result['success']) {
                     $coupon_applied = $result['coupon'];
                     $total_discount = $coupon_applied['discount_type'] === "percentage" ? ($total_amount * $coupon_applied['amount']) / 100 : $coupon_applied['amount'];

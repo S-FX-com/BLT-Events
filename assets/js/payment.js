@@ -100,6 +100,8 @@
 
 		const discount_amount = coupon.discount_type == "percentage" ? (totalPrice * coupon.amount) / 100 : coupon.amount;
 		$(".coupon-discount-amount").text(formatPrice(discount_amount));
+
+		$(".total-amount").text(formatPrice(totalPrice - discount_amount, true));
 	};
 
 	const removeCoupon = () => {
@@ -114,6 +116,8 @@
 		couponApplied = null;
 
 		$(".coupon-discount-amount").text("");
+
+		$(".total-amount").text(formatPrice(totalPrice, true));
 	};
 
 	//
@@ -131,6 +135,7 @@
 				data: {
 					action: "obie_validate_coupon",
 					coupon_code: code,
+					event_id: $('input[name="event_id"]').val(),
 					oe_coupon_nonce: $('input[name="oe_coupon_nonce"]').val(),
 				},
 			});

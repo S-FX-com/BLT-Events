@@ -359,9 +359,9 @@ class Obie_Events_Coupons_CPT
             update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', sanitize_text_field($_POST['status']));
         }
 
-        if (isset($_POST['applicable_tickets'])) {
-            $applicable_tickets = array_map('sanitize_text_field', $_POST['applicable_tickets']);
-            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'applicable_tickets', $applicable_tickets);
+        if (isset($_POST['applicable_events'])) {
+            $applicable_events = array_map('sanitize_text_field', $_POST['applicable_events']);
+            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'applicable_events', $applicable_events);
         }
     }
 }
