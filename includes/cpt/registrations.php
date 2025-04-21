@@ -150,7 +150,7 @@ class Obie_Events_Registrations_CPT
                 <td>
                     <select id="status" name="status">
                         <option value="pending" <?php selected($status, 'pending'); ?>>Pending</option>
-                        <option value="reserved" <?php selected($status, 'reserved'); ?>>Reserved</option>
+                        <option value="registered" <?php selected($status, 'registered'); ?>>Registered</option>
                         <option value="cancelled" <?php selected($status, 'cancelled'); ?>>Cancelled</option>
                     </select>
                 </td>

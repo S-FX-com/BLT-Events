@@ -213,8 +213,8 @@
 					if (result.error) throw new Error(result.error.message);
 				}
 
-				// Reserved
-				alert("Your tickets have been reserved.");
+				// Registered
+				alert("Your tickets have been registered.");
 				window.location.reload();
 			} catch (error) {
 				const errorElement = $("#card-errors");

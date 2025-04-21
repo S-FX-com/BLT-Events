@@ -51,7 +51,7 @@ class Obie_Events_Registrations
 				OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id' => $payment_intent_id,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid'      => $amount_paid,
 				OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date'     => $payment_date,
-                OBIE_EVENTS_PLUGIN_PREFIX . 'status'           => 'reserved'
+                OBIE_EVENTS_PLUGIN_PREFIX . 'status'           => 'registered'
             );
         } else {
             $registration_data = array(
@@ -59,7 +59,7 @@ class Obie_Events_Registrations
                 OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name' => $name,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email' => $email,
 				OBIE_EVENTS_PLUGIN_PREFIX . 'tickets' => $tickets,
-                OBIE_EVENTS_PLUGIN_PREFIX . 'status' => 'reserved',
+                OBIE_EVENTS_PLUGIN_PREFIX . 'status' => 'registered',
             );
         }
 
