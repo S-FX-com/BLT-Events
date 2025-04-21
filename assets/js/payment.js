@@ -157,7 +157,7 @@
 	});
 
 	// Manage form submission
-	let form = $("#obie-events-reservation-form");
+	let form = $("#obie-events-registration-form");
 	if (form) {
 		form.on("submit", async function (event) {
 			event.preventDefault();
@@ -186,13 +186,13 @@
 					url: obieEventPaymentData.ajaxUrl,
 					type: "POST",
 					data: {
-						action: totalPrice > 0 ? "obie_create_payment_intent" : "obie_event_reservation",
+						action: totalPrice > 0 ? "obie_create_payment_intent" : "obie_event_registration",
 						event_id: $('input[name="event_id"]').val(),
 						customer_name: $('input[name="customer_name"]').val(),
 						customer_email: $('input[name="customer_email"]').val(),
 						tickets: JSON.stringify(tickets),
 						coupon_code: couponApplied ? couponApplied.coupon_code : null,
-						oe_reservation_nonce: $('input[name="oe_reservation_nonce"]').val(),
+						oe_registration_nonce: $('input[name="oe_registration_nonce"]').val(),
 					},
 				});
 

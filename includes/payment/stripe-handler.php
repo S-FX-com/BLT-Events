@@ -35,7 +35,7 @@ class Obie_Events_Stripe
 
     public static function create_payment_intent()
     {
-		check_ajax_referer(Obie_Events_Reservations::$nonce, Obie_Events_Reservations::$nonce);
+		check_ajax_referer(Obie_Events_Registrations::$nonce, Obie_Events_Registrations::$nonce);
 		
         try {
 			$event_id = intval($_POST['event_id']);
@@ -177,6 +177,6 @@ class Obie_Events_Stripe
         $coupon = $payment_intent['metadata']['coupon'] ? json_decode($payment_intent['metadata']['coupon'], true) : null;
         $amount_saved = $payment_intent['metadata']['amount_saved'];
 
-        Obie_Events_Reservations::process_reservation($event_id, $name, $email, $tickets, $coupon, $amount_saved, $payment_intent);
+        Obie_Events_Registrations::process_registration($event_id, $name, $email, $tickets, $coupon, $amount_saved, $payment_intent);
     }
 }

@@ -1,7 +1,7 @@
 <?php
-class Obie_Events_Reservations_CPT
+class Obie_Events_Registrations_CPT
 {
-    public static $slug = 'event_reservation';
+    public static $slug = 'event_registration';
 
     public static function init()
     {
@@ -16,27 +16,26 @@ class Obie_Events_Reservations_CPT
     public static function register_post_type()
     {
         $labels = array(
-            'name'               => 'Reservations',
-            'singular_name'      => 'Reservation',
-            'menu_name'          => 'Reservations',
+            'name'               => 'Registrations',
+            'singular_name'      => 'Registration',
+            'menu_name'          => 'Registrations',
             'add_new'            => 'Add New',
-            'add_new_item'       => 'Add New Reservation',
-            'edit_item'          => 'Edit Reservation',
-            'new_item'           => 'New Reservation',
-            'view_item'          => 'View Reservation',
-            'search_items'       => 'Search Reservations',
-            'not_found'          => 'No reservations found',
-            'not_found_in_trash' => 'No reservations found in Trash',
+            'add_new_item'       => 'Add New Registration',
+            'edit_item'          => 'Edit Registration',
+            'new_item'           => 'New Registration',
+            'view_item'          => 'View Registration',
+            'search_items'       => 'Search Registrations',
+            'not_found'          => 'No registrations found',
+            'not_found_in_trash' => 'No registrations found in Trash',
         );
 
         $args = array(
             'labels'              => $labels,
             'public'              => false,
             'show_ui'            => true,
-            'show_in_menu'       => true,
+            'show_in_menu'       => 'edit.php?post_type=' . Obie_Events_CPT::$slug,
             'show_in_admin_bar'  => true,
-            'menu_position'      => 25,
-            'menu_icon'          => 'dashicons-clipboard',
+            'menu_position'      => null,
             'capability_type'    => 'post',
             'hierarchical'       => false,
             'supports'           => array('title'),
@@ -53,8 +52,8 @@ class Obie_Events_Reservations_CPT
     public static function add_meta_boxes()
     {
         add_meta_box(
-            'reservation_details',
-            'Reservation Details',
+            'registration_details',
+            'Registration Details',
             array(__CLASS__, 'render_details_meta_box'),
             self::$slug,
             'normal',
@@ -73,7 +72,7 @@ class Obie_Events_Reservations_CPT
 
     public static function render_details_meta_box($post)
     {
-        wp_nonce_field('reservation_details', 'reservation_details_nonce');
+        wp_nonce_field('registration_details', 'registration_details_nonce');
 
         $event_id = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_id', true);
         $customer_name = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
@@ -188,7 +187,7 @@ class Obie_Events_Reservations_CPT
     {
         $new_columns = array();
         $new_columns['cb'] = $columns['cb'];
-        $new_columns['title'] = __('Reservation ID');
+        $new_columns['title'] = __('Registration ID');
         $new_columns['event'] = __('Event');
         $new_columns['customer'] = __('Customer');
         $new_columns['amount'] = __('Amount');
@@ -238,8 +237,8 @@ class Obie_Events_Reservations_CPT
     public static function save_post($post_id)
     {
         if (
-            !isset($_POST['reservation_details_nonce']) ||
-            !wp_verify_nonce($_POST['reservation_details_nonce'], 'reservation_details')
+            !isset($_POST['registration_details_nonce']) ||
+            !wp_verify_nonce($_POST['registration_details_nonce'], 'registration_details')
         ) {
             return;
         }

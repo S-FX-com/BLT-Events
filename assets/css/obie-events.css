@@ -1,5 +1,5 @@
 /* Modern form container */
-.obie-events-reservation-form {
+.obie-events-registration-form {
     max-width: 600px;
     margin: 2rem auto;
     padding: 2rem;
@@ -9,12 +9,12 @@
 }
 
 /* Form rows */
-.obie-events-reservation-form .form-row {
+.obie-events-registration-form .form-row {
     margin-bottom: 1.5rem;
 }
 
 /* Labels */
-.obie-events-reservation-form label {
+.obie-events-registration-form label {
     display: block;
     margin-bottom: 0.5rem;
     color: #374151;
@@ -23,9 +23,9 @@
 }
 
 /* Input fields */
-.obie-events-reservation-form input[type="text"],
-.obie-events-reservation-form input[type="email"],
-.obie-events-reservation-form input[type="number"] {
+.obie-events-registration-form input[type="text"],
+.obie-events-registration-form input[type="email"],
+.obie-events-registration-form input[type="number"] {
     width: 100%;
     padding: 0 0.75rem;
     border: 1px solid #e5e7eb;
@@ -35,28 +35,28 @@
     background: #f9fafb;
 }
 
-.obie-events-reservation-form input:focus {
+.obie-events-registration-form input:focus {
     outline: none;
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 /* Ticket selection section */
-.obie-events-reservation-form .ticket-selection {
+.obie-events-registration-form .ticket-selection {
     margin: 0 0 1.5rem;
     padding: 1.5rem;
     background: #f8fafc;
     border-radius: 8px;
 }
 
-.obie-events-reservation-form .ticket-selection h4 {
+.obie-events-registration-form .ticket-selection h4 {
     margin: 0 0 1rem;
     color: #1f2937;
     font-size: 1.25rem;
 }
 
 /* Individual ticket type rows */
-.obie-events-reservation-form .ticket-type {
+.obie-events-registration-form .ticket-type {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -64,28 +64,28 @@
     border-bottom: 1px solid #e5e7eb;
 }
 
-.obie-events-reservation-form div:last-of-type {
+.obie-events-registration-form div:last-of-type {
     border-bottom: none
 }
 
-.obie-events-reservation-form .ticket-name {
+.obie-events-registration-form .ticket-name {
     flex-grow: 1;
     color: #4b5563;
     font-weight: 500;
 }
 
-.obie-events-reservation-form .ticket-price {
+.obie-events-registration-form .ticket-price {
     margin: 0 1rem;
     color: #059669;
     font-weight: 600;
 }
 
-.obie-events-reservation-form .ticket-quantity {
+.obie-events-registration-form .ticket-quantity {
     width: 80px !important;
 }
 
 /* Total amount display */
-.obie-events-reservation-form .total-amount {
+.obie-events-registration-form .total-amount {
     margin-top: 1.5rem;
     padding-top: 1rem;
     border-top: 2px solid #e5e7eb;
@@ -96,7 +96,7 @@
 }
 
 /* Stripe card element */
-.obie-events-reservation-form #card-element.StripeElement {
+.obie-events-registration-form #card-element.StripeElement {
     padding: 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -104,14 +104,14 @@
 }
 
 /* Error messages */
-.obie-events-reservation-form #card-errors {
+.obie-events-registration-form #card-errors {
     color: #dc2626;
     font-size: 1rem;
     margin: 1.5rem 0;
 }
 
 /* Submit button */
-.obie-events-reservation-form .submit-button {
+.obie-events-registration-form .submit-button {
     width: 100%;
     padding: 0 1rem;
     min-height: 40px;
@@ -125,17 +125,17 @@
     transition: background-color 0.2s;
 }
 
-.obie-events-reservation-form .submit-button:hover {
+.obie-events-registration-form .submit-button:hover {
     background: #4f46e5;
 }
 
-.obie-events-reservation-form .submit-button:focus {
+.obie-events-registration-form .submit-button:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
 }
 
 /* Loading state */
-.obie-events-reservation-form .submit-button:disabled {
+.obie-events-registration-form .submit-button:disabled {
     background: #9ca3af;
     cursor: not-allowed;
 }

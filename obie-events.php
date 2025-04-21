@@ -2,7 +2,7 @@
 /*
 Plugin Name: Obie Events
 Plugin URI: edit.php?post_type=event&page=obie-events-settings
-Description: A plugin to manage events, tickets, and reservations
+Description: A plugin to manage events, tickets, and registrations
 Version: 1.0
 Author: S-FX.COM
 Author URI: https://s-fx.com
@@ -26,10 +26,10 @@ $includes = [
     'includes/helpers.php',
     'includes/admin/admin-settings.php',
     'includes/cpt/events.php',
-    'includes/cpt/reservations.php',
+    'includes/cpt/registrations.php',
     'includes/cpt/coupons.php',
     'includes/shortcodes.php',
-    'includes/reservations.php',
+    'includes/registrations.php',
     'includes/coupons.php',
     'includes/payment/stripe-handler.php',
 ];
@@ -55,8 +55,8 @@ function Obie_Events_Init()
         Obie_Events_CPT::init();
     }
 
-    if (class_exists('Obie_Events_Reservations_CPT')) {
-        Obie_Events_Reservations_CPT::init();
+    if (class_exists('Obie_Events_Registrations_CPT')) {
+        Obie_Events_Registrations_CPT::init();
     }
 
     if (class_exists('Obie_Events_Coupons_CPT')) {
@@ -67,8 +67,8 @@ function Obie_Events_Init()
         Obie_Events_Shortcodes::init();
     }
 
-    if (class_exists('Obie_Events_Reservations')) {
-        Obie_Events_Reservations::init();
+    if (class_exists('Obie_Events_Registrations')) {
+        Obie_Events_Registrations::init();
     }
 
     if (class_exists('Obie_Events_Coupons')) {

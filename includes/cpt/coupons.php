@@ -33,10 +33,9 @@ class Obie_Events_Coupons_CPT
             'labels'             => $labels,
             'public'             => false,
             'show_ui'            => true,
-            'show_in_menu'       => true,
+            'show_in_menu'       => 'edit.php?post_type=' . Obie_Events_CPT::$slug,
             'show_in_admin_bar'  => true,
-            'menu_position'      => 26,
-            'menu_icon'          => 'dashicons-tickets-alt',
+            'menu_position'      => null,
             'capability_type'    => 'post',
             'hierarchical'       => false,
             'supports'           => array('title'),
@@ -198,7 +197,7 @@ class Obie_Events_Coupons_CPT
                 <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Reservation</th>
+                        <th>Registration</th>
                         <th>Customer</th>
                         <th>Amount Saved</th>
                     </tr>
@@ -208,9 +207,9 @@ class Obie_Events_Coupons_CPT
                         <tr>
                             <td><?php echo date(get_option('date_format'), $usage['date']); ?></td>
                             <td>
-                                <?php if (!empty($usage['reservation_id'])) : ?>
-                                    <a href="<?php echo get_edit_post_link($usage['reservation_id']); ?>">
-                                        #<?php echo $usage['reservation_id']; ?>
+                                <?php if (!empty($usage['registration_id'])) : ?>
+                                    <a href="<?php echo get_edit_post_link($usage['registration_id']); ?>">
+                                        #<?php echo $usage['registration_id']; ?>
                                     </a>
                                 <?php else : ?>
                                     -
@@ -218,8 +217,8 @@ class Obie_Events_Coupons_CPT
                             </td>
                             <td>
                                 <?php
-                                $customer_name = get_post_meta($usage['reservation_id'], OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
-                                $customer_email = get_post_meta($usage['reservation_id'], OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
+                                $customer_name = get_post_meta($usage['registration_id'], OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
+                                $customer_email = get_post_meta($usage['registration_id'], OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
                                 ?>
                                 <?php echo esc_html($customer_name); ?>
                                 <br />

@@ -127,7 +127,7 @@ class Obie_Events_Coupons
         }
     }
 
-    public static function apply_coupon($coupon_id, $reservation_id, $amount_saved)
+    public static function apply_coupon($coupon_id, $registration_id, $amount_saved)
     {
         // Update coupon usage stats
         $total_uses = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'total_uses', true) ?: 0;
@@ -145,12 +145,12 @@ class Obie_Events_Coupons
         $usage_history = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'usage_history', true) ?: array();
         $usage_history[] = array(
             'date' => $last_used,
-            'reservation_id' => $reservation_id,
+            'registration_id' => $registration_id,
             'amount_saved' => $amount_saved
         );
         update_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'usage_history', $usage_history);
         
-        // Store coupon info with reservation
+        // Store coupon info with registration
 
         $discount_type = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'discount_type', true);
         $amount = (float) get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount', true);
@@ -164,7 +164,7 @@ class Obie_Events_Coupons
             "coupon_name" => $coupon_name,
             "coupon_code" => $coupon_code
         );
-        update_post_meta($reservation_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_applied', $coupon_data);
+        update_post_meta($registration_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_applied', $coupon_data);
         
         return true;
     }

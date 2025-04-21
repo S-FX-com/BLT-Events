@@ -3,7 +3,7 @@ class Obie_Events_Shortcodes
 {
 	public static function init()
 	{
-		add_shortcode('Obie_Event_Reservation', array(__CLASS__, 'reservation_shortcode'));
+		add_shortcode('Obie_Event_Registration', array(__CLASS__, 'registration_shortcode'));
 		add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_scripts'));
 	}
 
@@ -18,20 +18,20 @@ class Obie_Events_Shortcodes
 		));
 	}
 
-	public static function reservation_shortcode($atts)
+	public static function registration_shortcode($atts)
 	{
 		$atts = shortcode_atts(array(
 			'id' => get_the_ID(),
-		), $atts, 'Obie_Event_Reservation');
+		), $atts, 'Obie_Event_Registration');
 
 		$event_id = intval($atts['id']);
 		$by_tickets = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', true);
 		$ticket_types = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
 
 		ob_start(); ?>
-		<form id="obie-events-reservation-form" class="obie-events-reservation-form">
+		<form id="obie-events-registration-form" class="obie-events-registration-form">
 			<input type="hidden" name="event_id" value="<?php echo $event_id; ?>" />
-			<?php wp_nonce_field(Obie_Events_Reservations::$nonce, Obie_Events_Reservations::$nonce); ?>
+			<?php wp_nonce_field(Obie_Events_Registrations::$nonce, Obie_Events_Registrations::$nonce); ?>
 
 			<div class="form-row">
 				<label for="customer_name">Name</label>
