@@ -216,7 +216,15 @@ class Obie_Events_Coupons_CPT
                                     -
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo esc_html($usage['customer_name']); ?></td>
+                            <td>
+                                <?php
+                                $customer_name = get_post_meta($usage['reservation_id'], OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
+                                $customer_email = get_post_meta($usage['reservation_id'], OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
+                                ?>
+                                <?php echo esc_html($customer_name); ?>
+                                <br />
+                                <?php echo esc_html($customer_email); ?>
+                            </td>
                             <td>$<?php echo number_format($usage['amount_saved'], 2); ?></td>
                         </tr>
                     <?php endforeach; ?>

@@ -186,6 +186,7 @@
 						customer_name: $('input[name="customer_name"]').val(),
 						customer_email: $('input[name="customer_email"]').val(),
 						tickets: JSON.stringify(tickets),
+						coupon_code: couponApplied ? couponApplied.coupon_code : null,
 						oe_reservation_nonce: $('input[name="oe_reservation_nonce"]').val(),
 					},
 				});

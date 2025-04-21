@@ -75,11 +75,11 @@ class Obie_Events_Reservations_CPT
     {
         wp_nonce_field('reservation_details', 'reservation_details_nonce');
 
-        $event_id = get_post_meta($post->ID, '_event_id', true);
-        $customer_name = get_post_meta($post->ID, '_customer_name', true);
-        $customer_email = get_post_meta($post->ID, '_customer_email', true);
-        $tickets = get_post_meta($post->ID, '_tickets', true);
-        $status = get_post_meta($post->ID, '_status', true);
+        $event_id = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_id', true);
+        $customer_name = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
+        $customer_email = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
+        $tickets = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'tickets', true);
+        $status = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
         
         ?>
         <table class="form-table">
@@ -145,9 +145,9 @@ class Obie_Events_Reservations_CPT
     {
         wp_nonce_field('payment_details', 'payment_details_nonce');
 
-        $payment_intent_id = get_post_meta($post->ID, '_payment_intent_id', true) ?: "No payment processed";
-        $amount_paid = get_post_meta($post->ID, '_amount_paid', true) ?: 0;
-        $payment_date = get_post_meta($post->ID, '_payment_date', true) ?: 0;
+        $payment_intent_id = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id', true) ?: "No payment processed";
+        $amount_paid = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
+        $payment_date = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date', true) ?: 0;
 
         ?>
         <table class="form-table">
@@ -183,26 +183,26 @@ class Obie_Events_Reservations_CPT
     {
         switch ($column) {
             case 'event':
-                $event_id = get_post_meta($post_id, '_event_id', true);
+                $event_id = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_id', true);
                 if ($event_id) {
                     echo '<a href="' . get_edit_post_link($event_id) . '">' . get_the_title($event_id) . '</a>';
                 }
                 break;
 
             case 'customer':
-                $customer_name = get_post_meta($post_id, '_customer_name', true);
-                $customer_email = get_post_meta($post_id, '_customer_email', true);
+                $customer_name = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
+                $customer_email = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
                 echo esc_html($customer_name) . '<br/>';
                 echo '<small>' . esc_html($customer_email) . '</small>';
                 break;
 
             case 'amount':
-                $amount_paid = get_post_meta($post_id, '_amount_paid', true) ?: 0;
+                $amount_paid = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
                 echo '$' . number_format($amount_paid, 2);
                 break;
 
             case 'status':
-                $status = get_post_meta($post_id, '_status', true);
+                $status = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
                 $status_class = 'status-' . $status;
                 echo '<span class="' . esc_attr($status_class) . '">' . esc_html(ucfirst($status)) . '</span>';
                 break;
@@ -236,15 +236,15 @@ class Obie_Events_Reservations_CPT
 
         // Guardar los campos editables
         if (isset($_POST['customer_name'])) {
-            update_post_meta($post_id, '_customer_name', sanitize_text_field($_POST['customer_name']));
+            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', sanitize_text_field($_POST['customer_name']));
         }
 
         if (isset($_POST['customer_email'])) {
-            update_post_meta($post_id, '_customer_email', sanitize_email($_POST['customer_email']));
+            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', sanitize_email($_POST['customer_email']));
         }
 
         if (isset($_POST['status'])) {
-            update_post_meta($post_id, '_status', sanitize_text_field($_POST['status']));
+            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', sanitize_text_field($_POST['status']));
         }
     }
 }

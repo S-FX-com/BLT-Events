@@ -22,7 +22,7 @@ class Obie_Events_Reservations
             wp_send_json_error('Missing required fields');
         }
 		
-		$ticket_types = get_post_meta($event_id, '_event_ticket_types', true);
+		$ticket_types = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
 		$selected_tickets = [];
         foreach ($tickets as $ticket) {
             $ticket_type = $ticket_types[$ticket['index']];
@@ -36,30 +36,30 @@ class Obie_Events_Reservations
         self::process_reservation($event_id, $name, $email, $selected_tickets);
     }
 	
-	public static function process_reservation($event_id, $name, $email, $tickets, $payment_intent = null)
+	public static function process_reservation($event_id, $name, $email, $tickets, $coupon = null, $amount_saved = 0, $payment_intent = null)
 	{
-        if ($payment_intent && !empty($payment_intent)) {
+        if (!empty($payment_intent)) {
 			$payment_intent_id = $payment_intent['id'];
 			$amount_paid = $payment_intent['amount'] / 100;
 			$payment_date = $payment_intent['created'];
 
             $reservation_data = array(
-                '_event_id' => $event_id,
-                '_customer_name' => $name,
-                '_customer_email' => $email,
-                '_tickets' => $tickets,
-				'_payment_intent_id' => $payment_intent_id,
-                '_amount_paid'      => $amount_paid,
-				'_payment_date'     => $payment_date,
-                '_status'           => 'reserved'
+                OBIE_EVENTS_PLUGIN_PREFIX . 'event_id' => $event_id,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name' => $name,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email' => $email,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'tickets' => $tickets,
+				OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id' => $payment_intent_id,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid'      => $amount_paid,
+				OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date'     => $payment_date,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'status'           => 'reserved'
             );
         } else {
             $reservation_data = array(
-                '_event_id' => $event_id,
-                '_customer_name' => $name,
-                '_customer_email' => $email,
-				'_tickets' => $tickets,
-                '_status' => 'reserved',
+                OBIE_EVENTS_PLUGIN_PREFIX . 'event_id' => $event_id,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name' => $name,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email' => $email,
+				OBIE_EVENTS_PLUGIN_PREFIX . 'tickets' => $tickets,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'status' => 'reserved',
             );
         }
 
@@ -70,6 +70,15 @@ class Obie_Events_Reservations
             'post_status' => 'publish',
 			'meta_input' => $reservation_data
         ));
+
+        if (!empty($coupon)) {
+            Obie_Events_Coupons::apply_coupon(
+                $coupon['id'],
+                $reservation_id,
+                $amount_saved,
+                $name
+            );
+        }
 
         if ($reservation_id) {
             wp_send_json_success('Reservation successful');

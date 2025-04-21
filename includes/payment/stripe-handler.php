@@ -42,6 +42,7 @@ class Obie_Events_Stripe
 			$name = sanitize_text_field($_POST['customer_name']);
         	$email = sanitize_email($_POST['customer_email']);
 			$tickets = !empty($_POST['tickets']) ? json_decode(stripslashes($_POST['tickets']), true) : [];
+            $coupon_code = sanitize_text_field($_POST['coupon_code']);
 			
             if (empty($event_id) || empty($name) || empty($email) || empty($tickets)) {
                 throw new Exception('Missing required data');
@@ -51,6 +52,7 @@ class Obie_Events_Stripe
             $ticket_types = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
 			$selected_tickets = [];
 			$total_amount = 0;
+            $total_discount = 0;
             foreach ($tickets as $ticket) {
                 $ticket_type = $ticket_types[$ticket['index']];
                 $total_amount += $ticket_type['price'] * $ticket['quantity'] * 100;
@@ -61,6 +63,19 @@ class Obie_Events_Stripe
 				];
             }
 
+            // Verificar coupon
+            $coupon_applied = null;
+            if (!empty($coupon_code)) {
+                $result = Obie_Events_Coupons::validate_coupon($coupon_code);
+                if ($result['success']) {
+                    $coupon_applied = $result['coupon'];
+                    $total_discount = $coupon_applied['discount_type'] === "percentage" ? ($total_amount * $coupon_applied['amount']) / 100 : $coupon_applied['amount'];
+                    $total_amount = $total_amount - $total_discount;
+                } else {
+                    throw new Exception('Coupon is not valid');
+                }
+            }
+
             // Crear el Payment Intent
             $body = array(
                 'amount'   => $total_amount,
@@ -69,15 +84,14 @@ class Obie_Events_Stripe
                     'event_id' => $event_id,
 					'customer_name' => $name,
 					'customer_email' => $email,
-                    'tickets'  => json_encode($selected_tickets)
+                    'tickets'  => json_encode($selected_tickets),
+                    'coupon' => $coupon_applied ? json_encode($coupon_applied) : null,
+                    'amount_saved' => $total_discount / 100
                 )
             );
 
             $payment_intent = self::make_request('payment_intents', 'POST', $body);
-
-            wp_send_json_success([
-                'clientSecret' => $payment_intent['client_secret']
-            ]);
+            wp_send_json_success([ 'clientSecret' => $payment_intent['client_secret'] ]);
         } catch (Exception $e) {
             wp_send_json_error(['error' => $e->getMessage()]);
         }
@@ -160,7 +174,9 @@ class Obie_Events_Stripe
 		$name = $payment_intent['metadata']['customer_name'];
 		$email = $payment_intent['metadata']['customer_email'];
 		$tickets = json_decode($payment_intent['metadata']['tickets'], true);
+        $coupon = $payment_intent['metadata']['coupon'] ? json_decode($payment_intent['metadata']['coupon'], true) : null;
+        $amount_saved = $payment_intent['metadata']['amount_saved'];
 
-        Obie_Events_Reservations::process_reservation($event_id, $name, $email, $tickets, $payment_intent);
+        Obie_Events_Reservations::process_reservation($event_id, $name, $email, $tickets, $coupon, $amount_saved, $payment_intent);
     }
 }
