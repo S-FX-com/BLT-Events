@@ -80,7 +80,7 @@ class Obie_Events_Reservations_CPT
         $customer_email = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
         $tickets = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'tickets', true);
         $status = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
-        
+        $coupon_applied = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_applied', true);
         ?>
         <table class="form-table">
             <tr>
@@ -124,6 +124,24 @@ class Obie_Events_Reservations_CPT
                             echo '</tr>';
                         }
                         echo '</tbody></table>';
+                        ?>
+                    </td>
+                </tr>
+            <?php } ?>
+            <?php if (!empty($coupon_applied)) { ?>
+                <tr>
+                    <th><label>Coupon Applied</label></th>
+                    <td>
+                        <?php
+                        echo '<table class="widefat fixed" style="width: auto;">';
+                        echo '<tr><th>Coupon Name</th><td>' . esc_html($coupon_applied['coupon_name']) . '</td></tr>';
+                        echo '<tr><th>Coupon Code</th><td>' . esc_html($coupon_applied['coupon_code']) . '</td></tr>';
+                        echo '<tr><th>Discount Type</th><td>' . (($coupon_applied['discount_type'] == 'percentage') ? 'Percentage' : 'Fixed Amount') . '</td></tr>';
+                        echo '<tr><th>Amount</th><td>' . ($coupon_applied['discount_type'] == 'percentage' ? esc_html($coupon_applied['amount']) . '%' : '$' . number_format($coupon_applied['amount'], 2)) . '</td></tr>';
+                        if (isset($coupon_applied['id'])) {
+                            echo '<tr><th>Coupon ID</th><td><a href="' . get_edit_post_link($coupon_applied['id']) . '">' . esc_html($coupon_applied['id']) . '</a></td></tr>';
+                        }
+                        echo '</table>';
                         ?>
                     </td>
                 </tr>

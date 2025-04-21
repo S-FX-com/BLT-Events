@@ -151,7 +151,20 @@ class Obie_Events_Coupons
         update_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'usage_history', $usage_history);
         
         // Store coupon info with reservation
-        // ------ Empty ------ //
+
+        $discount_type = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'discount_type', true);
+        $amount = (float) get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount', true);
+        $coupon_name = get_the_title($coupon_id);
+        $coupon_code = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_code', true);
+
+        $coupon_data = array(
+            "id" => $coupon_id,
+            "discount_type" => $discount_type,
+            "amount" => $amount,
+            "coupon_name" => $coupon_name,
+            "coupon_code" => $coupon_code
+        );
+        update_post_meta($reservation_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_applied', $coupon_data);
         
         return true;
     }
