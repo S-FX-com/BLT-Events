@@ -13,6 +13,7 @@
 	let elements = stripe.elements();
 	let card = null;
 	let totalPrice = 0;
+	let couponApplied = null;
 	let cardDestroyed = true; // Add flag to track if card has been properly destroyed
 
 	// Function to cleanup card element
@@ -58,6 +59,7 @@
 	// Calculate the total when quantities change
 	$(".ticket-quantity").on("change", function () {
 		let total = 0;
+		let totalDiscount = 0;
 
 		$(".ticket-quantity").each(function () {
 			const quantity = Number.parseInt($(this).val(), 10);
@@ -68,7 +70,13 @@
 		});
 
 		totalPrice = total;
-		$(".total-amount").text(formatPrice(totalPrice, true));
+
+		if (couponApplied) {
+			totalDiscount = couponApplied.discount_type == "percentage" ? (totalPrice * couponApplied.amount) / 100 : couponApplied.amount;
+			$(".coupon-discount-amount").text(formatPrice(totalDiscount));
+		}
+
+		$(".total-amount").text(formatPrice(totalPrice - totalDiscount, true));
 
 		if (totalPrice > 0) {
 			createCard();
@@ -86,14 +94,24 @@
 		$('input[name="coupon_code"]').val("");
 		$('input[name="applied_coupon"]').val(coupon.coupon_code);
 
-		$(".coupon-discount-amount").text(formatPrice(coupon.amount));
+		$("#coupon-message").text("Coupon applied");
+
+		couponApplied = coupon;
+
+		const discount_amount = coupon.discount_type == "percentage" ? (totalPrice * coupon.amount) / 100 : coupon.amount;
+		$(".coupon-discount-amount").text(formatPrice(discount_amount));
 	};
 
 	const removeCoupon = () => {
 		$("#coupon-form").show();
 		$("#coupon-discount").hide();
 
+		$('input[name="coupon_code"]').val("");
 		$('input[name="applied_coupon"]').val("");
+
+		$("#coupon-message").text("");
+
+		couponApplied = null;
 
 		$(".coupon-discount-amount").text("");
 	};
@@ -118,7 +136,6 @@
 			});
 
 			if (!response.success) throw response?.data;
-			$("#coupon-message").text(response.data.message);
 			applyCoupon(response.data.coupon);
 		} catch (error) {
 			const errorElement = $("#coupon-message");

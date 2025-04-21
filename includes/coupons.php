@@ -59,11 +59,6 @@ class Obie_Events_Coupons
         $discount_type = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'discount_type', true);
         $amount = (float) get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount', true);
 
-        $message = sprintf(
-            __('Coupon applied: %s discount', OBIE_EVENTS_PLUGIN_PATH),
-            $discount_type === 'percentage' ? $amount . '%' : '$' . $amount
-        );
-
         $coupon = array(
             "discount_type" => $discount_type,
             "amount" => $amount,
@@ -71,7 +66,7 @@ class Obie_Events_Coupons
             "coupon_name" => $coupon_name
         );
 
-        wp_send_json_success(array('message' => $message, 'coupon' => $coupon));
+        wp_send_json_success(array('message' => __('Coupon applied', OBIE_EVENTS_PLUGIN_PATH), 'coupon' => $coupon));
     }
 
     public static function apply_coupon($coupon_id, $reservation_id, $amount_saved, $customer_name)
