@@ -84,8 +84,8 @@ add_action('plugins_loaded', 'Obie_Events_Init');
 
 function obie_events_enqueue_assets() 
 {
-    wp_enqueue_style('obie-events-styles', OBIE_EVENTS_PLUGIN_URL . 'assets/css/obie-events.css', array(), '1.0');
-    wp_enqueue_script('obie-events-js', OBIE_EVENTS_PLUGIN_URL . 'assets/js/obie-events.js', array('jquery'), '1.0', true);
+    wp_enqueue_style('obie-events-styles', OBIE_EVENTS_PLUGIN_URL . 'assets/css/obie-events.css', array(), false);
+    wp_enqueue_script('obie-events-js', OBIE_EVENTS_PLUGIN_URL . 'assets/js/obie-events.js', array('jquery'), false, true);
 
     wp_localize_script('obie-events-js', 'obieEventData', array(
         'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -100,8 +100,8 @@ add_action('wp_enqueue_scripts', 'obie_events_enqueue_assets');
 
 function obie_events_enqueue_admin_assets($hook) 
 {
-    wp_enqueue_style('obie-events-admin-styles', OBIE_EVENTS_PLUGIN_URL . 'assets/css/admin.css', array(), '1.0');
-    wp_enqueue_script('obie-events-admin-js', OBIE_EVENTS_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), '1.0', true);
+    wp_enqueue_style('obie-events-admin-styles', OBIE_EVENTS_PLUGIN_URL . 'assets/css/admin.css', array(), false);
+    wp_enqueue_script('obie-events-admin-js', OBIE_EVENTS_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), false, true);
 }
 
 add_action('admin_enqueue_scripts', 'obie_events_enqueue_admin_assets');

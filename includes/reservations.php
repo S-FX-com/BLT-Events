@@ -11,7 +11,7 @@ class Obie_Events_Reservations
 
     public static function event_reservation()
     {
-		check_ajax_referer(self::$nonce, 'nonce');
+		check_ajax_referer(self::$nonce, self::$nonce);
 		
         $event_id = intval($_POST['event_id']);
         $name = sanitize_text_field($_POST['customer_name']);

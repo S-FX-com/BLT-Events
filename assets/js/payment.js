@@ -24,7 +24,7 @@
 		cardDestroyed = true;
 
 		const errorElement = $("#card-errors");
-		if (errorElement) errorElement.html("");
+		if (errorElement) errorElement.text("");
 	};
 
 	// Function to create and mount card element
@@ -36,7 +36,7 @@
 		card.mount("#card-element");
 		card.addEventListener("change", function (event) {
 			let displayError = $("#card-errors");
-			if (displayError) displayError.html(event.error ? event.error.message : "");
+			if (displayError) displayError.text(event.error ? event.error.message : "");
 		});
 		cardDestroyed = false;
 	};
@@ -72,11 +72,66 @@
 
 		if (totalPrice > 0) {
 			createCard();
-			$("#obie-events-reserve-button").html("Purchase tickets");
+			$("#obie-events-reserve-button").text("Purchase tickets");
 		} else {
 			destroyCard();
-			$("#obie-events-reserve-button").html("Reserve now");
+			$("#obie-events-reserve-button").text("Reserve now");
 		}
+	});
+
+	const applyCoupon = (coupon) => {
+		$("#coupon-form").hide();
+		$("#coupon-discount").show();
+
+		$('input[name="coupon_code"]').val("");
+		$('input[name="applied_coupon"]').val(coupon.coupon_code);
+
+		$(".coupon-discount-amount").text(formatPrice(coupon.amount));
+	};
+
+	const removeCoupon = () => {
+		$("#coupon-form").show();
+		$("#coupon-discount").hide();
+
+		$('input[name="applied_coupon"]').val("");
+
+		$(".coupon-discount-amount").text("");
+	};
+
+	//
+	$("#obie-events-apply-coupon").on("click", async function () {
+		const code = $("#coupon_code").val();
+		if (!code) {
+			$("#coupon-message").text("Please enter a coupon code.");
+			return;
+		}
+
+		try {
+			const response = await $.ajax({
+				url: obieEventPaymentData.ajaxUrl,
+				type: "POST",
+				data: {
+					action: "obie_validate_coupon",
+					coupon_code: code,
+					oe_coupon_nonce: $('input[name="oe_coupon_nonce"]').val(),
+				},
+			});
+
+			if (!response.success) throw response?.data;
+			$("#coupon-message").text(response.data.message);
+			applyCoupon(response.data.coupon);
+		} catch (error) {
+			const errorElement = $("#coupon-message");
+			if (errorElement) {
+				errorElement.text(error.message);
+			}
+			console.error("Coupon error:", error);
+		}
+	});
+
+	//
+	$("#obie-events-remove-coupon").on("click", function () {
+		removeCoupon();
 	});
 
 	// Manage form submission
@@ -141,7 +196,7 @@
 			} catch (error) {
 				const errorElement = $("#card-errors");
 				if (errorElement) {
-					errorElement.html(error.message);
+					errorElement.text(error.message);
 				}
 				console.error("Payment error:", error);
 			}

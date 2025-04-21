@@ -31,7 +31,7 @@ class Obie_Events_Shortcodes
 		ob_start(); ?>
 		<form id="obie-events-reservation-form" class="obie-events-reservation-form">
 			<input type="hidden" name="event_id" value="<?php echo $event_id; ?>" />
-			<?php wp_nonce_field(Obie_Events_Reservations::$nonce, 'nonce'); ?>
+			<?php wp_nonce_field(Obie_Events_Reservations::$nonce, Obie_Events_Reservations::$nonce); ?>
 
 			<div class="form-row">
 				<label for="customer_name">Name</label>
@@ -66,19 +66,20 @@ class Obie_Events_Shortcodes
 					<?php endforeach; ?>
 
 					<div class="coupon-section">
-						<div class="form-row coupon-row">
+						<?php wp_nonce_field(Obie_Events_Coupons::$nonce, Obie_Events_Coupons::$nonce); ?>
+						<div id="coupon-form" class="form-row coupon-row">
 							<label for="coupon_code"><?php _e('Coupon Code', OBIE_EVENTS_PLUGIN_PATH); ?></label>
 							<div class="coupon-input-group">
 								<input type="text" id="coupon_code" name="coupon_code" placeholder="<?php _e('Enter coupon code', OBIE_EVENTS_PLUGIN_PATH); ?>" />
 								<button type="button" id="obie-events-apply-coupon" class="coupon-button"><?php _e('Apply', OBIE_EVENTS_PLUGIN_PATH); ?></button>
 							</div>
 						</div>
-						<div id="coupon-message"></div>
 						<div id="coupon-discount" class="coupon-discount" style="display: none;">
-							<span class="discount-amount"></span>
 							<input type="hidden" name="applied_coupon" id="applied_coupon" value="" />
-							<button type="button" id="remove-coupon" class="remove-coupon"><?php _e('Remove', OBIE_EVENTS_PLUGIN_PATH); ?></button>
+							<span class="coupon-discount-amount"></span>
+							<button type="button" id="obie-events-remove-coupon" class="remove-coupon"><?php _e('Remove', OBIE_EVENTS_PLUGIN_PATH); ?></button>
 						</div>
+						<div id="coupon-message"></div>
 					</div>
 
 					<p class="total-amount">

@@ -15,7 +15,7 @@ class Obie_Events_Coupons
     }
 
     public static function validate_coupon() {
-        check_ajax_referer(self::$nonce, 'nonce');
+        check_ajax_referer(self::$nonce, self::$nonce);
 
         $coupon_code = isset($_POST['coupon_code']) ? sanitize_text_field($_POST['coupon_code']) : '';
 
@@ -39,6 +39,7 @@ class Obie_Events_Coupons
         }
 
         $coupon = $coupons[0];
+        $coupon_name = $coupon->post_title;
         $coupon_id = $coupon->ID;
         $expiration_date = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_expiration_date', true);
         $usage_limit = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_usage_limit', true);
@@ -55,31 +56,22 @@ class Obie_Events_Coupons
         }
 
         // Get coupon details
-        $discount_type = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_discount_type', true);
-        $amount = (float) get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_amount', true);
-
-        // Store coupon in session
-        $_SESSION[self::$cookie_name] = array(
-            'id' => $coupon_id,
-            'code' => $coupon_code
-        );
+        $discount_type = get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'discount_type', true);
+        $amount = (float) get_post_meta($coupon_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount', true);
 
         $message = sprintf(
             __('Coupon applied: %s discount', OBIE_EVENTS_PLUGIN_PATH),
             $discount_type === 'percentage' ? $amount . '%' : '$' . $amount
         );
 
-        wp_send_json_success(array('message' => $message));
-    }
-    
-    public static function remove_coupon() {
-        check_ajax_referer(OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_nonce', 'nonce');
+        $coupon = array(
+            "discount_type" => $discount_type,
+            "amount" => $amount,
+            "coupon_code" => $coupon_code,
+            "coupon_name" => $coupon_name
+        );
 
-        if (isset($_SESSION[self::$cookie_name])) {
-            unset($_SESSION[self::$cookie_name]);
-        }
-        
-        wp_send_json_success(array('message' => __('Coupon removed', OBIE_EVENTS_PLUGIN_PATH)));
+        wp_send_json_success(array('message' => $message, 'coupon' => $coupon));
     }
 
     public static function apply_coupon($coupon_id, $reservation_id, $amount_saved, $customer_name)

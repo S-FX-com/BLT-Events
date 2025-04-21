@@ -35,7 +35,7 @@ class Obie_Events_Stripe
 
     public static function create_payment_intent()
     {
-		check_ajax_referer(Obie_Events_Reservations::$nonce, 'nonce');
+		check_ajax_referer(Obie_Events_Reservations::$nonce, Obie_Events_Reservations::$nonce);
 		
         try {
 			$event_id = intval($_POST['event_id']);
