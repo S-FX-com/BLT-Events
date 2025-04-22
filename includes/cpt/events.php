@@ -96,8 +96,7 @@ class Obie_Events_CPT
         $max_capacity = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_max_capacity', true);
         $by_tickets = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', true);
         $ticket_types = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
-
-?>
+        ?>
         <table class="form-table">
             <tr>
                 <th>
@@ -176,8 +175,7 @@ class Obie_Events_CPT
                     $(this).parent().parent().remove();
                 });
             });
-        </script>
-<?php
+        </script> <?php
     }
 
     public static function save_meta_box_data($post_id)
