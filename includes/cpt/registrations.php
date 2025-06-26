@@ -253,7 +253,6 @@ class Obie_Events_Registrations_CPT
                         return;
                     }
 
-                    // Guardar los campos editables
                     if (isset($_POST['customer_name'])) {
                         update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', sanitize_text_field($_POST['customer_name']));
                     }
@@ -282,7 +281,6 @@ class Obie_Events_Registrations_CPT
                         wp_die('No tienes permisos suficientes para exportar.');
                     }
 
-                    // Limpiar cualquier salida previa
                     if (ob_get_length()) ob_clean();
                     flush();
 
@@ -297,8 +295,7 @@ class Obie_Events_Registrations_CPT
                     header('Content-Disposition: attachment; filename=registrants.csv');
                     $output = fopen('php://output', 'w');
 
-                    // Encabezados CSV
-                    fputcsv($output, array('ID', 'Event', 'Name', 'Email', 'Tickets', 'Amount', 'Status', 'Date', 'Coupon'));
+                    fputcsv($output, array('ID', 'Event', 'Name', 'Email', 'Tickets', 'Amount', 'Discount Amount', 'Status', 'Date', 'Coupon'));
 
                     while ($query->have_posts()) {
                         $query->the_post();
@@ -313,8 +310,16 @@ class Obie_Events_Registrations_CPT
                         $date = get_the_date('Y-m-d H:i:s', $post_id);
                         $coupon = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_applied', true);
                         $coupon_str = '';
+                        $discount_amount = '';
+                        $monto_original = 0;
+                        if (!empty($tickets) && is_array($tickets)) {
+                            foreach ($tickets as $ticket) {
+                                $monto_original += $ticket['price'] * $ticket['quantity'];
+                            }
+                        }
                         if (!empty($coupon)) {
                             $coupon_str = $coupon['coupon_code'] . ' (' . $coupon['coupon_name'] . ')';
+                            $discount_amount = $monto_original - $amount_paid;
                         }
                         $tickets_str = '';
                         if (!empty($tickets) && is_array($tickets)) {
@@ -330,6 +335,7 @@ class Obie_Events_Registrations_CPT
                             $customer_email,
                             $tickets_str,
                             $amount_paid,
+                            $discount_amount,
                             $status,
                             $date,
                             $coupon_str
