@@ -96,7 +96,10 @@ class Obie_Events_CPT
         $max_capacity = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_max_capacity', true);
         $by_tickets = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', true);
         $ticket_types = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
-        ?>
+        // Obtener roles de WP
+        global $wp_roles;
+        $roles = $wp_roles->roles;
+?>
         <table class="form-table">
             <tr>
                 <th>
@@ -125,6 +128,8 @@ class Obie_Events_CPT
                                 <tr>
                                     <th>Ticket Name</th>
                                     <th>Ticket Price</th>
+                                    <th>Allowed Roles</th>
+                                    <th>Expiration Date</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -137,6 +142,16 @@ class Obie_Events_CPT
                                             </td>
                                             <td>
                                                 <input type="number" name="ticket_type_price[]" value="<?php echo esc_attr($ticket['price']); ?>" placeholder="Ticket Price" step="0.01" min="0" />
+                                            </td>
+                                            <td>
+                                                <select name="ticket_type_roles[<?php echo $index; ?>][]" multiple style="min-width:120px;">
+                                                    <?php foreach ($roles as $role_key => $role) { ?>
+                                                        <option value="<?php echo esc_attr($role_key); ?>" <?php if (!empty($ticket['roles']) && in_array($role_key, $ticket['roles'])) echo 'selected'; ?>><?php echo esc_html($role['name']); ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" name="ticket_type_expiration[]" value="<?php echo !empty($ticket['expiration']) ? esc_attr($ticket['expiration']) : ''; ?>" />
                                             </td>
                                             <td>
                                                 <button type="button" class="remove_ticket_type button">Remove</button>
@@ -162,10 +177,16 @@ class Obie_Events_CPT
                 });
 
                 $('#add_ticket_type').click(function() {
+                    var rolesOptions = '';
+                    <?php foreach ($roles as $role_key => $role) { ?>
+                        rolesOptions += '<option value="<?php echo esc_attr($role_key); ?>"><?php echo esc_html($role['name']); ?></option>';
+                    <?php } ?>
                     var html =
                         '<tr class="ticket_type">' +
                         '<td><input type="text" name="ticket_type_name[]" placeholder="Ticket Name" /></td>' +
                         '<td><input type="number" name="ticket_type_price[]" placeholder="Ticket Price" step="0.01" min="0" /></td>' +
+                        '<td><select name="ticket_type_roles[' + ($('#ticket_type_container tr').length) + '][]" multiple style="min-width:120px;">' + rolesOptions + '</select></td>' +
+                        '<td><input type="date" name="ticket_type_expiration[]" /></td>' +
                         '<td><button type="button" class="button remove_ticket_type">Remove</button></td>' +
                         '</tr>';
                     $('#ticket_type_container').append(html);
@@ -176,45 +197,49 @@ class Obie_Events_CPT
                 });
             });
         </script> <?php
-    }
+                }
 
-    public static function save_meta_box_data($post_id)
-    {
-        if (!isset($_POST['event_details_nonce']) || !wp_verify_nonce($_POST['event_details_nonce'], 'event_details')) {
-            return;
-        }
+                public static function save_meta_box_data($post_id)
+                {
+                    if (!isset($_POST['event_details_nonce']) || !wp_verify_nonce($_POST['event_details_nonce'], 'event_details')) {
+                        return;
+                    }
 
-        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-            return;
-        }
+                    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+                        return;
+                    }
 
-        if (!current_user_can('edit_post', $post_id)) {
-            return;
-        }
+                    if (!current_user_can('edit_post', $post_id)) {
+                        return;
+                    }
 
-        $with_capacity = isset($_POST['with_capacity']) ? '1' : '0';
-        update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_with_capacity', $with_capacity);
+                    $with_capacity = isset($_POST['with_capacity']) ? '1' : '0';
+                    update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_with_capacity', $with_capacity);
 
-        if (isset($_POST['max_capacity'])) {
-            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_max_capacity', absint($_POST['max_capacity']));
-        }
+                    if (isset($_POST['max_capacity'])) {
+                        update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_max_capacity', absint($_POST['max_capacity']));
+                    }
 
-        $by_tickets = isset($_POST['by_tickets']) ? '1' : '0';
-        update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', $by_tickets);
+                    $by_tickets = isset($_POST['by_tickets']) ? '1' : '0';
+                    update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', $by_tickets);
 
-        $ticket_types = array();
-        if ($by_tickets && isset($_POST['ticket_type_name']) && isset($_POST['ticket_type_price'])) {
-            $names = $_POST['ticket_type_name'];
-            $prices = $_POST['ticket_type_price'];
-            for ($i = 0; $i < count($names); $i++) {
-                if (!empty($names[$i]) && is_numeric($prices[$i])) {
-                    $ticket_types[] = array(
-                        'name' => sanitize_text_field($names[$i]),
-                        'price' => floatval($prices[$i])
-                    );
+                    $ticket_types = array();
+                    if ($by_tickets && isset($_POST['ticket_type_name']) && isset($_POST['ticket_type_price'])) {
+                        $names = $_POST['ticket_type_name'];
+                        $prices = $_POST['ticket_type_price'];
+                        $roles = isset($_POST['ticket_type_roles']) ? $_POST['ticket_type_roles'] : array();
+                        $expirations = isset($_POST['ticket_type_expiration']) ? $_POST['ticket_type_expiration'] : array();
+                        for ($i = 0; $i < count($names); $i++) {
+                            if (!empty($names[$i]) && is_numeric($prices[$i])) {
+                                $ticket_types[] = array(
+                                    'name' => sanitize_text_field($names[$i]),
+                                    'price' => floatval($prices[$i]),
+                                    'roles' => isset($roles[$i]) ? array_map('sanitize_text_field', (array)$roles[$i]) : array(),
+                                    'expiration' => isset($expirations[$i]) ? sanitize_text_field($expirations[$i]) : ''
+                                );
+                            }
+                        }
+                    }
+                    update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', $ticket_types);
                 }
             }
-        }
-        update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', $ticket_types);
-    }
-}

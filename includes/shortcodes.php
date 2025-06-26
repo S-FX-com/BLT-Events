@@ -28,6 +28,42 @@ class Obie_Events_Shortcodes
 		$by_tickets = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', true);
 		$ticket_types = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
 
+		// FILTRO de tickets por rol y expiración
+		$user = wp_get_current_user();
+		$user_roles = (array) $user->roles;
+		$is_logged_in = is_user_logged_in();
+		$today = date('Y-m-d');
+		$filtered_tickets = array();
+		if (!empty($ticket_types)) {
+			foreach ($ticket_types as $ticket) {
+				// Filtrar por roles
+				$roles_ok = true;
+				if (!empty($ticket['roles'])) {
+					$roles_ok = false;
+					if ($is_logged_in) {
+						foreach ($user_roles as $role) {
+							if (in_array($role, $ticket['roles'])) {
+								$roles_ok = true;
+								break;
+							}
+						}
+					}
+				}
+				// Si no está logueado y el ticket tiene roles, no mostrar
+				if (!$is_logged_in && !empty($ticket['roles'])) {
+					$roles_ok = false;
+				}
+				// Filtrar por expiración
+				$expiration_ok = true;
+				if (!empty($ticket['expiration'])) {
+					$expiration_ok = ($ticket['expiration'] >= $today);
+				}
+				if ($roles_ok && $expiration_ok) {
+					$filtered_tickets[] = $ticket;
+				}
+			}
+		}
+
 		ob_start(); ?>
 		<form id="obie-events-registration-form" class="obie-events-registration-form">
 			<input type="hidden" name="event_id" value="<?php echo $event_id; ?>" />
@@ -43,58 +79,60 @@ class Obie_Events_Shortcodes
 				<input type="email" id="customer_email" name="customer_email" required />
 			</div>
 
-			<?php if ($by_tickets && !empty($ticket_types)) : ?>
-				<div class="ticket-selection">
-					<h4>Select Tickets</h4>
-					<?php foreach ($ticket_types as $index => $ticket) : ?>
-						<div class="ticket-type">
-							<span class="ticket-name"><?php echo esc_html($ticket['name']); ?></span>
-							<div class="ticket-quantity-controls">
-								<button type="button" class="quantity-btn minus-btn" data-index="<?php echo $index; ?>">-</button>
-								<input type="number"
-									name="ticket_quantity[]"
-									data-index="<?php echo $index; ?>"
-									data-price="<?php echo $ticket['price']; ?>"
-									min="0"
-									value="0"
-									class="ticket-quantity"
-									readonly />
-								<button type="button" class="quantity-btn plus-btn" data-index="<?php echo $index; ?>">+</button>
+			<?php if ($by_tickets) : ?>
+				<?php if (!empty($filtered_tickets)) : ?>
+					<div class="ticket-selection">
+						<h4>Select Tickets</h4>
+						<?php foreach ($filtered_tickets as $index => $ticket) : ?>
+							<div class="ticket-type">
+								<span class="ticket-name"><?php echo esc_html($ticket['name']); ?></span>
+								<div class="ticket-quantity-controls">
+									<button type="button" class="quantity-btn minus-btn" data-index="<?php echo $index; ?>">-</button>
+									<input type="number"
+										name="ticket_quantity[]"
+										data-index="<?php echo $index; ?>"
+										data-price="<?php echo $ticket['price']; ?>"
+										min="0"
+										value="0"
+										class="ticket-quantity"
+										readonly />
+									<button type="button" class="quantity-btn plus-btn" data-index="<?php echo $index; ?>">+</button>
+								</div>
+								<span class="ticket-price"><?php echo Obie_Events_Helper::format_price($ticket['price']); ?></span>
 							</div>
-							<span class="ticket-price"><?php echo Obie_Events_Helper::format_price($ticket['price']); ?></span>
-						</div>
-					<?php endforeach; ?>
+						<?php endforeach; ?>
 
-					<div class="coupon-section">
-						<?php wp_nonce_field(Obie_Events_Coupons::$nonce, Obie_Events_Coupons::$nonce); ?>
-						<div id="coupon-form" class="form-row coupon-row">
-							<label for="coupon_code"><?php _e('Coupon Code', OBIE_EVENTS_PLUGIN_PATH); ?></label>
-							<div class="coupon-input-group">
-								<input type="text" id="coupon_code" name="coupon_code" placeholder="<?php _e('Enter coupon code', OBIE_EVENTS_PLUGIN_PATH); ?>" />
-								<button type="button" id="obie-events-apply-coupon" class="coupon-button"><?php _e('Apply', OBIE_EVENTS_PLUGIN_PATH); ?></button>
+						<div class="coupon-section">
+							<?php wp_nonce_field(Obie_Events_Coupons::$nonce, Obie_Events_Coupons::$nonce); ?>
+							<div id="coupon-form" class="form-row coupon-row">
+								<label for="coupon_code"><?php _e('Coupon Code', OBIE_EVENTS_PLUGIN_PATH); ?></label>
+								<div class="coupon-input-group">
+									<input type="text" id="coupon_code" name="coupon_code" placeholder="<?php _e('Enter coupon code', OBIE_EVENTS_PLUGIN_PATH); ?>" />
+									<button type="button" id="obie-events-apply-coupon" class="coupon-button"><?php _e('Apply', OBIE_EVENTS_PLUGIN_PATH); ?></button>
+								</div>
 							</div>
+							<div id="coupon-discount" class="coupon-discount" style="display: none;">
+								<input type="hidden" name="applied_coupon" id="applied_coupon" value="" />
+								<span class="coupon-discount-amount"></span>
+								<button type="button" id="obie-events-remove-coupon" class="remove-coupon"><?php _e('Remove', OBIE_EVENTS_PLUGIN_PATH); ?></button>
+							</div>
+							<div id="coupon-message"></div>
 						</div>
-						<div id="coupon-discount" class="coupon-discount" style="display: none;">
-							<input type="hidden" name="applied_coupon" id="applied_coupon" value="" />
-							<span class="coupon-discount-amount"></span>
-							<button type="button" id="obie-events-remove-coupon" class="remove-coupon"><?php _e('Remove', OBIE_EVENTS_PLUGIN_PATH); ?></button>
-						</div>
-						<div id="coupon-message"></div>
+
+						<p class="total-amount">
+							<?php echo Obie_Events_Helper::format_price(0, true); ?>
+						</p>
 					</div>
 
-					<p class="total-amount">
-						<?php echo Obie_Events_Helper::format_price(0, true); ?>
-					</p>
-				</div>
-
-				<div id="card-element"></div>
-				<div id="card-errors" role="alert"></div>
+					<div id="card-element"></div>
+					<div id="card-errors" role="alert"></div>
+				<?php endif; ?>
 			<?php endif; ?>
 
 			<button type="submit" id="obie-events-reserve-button" class="submit-button">
 				Reserve now
 			</button>
 		</form>
-		<?php return ob_get_clean();
+<?php return ob_get_clean();
 	}
 }
