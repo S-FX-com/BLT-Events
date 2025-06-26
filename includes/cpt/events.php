@@ -365,31 +365,46 @@ class Obie_Events_CPT
         </div>
 
         <style>
+            /* Modern calendar container */
             .obie-events-calendar {
                 max-width: 1000px;
-                margin: 0 auto;
-                font-family: Arial, sans-serif;
+                margin: 2rem auto;
+                padding: 2rem;
+                background: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
 
+            /* View toggle buttons */
             .calendar-view-toggle {
                 text-align: center;
-                margin-bottom: 20px;
+                margin-bottom: 2rem;
             }
 
             .view-toggle-btn {
-                background: #f0f0f0;
-                border: 1px solid #ddd;
-                padding: 10px 20px;
-                margin: 0 5px;
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                padding: 0.75rem 1.5rem;
+                margin: 0 0.25rem;
                 cursor: pointer;
-                border-radius: 5px;
-                transition: all 0.3s ease;
+                border-radius: 8px;
+                font-size: 1rem;
+                font-weight: 500;
+                color: #374151;
+                transition: all 0.2s ease;
+            }
+
+            .view-toggle-btn:hover {
+                background: #f3f4f6;
+                border-color: #d1d5db;
             }
 
             .view-toggle-btn.active {
-                background: #0073aa;
+                background: #6366f1;
                 color: white;
-                border-color: #0073aa;
+                border-color: #6366f1;
+                box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
             }
 
             .calendar-view {
@@ -400,111 +415,132 @@ class Obie_Events_CPT
                 display: block;
             }
 
-            /* Vista Lista */
+            /* Navigation controls */
             .list-navigation,
             .month-navigation {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 20px;
-                padding: 0 10px;
+                margin-bottom: 2rem;
+                padding: 0 1rem;
             }
 
             .nav-btn {
-                background: #0073aa;
+                background: #6366f1;
                 color: white;
                 border: none;
-                padding: 8px 15px;
-                border-radius: 5px;
+                padding: 0.75rem 1.5rem;
+                border-radius: 8px;
                 cursor: pointer;
-                transition: background 0.3s ease;
+                font-size: 1rem;
+                font-weight: 500;
+                transition: background-color 0.2s ease;
             }
 
             .nav-btn:hover {
-                background: #005a87;
+                background: #4f46e5;
+            }
+
+            .nav-btn:focus {
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
             }
 
             .nav-btn:disabled {
-                background: #ccc;
+                background: #9ca3af;
                 cursor: not-allowed;
             }
 
             .list-info,
             .month-title {
-                font-size: 18px;
-                font-weight: bold;
-                color: #333;
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #1f2937;
             }
 
+            /* Events list */
             .events-list {
-                min-height: 200px;
+                min-height: 300px;
             }
 
             .event-item {
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 15px;
-                margin-bottom: 15px;
-                background: white;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                transition: transform 0.2s ease;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                background: #ffffff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                transition: all 0.2s ease;
             }
 
             .event-item:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border-color: #d1d5db;
             }
 
             .event-title {
-                font-size: 18px;
-                font-weight: bold;
-                color: #0073aa;
-                margin-bottom: 8px;
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #6366f1;
+                margin-bottom: 0.75rem;
+                line-height: 1.4;
             }
 
             .event-title a {
                 text-decoration: none;
                 color: inherit;
+                transition: color 0.2s ease;
+            }
+
+            .event-title a:hover {
+                color: #4f46e5;
             }
 
             .event-date {
-                color: #666;
-                font-size: 14px;
-                margin-bottom: 5px;
+                color: #4b5563;
+                font-size: 1rem;
+                font-weight: 500;
+                margin-bottom: 0.5rem;
             }
 
             .event-time {
-                color: #888;
-                font-size: 13px;
-                margin-bottom: 10px;
+                color: #6b7280;
+                font-size: 0.875rem;
+                margin-bottom: 1rem;
             }
 
             .event-excerpt {
-                color: #555;
-                line-height: 1.5;
+                color: #374151;
+                line-height: 1.6;
+                font-size: 0.95rem;
             }
 
-            /* Vista Mes */
+            /* Month calendar grid */
             .calendar-grid {
-                border: 1px solid #ddd;
-                border-radius: 8px;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
                 overflow: hidden;
                 background: white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             }
 
             .calendar-header {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
-                background: #f8f9fa;
-                border-bottom: 1px solid #ddd;
+                background: #f8fafc;
+                border-bottom: 1px solid #e5e7eb;
             }
 
             .day-header {
-                padding: 10px;
+                padding: 1rem;
                 text-align: center;
-                font-weight: bold;
-                color: #333;
-                border-right: 1px solid #ddd;
+                font-weight: 600;
+                color: #374151;
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                border-right: 1px solid #e5e7eb;
             }
 
             .day-header:last-child {
@@ -514,16 +550,21 @@ class Obie_Events_CPT
             .calendar-days {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
-                min-height: 400px;
+                min-height: 500px;
             }
 
             .calendar-day {
-                border-right: 1px solid #eee;
-                border-bottom: 1px solid #eee;
-                min-height: 80px;
-                padding: 5px;
+                border-right: 1px solid #f3f4f6;
+                border-bottom: 1px solid #f3f4f6;
+                min-height: 100px;
+                padding: 0.75rem;
                 position: relative;
                 background: white;
+                transition: background-color 0.2s ease;
+            }
+
+            .calendar-day:hover {
+                background: #f9fafb;
             }
 
             .calendar-day:last-child {
@@ -531,74 +572,139 @@ class Obie_Events_CPT
             }
 
             .calendar-day.other-month {
-                background: #f8f9fa;
-                color: #ccc;
+                background: #f8fafc;
+                color: #9ca3af;
             }
 
             .calendar-day.today {
-                background: #e7f3ff;
+                background: #eff6ff;
+                border-color: #dbeafe;
             }
 
             .day-number {
-                font-weight: bold;
-                margin-bottom: 5px;
+                font-weight: 600;
+                font-size: 1rem;
+                color: #374151;
+                margin-bottom: 0.5rem;
+            }
+
+            .calendar-day.today .day-number {
+                color: #2563eb;
+                background: #dbeafe;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
             }
 
             .day-events {
-                font-size: 11px;
+                font-size: 0.75rem;
             }
 
             .day-event {
-                background: #0073aa;
+                background: #6366f1;
                 color: white;
-                padding: 2px 4px;
-                margin: 1px 0;
-                border-radius: 3px;
+                padding: 0.25rem 0.5rem;
+                margin: 0.125rem 0;
+                border-radius: 4px;
                 cursor: pointer;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                font-weight: 500;
+                transition: background-color 0.2s ease;
             }
 
             .day-event:hover {
-                background: #005a87;
+                background: #4f46e5;
             }
 
+            /* Loading and empty states */
             .loading {
                 text-align: center;
-                padding: 40px;
-                color: #666;
+                padding: 3rem;
+                color: #6b7280;
+                font-size: 1.125rem;
             }
 
             .no-events {
                 text-align: center;
-                padding: 40px;
-                color: #999;
+                padding: 3rem;
+                color: #9ca3af;
                 font-style: italic;
+                font-size: 1.125rem;
+                background: #f9fafb;
+                border-radius: 8px;
+                margin: 1rem 0;
             }
 
-            /* Responsive */
+            /* Responsive design */
             @media (max-width: 768px) {
+                .obie-events-calendar {
+                    margin: 1rem;
+                    padding: 1.5rem;
+                }
+
                 .calendar-days {
-                    min-height: 300px;
+                    min-height: 400px;
                 }
 
                 .calendar-day {
-                    min-height: 60px;
+                    min-height: 80px;
+                    padding: 0.5rem;
                 }
 
                 .day-events {
-                    font-size: 10px;
+                    font-size: 0.6875rem;
                 }
 
                 .list-navigation,
                 .month-navigation {
                     flex-direction: column;
-                    gap: 10px;
+                    gap: 1rem;
+                    text-align: center;
                 }
 
                 .nav-btn {
-                    padding: 10px 20px;
+                    padding: 0.875rem 2rem;
+                    font-size: 1rem;
+                }
+
+                .event-item {
+                    padding: 1.25rem;
+                }
+
+                .event-title {
+                    font-size: 1.125rem;
+                }
+
+                .list-info,
+                .month-title {
+                    font-size: 1.25rem;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .view-toggle-btn {
+                    display: block;
+                    margin: 0.25rem 0;
+                    width: 100%;
+                }
+
+                .calendar-day {
+                    min-height: 60px;
+                    padding: 0.25rem;
+                }
+
+                .day-number {
+                    font-size: 0.875rem;
+                }
+
+                .day-events {
+                    font-size: 0.625rem;
                 }
             }
         </style>
