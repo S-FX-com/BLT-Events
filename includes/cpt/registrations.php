@@ -11,6 +11,8 @@ class Obie_Events_Registrations_CPT
         add_action('manage_' . self::$slug . '_posts_columns', array(__CLASS__, 'set_custom_columns'));
         add_action('manage_' . self::$slug . '_posts_custom_column', array(__CLASS__, 'custom_column'), 10, 2);
         add_filter('manage_edit-' . self::$slug . '_sortable_columns', array(__CLASS__, 'sortable_columns'));
+        add_action('admin_post_obie_export_registrants_csv', array(__CLASS__, 'export_registrants_csv'));
+        add_action('restrict_manage_posts', array(__CLASS__, 'add_export_button'));
     }
 
     public static function register_post_type()
@@ -80,7 +82,7 @@ class Obie_Events_Registrations_CPT
         $tickets = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'tickets', true);
         $status = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
         $coupon_applied = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_applied', true);
-        ?>
+?>
         <table class="form-table">
             <tr>
                 <th><label for="event_id">Event</label></th>
@@ -155,18 +157,18 @@ class Obie_Events_Registrations_CPT
                     </select>
                 </td>
             </tr>
-        </table> <?php 
-    }
+        </table> <?php
+                }
 
-    public static function render_payment_meta_box($post)
-    {
-        wp_nonce_field('payment_details', 'payment_details_nonce');
+                public static function render_payment_meta_box($post)
+                {
+                    wp_nonce_field('payment_details', 'payment_details_nonce');
 
-        $payment_intent_id = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id', true) ?: "No payment processed";
-        $amount_paid = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
-        $payment_date = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date', true) ?: 0;
+                    $payment_intent_id = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id', true) ?: "No payment processed";
+                    $amount_paid = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
+                    $payment_date = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date', true) ?: 0;
 
-        ?>
+                    ?>
         <table class="form-table">
             <tr>
                 <th><label>Payment Intent ID</label></th>
@@ -181,87 +183,159 @@ class Obie_Events_Registrations_CPT
                 <td><?php echo $payment_date ? date(get_option('obie_events_date_format') . ' H:i:s', $payment_date) : ''; ?></td>
             </tr>
         </table> <?php
-    }
-
-    public static function set_custom_columns($columns)
-    {
-        $new_columns = array();
-        $new_columns['cb'] = $columns['cb'];
-        $new_columns['title'] = __('Registration ID');
-        $new_columns['event'] = __('Event');
-        $new_columns['customer'] = __('Customer');
-        $new_columns['amount'] = __('Amount');
-        $new_columns['status'] = __('Status');
-        $new_columns['date'] = $columns['date'];
-        return $new_columns;
-    }
-
-    public static function custom_column($column, $post_id)
-    {
-        switch ($column) {
-            case 'event':
-                $event_id = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_id', true);
-                if ($event_id) {
-                    echo '<a href="' . get_edit_post_link($event_id) . '">' . get_the_title($event_id) . '</a>';
                 }
-                break;
 
-            case 'customer':
-                $customer_name = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
-                $customer_email = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
-                echo esc_html($customer_name) . '<br/>';
-                echo '<small>' . esc_html($customer_email) . '</small>';
-                break;
+                public static function set_custom_columns($columns)
+                {
+                    $new_columns = array();
+                    $new_columns['cb'] = $columns['cb'];
+                    $new_columns['title'] = __('Registration ID');
+                    $new_columns['event'] = __('Event');
+                    $new_columns['customer'] = __('Customer');
+                    $new_columns['amount'] = __('Amount');
+                    $new_columns['status'] = __('Status');
+                    $new_columns['date'] = $columns['date'];
+                    return $new_columns;
+                }
 
-            case 'amount':
-                $amount_paid = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
-                echo '$' . number_format($amount_paid, 2);
-                break;
+                public static function custom_column($column, $post_id)
+                {
+                    switch ($column) {
+                        case 'event':
+                            $event_id = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_id', true);
+                            if ($event_id) {
+                                echo '<a href="' . get_edit_post_link($event_id) . '">' . get_the_title($event_id) . '</a>';
+                            }
+                            break;
 
-            case 'status':
-                $status = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
-                $status_class = 'status-' . $status;
-                echo '<span class="' . esc_attr($status_class) . '">' . esc_html(ucfirst($status)) . '</span>';
-                break;
-        }
-    }
+                        case 'customer':
+                            $customer_name = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
+                            $customer_email = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
+                            echo esc_html($customer_name) . '<br/>';
+                            echo '<small>' . esc_html($customer_email) . '</small>';
+                            break;
 
-    public static function sortable_columns($columns)
-    {
-        $columns['event'] = 'event';
-        $columns['amount'] = 'amount';
-        $columns['status'] = 'status';
-        return $columns;
-    }
+                        case 'amount':
+                            $amount_paid = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
+                            echo '$' . number_format($amount_paid, 2);
+                            break;
 
-    public static function save_post($post_id)
-    {
-        if (
-            !isset($_POST['registration_details_nonce']) ||
-            !wp_verify_nonce($_POST['registration_details_nonce'], 'registration_details')
-        ) {
-            return;
-        }
+                        case 'status':
+                            $status = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
+                            $status_class = 'status-' . $status;
+                            echo '<span class="' . esc_attr($status_class) . '">' . esc_html(ucfirst($status)) . '</span>';
+                            break;
+                    }
+                }
 
-        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-            return;
-        }
+                public static function sortable_columns($columns)
+                {
+                    $columns['event'] = 'event';
+                    $columns['amount'] = 'amount';
+                    $columns['status'] = 'status';
+                    return $columns;
+                }
 
-        if (!current_user_can('edit_post', $post_id)) {
-            return;
-        }
+                public static function save_post($post_id)
+                {
+                    if (
+                        !isset($_POST['registration_details_nonce']) ||
+                        !wp_verify_nonce($_POST['registration_details_nonce'], 'registration_details')
+                    ) {
+                        return;
+                    }
 
-        // Guardar los campos editables
-        if (isset($_POST['customer_name'])) {
-            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', sanitize_text_field($_POST['customer_name']));
-        }
+                    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+                        return;
+                    }
 
-        if (isset($_POST['customer_email'])) {
-            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', sanitize_email($_POST['customer_email']));
-        }
+                    if (!current_user_can('edit_post', $post_id)) {
+                        return;
+                    }
 
-        if (isset($_POST['status'])) {
-            update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', sanitize_text_field($_POST['status']));
-        }
-    }
-}
+                    // Guardar los campos editables
+                    if (isset($_POST['customer_name'])) {
+                        update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', sanitize_text_field($_POST['customer_name']));
+                    }
+
+                    if (isset($_POST['customer_email'])) {
+                        update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', sanitize_email($_POST['customer_email']));
+                    }
+
+                    if (isset($_POST['status'])) {
+                        update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', sanitize_text_field($_POST['status']));
+                    }
+                }
+
+                public static function add_export_button($post_type)
+                {
+                    if ($post_type !== self::$slug) return;
+                    $export_url = add_query_arg([
+                        'action' => 'obie_export_registrants_csv',
+                    ], admin_url('admin-post.php'));
+                    echo '<a href="' . esc_url($export_url) . '" class="button action" style="margin-right:6px;">Export Registrations (CSV)</a>';
+                }
+
+                public static function export_registrants_csv()
+                {
+                    if (!current_user_can('manage_options')) {
+                        wp_die('No tienes permisos suficientes para exportar.');
+                    }
+
+                    // Limpiar cualquier salida previa
+                    if (ob_get_length()) ob_clean();
+                    flush();
+
+                    $args = array(
+                        'post_type' => self::$slug,
+                        'post_status' => 'publish',
+                        'posts_per_page' => -1,
+                    );
+                    $query = new WP_Query($args);
+
+                    header('Content-Type: text/csv; charset=utf-8');
+                    header('Content-Disposition: attachment; filename=registrants.csv');
+                    $output = fopen('php://output', 'w');
+
+                    // Encabezados CSV
+                    fputcsv($output, array('ID', 'Event', 'Name', 'Email', 'Tickets', 'Amount', 'Status', 'Date', 'Coupon'));
+
+                    while ($query->have_posts()) {
+                        $query->the_post();
+                        $post_id = get_the_ID();
+                        $event_id = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_id', true);
+                        $event_title = $event_id ? get_the_title($event_id) : '';
+                        $customer_name = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
+                        $customer_email = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
+                        $tickets = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'tickets', true);
+                        $amount_paid = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true);
+                        $status = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'status', true);
+                        $date = get_the_date('Y-m-d H:i:s', $post_id);
+                        $coupon = get_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'coupon_applied', true);
+                        $coupon_str = '';
+                        if (!empty($coupon)) {
+                            $coupon_str = $coupon['coupon_code'] . ' (' . $coupon['coupon_name'] . ')';
+                        }
+                        $tickets_str = '';
+                        if (!empty($tickets) && is_array($tickets)) {
+                            foreach ($tickets as $ticket) {
+                                $tickets_str .= $ticket['name'] . ' x' . $ticket['quantity'] . ' ($' . number_format($ticket['price'], 2) . ') | ';
+                            }
+                            $tickets_str = rtrim($tickets_str, ' | ');
+                        }
+                        fputcsv($output, array(
+                            $post_id,
+                            $event_title,
+                            $customer_name,
+                            $customer_email,
+                            $tickets_str,
+                            $amount_paid,
+                            $status,
+                            $date,
+                            $coupon_str
+                        ));
+                    }
+                    fclose($output);
+                    exit;
+                }
+            }
