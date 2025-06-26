@@ -5,6 +5,7 @@ class Obie_Events_Shortcodes
 	{
 		add_shortcode('Obie_Event_Registration', array(__CLASS__, 'registration_shortcode'));
 		add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_scripts'));
+		add_shortcode('obie_events_calendar', array(__CLASS__, 'calendar_shortcode'));
 	}
 
 	public static function enqueue_scripts()
@@ -134,5 +135,112 @@ class Obie_Events_Shortcodes
 			</button>
 		</form>
 <?php return ob_get_clean();
+	}
+
+	public static function calendar_shortcode($atts)
+	{
+		$atts = shortcode_atts(array(
+			'view' => 'list', // 'list' o 'month'
+			'show_past' => false,
+		), $atts, 'obie_events_calendar');
+
+		$today = date('Y-m-d');
+		$args = array(
+			'post_type' => Obie_Events_CPT::$slug,
+			'posts_per_page' => -1,
+			'meta_key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
+			'orderby' => 'meta_value',
+			'order' => 'ASC',
+		);
+		$query = new WP_Query($args);
+		$events = array();
+		if ($query->have_posts()) {
+			while ($query->have_posts()) {
+				$query->the_post();
+				$event_date = get_post_meta(get_the_ID(), OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+				$event_start_time = get_post_meta(get_the_ID(), OBIE_EVENTS_PLUGIN_PREFIX . 'event_start_time', true);
+				$event_end_time = get_post_meta(get_the_ID(), OBIE_EVENTS_PLUGIN_PREFIX . 'event_end_time', true);
+				$event_all_day = get_post_meta(get_the_ID(), OBIE_EVENTS_PLUGIN_PREFIX . 'event_all_day', true);
+				if (!$atts['show_past'] && $event_date < $today) continue;
+				if ($atts['show_past'] && $event_date >= $today) continue;
+				$events[] = array(
+					'ID' => get_the_ID(),
+					'title' => get_the_title(),
+					'permalink' => get_permalink(),
+					'date' => $event_date,
+					'start_time' => $event_start_time,
+					'end_time' => $event_end_time,
+					'all_day' => $event_all_day,
+				);
+			}
+			wp_reset_postdata();
+		}
+		ob_start();
+		$current_view = $atts['view'] === 'month' ? 'month' : 'list';
+		echo '<div class="obie-events-calendar-wrapper">';
+		echo '<div class="obie-events-calendar-switch" style="margin-bottom:10px;">';
+		echo '<button type="button" class="' . ($current_view == 'list' ? 'active' : '') . '" data-view="list">List</button> ';
+		echo '<button type="button" class="' . ($current_view == 'month' ? 'active' : '') . '" data-view="month">Month</button>';
+		echo '</div>';
+		// Vista de lista
+		echo '<div class="obie-events-calendar-view" data-view="list" style="' . ($current_view == 'list' ? '' : 'display:none;') . '">';
+		echo '<ul class="obie-events-list">';
+		foreach ($events as $event) {
+			echo '<li>';
+			echo '<a href="' . esc_url($event['permalink']) . '"><strong>' . esc_html($event['title']) . '</strong></a> - ';
+			echo esc_html($event['date']);
+			if ($event['all_day'] == '1') {
+				echo ' (All day)';
+			} else if ($event['start_time'] || $event['end_time']) {
+				echo ' ' . esc_html($event['start_time']);
+				if ($event['end_time']) {
+					echo ' - ' . esc_html($event['end_time']);
+				}
+			}
+			echo '</li>';
+		}
+		echo '</ul>';
+		echo '</div>';
+		// Vista de calendario mensual
+		echo '<div class="obie-events-calendar-view" data-view="month" style="' . ($current_view == 'month' ? '' : 'display:none;') . '">';
+		echo '<div class="obie-events-calendar-month">';
+		$month = date('m');
+		$year = date('Y');
+		$days_in_month = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+		echo '<table class="calendar-table"><thead><tr>';
+		foreach (["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as $day) {
+			echo '<th>' . $day . '</th>';
+		}
+		echo '</tr></thead><tbody><tr>';
+		$first_day_of_month = date('w', strtotime("$year-$month-01"));
+		for ($i = 0; $i < $first_day_of_month; $i++) {
+			echo '<td></td>';
+		}
+		$day_counter = $first_day_of_month;
+		for ($day = 1; $day <= $days_in_month; $day++) {
+			$current_date = sprintf('%04d-%02d-%02d', $year, $month, $day);
+			$event_titles = array();
+			foreach ($events as $event) {
+				if ($event['date'] === $current_date) {
+					$event_titles[] = '<a href="' . esc_url($event['permalink']) . '">' . esc_html($event['title']) . '</a>';
+				}
+			}
+			echo '<td>' . $day;
+			if (!empty($event_titles)) {
+				echo '<div class="calendar-events">' . implode('<br>', $event_titles) . '</div>';
+			}
+			echo '</td>';
+			$day_counter++;
+			if ($day_counter % 7 == 0) echo '</tr><tr>';
+		}
+		while ($day_counter % 7 != 0) {
+			echo '<td></td>';
+			$day_counter++;
+		}
+		echo '</tr></tbody></table>';
+		echo '</div>';
+		echo '</div>';
+		echo '</div>';
+		return ob_get_clean();
 	}
 }
