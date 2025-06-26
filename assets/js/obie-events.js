@@ -23,17 +23,3 @@ function formatPrice(price, includeTotal = false) {
 
 	return priceString;
 }
-
-jQuery(document).ready(function ($) {
-	// Cambiar vista del calendario
-	if ($(".obie-events-calendar-switch").length) {
-		$(".obie-events-calendar-switch button").on("click", function () {
-			var view = $(this).data("view");
-			var $calendar = $(this).closest(".obie-events-calendar-wrapper");
-			$calendar.find(".obie-events-calendar-view").hide();
-			$calendar.find('.obie-events-calendar-view[data-view="' + view + '"]').show();
-			$calendar.find(".obie-events-calendar-switch button").removeClass("active");
-			$(this).addClass("active");
-		});
-	}
-});
