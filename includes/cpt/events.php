@@ -9,6 +9,13 @@ class Obie_Events_CPT
         add_action('init', array(__CLASS__, 'register_taxonomies'));
         add_action('add_meta_boxes', array(__CLASS__, 'add_meta_boxes'));
         add_action('save_post', array(__CLASS__, 'save_meta_box_data'));
+
+        add_shortcode('obie_events_calendar', array(__CLASS__, 'calendar_shortcode'));
+
+        add_action('wp_ajax_obie_events_get_list', array(__CLASS__, 'ajax_get_events_list'));
+        add_action('wp_ajax_nopriv_obie_events_get_list', array(__CLASS__, 'ajax_get_events_list'));
+        add_action('wp_ajax_obie_events_get_month', array(__CLASS__, 'ajax_get_events_month'));
+        add_action('wp_ajax_nopriv_obie_events_get_month', array(__CLASS__, 'ajax_get_events_month'));
     }
 
     public static function register_post_type()
@@ -288,5 +295,636 @@ class Obie_Events_CPT
                         }
                     }
                     update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', $ticket_types);
+                }
+
+                public static function calendar_shortcode($atts)
+                {
+                    $atts = shortcode_atts(array(
+                        'view' => 'list', // 'list' o 'month'
+                        'events_per_page' => 5
+                    ), $atts, 'obie_events_calendar');
+
+                    $view = sanitize_text_field($atts['view']);
+                    $events_per_page = intval($atts['events_per_page']);
+
+                    // Enqueue scripts específicos para el calendario
+                    wp_enqueue_script('obie-events-calendar', OBIE_EVENTS_PLUGIN_URL . 'assets/js/calendar.js', array('jquery'), '1.0', true);
+                    wp_localize_script('obie-events-calendar', 'obieCalendarData', array(
+                        'ajaxUrl' => admin_url('admin-ajax.php'),
+                        'nonce' => wp_create_nonce('obie_events_calendar_nonce'),
+                        'eventsPerPage' => $events_per_page
+                    ));
+
+                    ob_start(); ?>
+
+        <div id="obie-events-calendar-container" class="obie-events-calendar">
+            <!-- Vista Toggle -->
+            <div class="calendar-view-toggle">
+                <button type="button" class="view-toggle-btn <?php echo $view === 'list' ? 'active' : ''; ?>" data-view="list">
+                    Lista
+                </button>
+                <button type="button" class="view-toggle-btn <?php echo $view === 'month' ? 'active' : ''; ?>" data-view="month">
+                    Mes
+                </button>
+            </div>
+
+            <!-- Vista Lista -->
+            <div id="calendar-list-view" class="calendar-view <?php echo $view === 'list' ? 'active' : ''; ?>">
+                <div class="list-navigation">
+                    <button type="button" id="list-prev" class="nav-btn">« Anteriores</button>
+                    <span class="list-info">Próximos eventos</span>
+                    <button type="button" id="list-next" class="nav-btn">Siguientes »</button>
+                </div>
+                <div id="events-list-container" class="events-list">
+                    <div class="loading">Cargando eventos...</div>
+                </div>
+            </div>
+
+            <!-- Vista Mes -->
+            <div id="calendar-month-view" class="calendar-view <?php echo $view === 'month' ? 'active' : ''; ?>">
+                <div class="month-navigation">
+                    <button type="button" id="month-prev" class="nav-btn">« Anterior</button>
+                    <span id="current-month" class="month-title"><?php echo date('F Y'); ?></span>
+                    <button type="button" id="month-next" class="nav-btn">Siguiente »</button>
+                </div>
+                <div id="calendar-grid" class="calendar-grid">
+                    <div class="calendar-header">
+                        <div class="day-header">Dom</div>
+                        <div class="day-header">Lun</div>
+                        <div class="day-header">Mar</div>
+                        <div class="day-header">Mié</div>
+                        <div class="day-header">Jue</div>
+                        <div class="day-header">Vie</div>
+                        <div class="day-header">Sáb</div>
+                    </div>
+                    <div id="calendar-days" class="calendar-days">
+                        <div class="loading">Cargando calendario...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .obie-events-calendar {
+                max-width: 1000px;
+                margin: 0 auto;
+                font-family: Arial, sans-serif;
+            }
+
+            .calendar-view-toggle {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .view-toggle-btn {
+                background: #f0f0f0;
+                border: 1px solid #ddd;
+                padding: 10px 20px;
+                margin: 0 5px;
+                cursor: pointer;
+                border-radius: 5px;
+                transition: all 0.3s ease;
+            }
+
+            .view-toggle-btn.active {
+                background: #0073aa;
+                color: white;
+                border-color: #0073aa;
+            }
+
+            .calendar-view {
+                display: none;
+            }
+
+            .calendar-view.active {
+                display: block;
+            }
+
+            /* Vista Lista */
+            .list-navigation,
+            .month-navigation {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding: 0 10px;
+            }
+
+            .nav-btn {
+                background: #0073aa;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background 0.3s ease;
+            }
+
+            .nav-btn:hover {
+                background: #005a87;
+            }
+
+            .nav-btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+
+            .list-info,
+            .month-title {
+                font-size: 18px;
+                font-weight: bold;
+                color: #333;
+            }
+
+            .events-list {
+                min-height: 200px;
+            }
+
+            .event-item {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 15px;
+                background: white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                transition: transform 0.2s ease;
+            }
+
+            .event-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .event-title {
+                font-size: 18px;
+                font-weight: bold;
+                color: #0073aa;
+                margin-bottom: 8px;
+            }
+
+            .event-title a {
+                text-decoration: none;
+                color: inherit;
+            }
+
+            .event-date {
+                color: #666;
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+
+            .event-time {
+                color: #888;
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+
+            .event-excerpt {
+                color: #555;
+                line-height: 1.5;
+            }
+
+            /* Vista Mes */
+            .calendar-grid {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                overflow: hidden;
+                background: white;
+            }
+
+            .calendar-header {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                background: #f8f9fa;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .day-header {
+                padding: 10px;
+                text-align: center;
+                font-weight: bold;
+                color: #333;
+                border-right: 1px solid #ddd;
+            }
+
+            .day-header:last-child {
+                border-right: none;
+            }
+
+            .calendar-days {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                min-height: 400px;
+            }
+
+            .calendar-day {
+                border-right: 1px solid #eee;
+                border-bottom: 1px solid #eee;
+                min-height: 80px;
+                padding: 5px;
+                position: relative;
+                background: white;
+            }
+
+            .calendar-day:last-child {
+                border-right: none;
+            }
+
+            .calendar-day.other-month {
+                background: #f8f9fa;
+                color: #ccc;
+            }
+
+            .calendar-day.today {
+                background: #e7f3ff;
+            }
+
+            .day-number {
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .day-events {
+                font-size: 11px;
+            }
+
+            .day-event {
+                background: #0073aa;
+                color: white;
+                padding: 2px 4px;
+                margin: 1px 0;
+                border-radius: 3px;
+                cursor: pointer;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .day-event:hover {
+                background: #005a87;
+            }
+
+            .loading {
+                text-align: center;
+                padding: 40px;
+                color: #666;
+            }
+
+            .no-events {
+                text-align: center;
+                padding: 40px;
+                color: #999;
+                font-style: italic;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .calendar-days {
+                    min-height: 300px;
+                }
+
+                .calendar-day {
+                    min-height: 60px;
+                }
+
+                .day-events {
+                    font-size: 10px;
+                }
+
+                .list-navigation,
+                .month-navigation {
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .nav-btn {
+                    padding: 10px 20px;
+                }
+            }
+        </style>
+
+        <script>
+            jQuery(document).ready(function($) {
+                var currentPage = 0;
+                var currentMonth = new Date().getMonth();
+                var currentYear = new Date().getFullYear();
+                var currentView = '<?php echo $view; ?>';
+                var isLoading = false;
+
+                // Cambio de vista
+                $('.view-toggle-btn').on('click', function() {
+                    var newView = $(this).data('view');
+                    if (newView === currentView) return;
+
+                    $('.view-toggle-btn').removeClass('active');
+                    $(this).addClass('active');
+                    $('.calendar-view').removeClass('active');
+                    $('#calendar-' + newView + '-view').addClass('active');
+
+                    currentView = newView;
+
+                    if (newView === 'list') {
+                        loadEventsList(0);
+                    } else {
+                        loadEventsMonth(currentMonth, currentYear);
+                    }
+                });
+
+                // Navegación lista
+                $('#list-prev').on('click', function() {
+                    if (currentPage > 0) {
+                        currentPage--;
+                        loadEventsList(currentPage);
+                    }
+                });
+
+                $('#list-next').on('click', function() {
+                    currentPage++;
+                    loadEventsList(currentPage);
+                });
+
+                // Navegación mes
+                $('#month-prev').on('click', function() {
+                    currentMonth--;
+                    if (currentMonth < 0) {
+                        currentMonth = 11;
+                        currentYear--;
+                    }
+                    loadEventsMonth(currentMonth, currentYear);
+                });
+
+                $('#month-next').on('click', function() {
+                    currentMonth++;
+                    if (currentMonth > 11) {
+                        currentMonth = 0;
+                        currentYear++;
+                    }
+                    loadEventsMonth(currentMonth, currentYear);
+                });
+
+                // Cargar eventos iniciales
+                if (currentView === 'list') {
+                    loadEventsList(0);
+                } else {
+                    loadEventsMonth(currentMonth, currentYear);
+                }
+
+                function loadEventsList(page) {
+                    if (isLoading) return;
+                    isLoading = true;
+
+                    $('#events-list-container').html('<div class="loading">Cargando eventos...</div>');
+                    $('#list-prev').prop('disabled', true);
+                    $('#list-next').prop('disabled', true);
+
+                    $.ajax({
+                        url: obieCalendarData.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'obie_events_get_list',
+                            page: page,
+                            per_page: obieCalendarData.eventsPerPage,
+                            nonce: obieCalendarData.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $('#events-list-container').html(response.data.html);
+                                $('#list-prev').prop('disabled', page === 0);
+                                $('#list-next').prop('disabled', !response.data.has_more);
+                            } else {
+                                $('#events-list-container').html('<div class="no-events">Error al cargar eventos</div>');
+                            }
+                        },
+                        error: function() {
+                            $('#events-list-container').html('<div class="no-events">Error al cargar eventos</div>');
+                        },
+                        complete: function() {
+                            isLoading = false;
+                        }
+                    });
+                }
+
+                function loadEventsMonth(month, year) {
+                    if (isLoading) return;
+                    isLoading = true;
+
+                    $('#calendar-days').html('<div class="loading">Cargando calendario...</div>');
+
+                    var monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                    ];
+                    $('#current-month').text(monthNames[month] + ' ' + year);
+
+                    $.ajax({
+                        url: obieCalendarData.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'obie_events_get_month',
+                            month: month + 1,
+                            year: year,
+                            nonce: obieCalendarData.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $('#calendar-days').html(response.data.html);
+                            } else {
+                                $('#calendar-days').html('<div class="no-events">Error al cargar calendario</div>');
+                            }
+                        },
+                        error: function() {
+                            $('#calendar-days').html('<div class="no-events">Error al cargar calendario</div>');
+                        },
+                        complete: function() {
+                            isLoading = false;
+                        }
+                    });
+                }
+            });
+        </script>
+
+        <?php
+                    return ob_get_clean();
+                }
+
+                public static function ajax_get_events_list()
+                {
+                    if (!wp_verify_nonce($_POST['nonce'], 'obie_events_calendar_nonce')) {
+                        wp_die('Security check failed');
+                    }
+
+                    $page = intval($_POST['page']);
+                    $per_page = intval($_POST['per_page']) ?: 5;
+                    $offset = $page * $per_page;
+
+                    $args = array(
+                        'post_type' => 'event',
+                        'post_status' => 'publish',
+                        'posts_per_page' => $per_page,
+                        'offset' => $offset,
+                        'meta_key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
+                        'orderby' => 'meta_value',
+                        'order' => 'ASC',
+                        'meta_query' => array(
+                            array(
+                                'key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
+                                'value' => date('Y-m-d'),
+                                'compare' => '>='
+                            )
+                        )
+                    );
+
+                    $events = get_posts($args);
+
+                    // Verificar si hay más eventos
+                    $check_args = $args;
+                    $check_args['posts_per_page'] = 1;
+                    $check_args['offset'] = $offset + $per_page;
+                    $has_more = !empty(get_posts($check_args));
+
+                    ob_start();
+
+                    if (!empty($events)) {
+                        foreach ($events as $event) {
+                            $event_date = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+                            $event_start_time = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_start_time', true);
+                            $event_end_time = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_end_time', true);
+                            $event_all_day = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_all_day', true);
+
+                            $formatted_date = date('l, j F Y', strtotime($event_date));
+        ?>
+                <div class="event-item">
+                    <div class="event-title">
+                        <a href="<?php echo get_permalink($event->ID); ?>">
+                            <?php echo esc_html($event->post_title); ?>
+                        </a>
+                    </div>
+                    <div class="event-date"><?php echo $formatted_date; ?></div>
+                    <?php if (!$event_all_day && ($event_start_time || $event_end_time)) : ?>
+                        <div class="event-time">
+                            <?php
+                                if ($event_start_time) echo date('g:i A', strtotime($event_start_time));
+                                if ($event_start_time && $event_end_time) echo ' - ';
+                                if ($event_end_time) echo date('g:i A', strtotime($event_end_time));
+                            ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($event->post_excerpt) : ?>
+                        <div class="event-excerpt"><?php echo esc_html($event->post_excerpt); ?></div>
+                    <?php endif; ?>
+                </div>
+<?php
+                        }
+                    } else {
+                        echo '<div class="no-events">No se encontraron eventos próximos</div>';
+                    }
+
+                    $html = ob_get_clean();
+
+                    wp_send_json_success(array(
+                        'html' => $html,
+                        'has_more' => $has_more
+                    ));
+                }
+
+                public static function ajax_get_events_month()
+                {
+                    if (!wp_verify_nonce($_POST['nonce'], 'obie_events_calendar_nonce')) {
+                        wp_die('Security check failed');
+                    }
+
+                    $month = intval($_POST['month']);
+                    $year = intval($_POST['year']);
+
+                    // Obtener eventos del mes
+                    $start_date = sprintf('%04d-%02d-01', $year, $month);
+                    $end_date = date('Y-m-t', strtotime($start_date));
+
+                    $args = array(
+                        'post_type' => 'event',
+                        'post_status' => 'publish',
+                        'posts_per_page' => -1,
+                        'meta_key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
+                        'orderby' => 'meta_value',
+                        'order' => 'ASC',
+                        'meta_query' => array(
+                            array(
+                                'key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
+                                'value' => array($start_date, $end_date),
+                                'compare' => 'BETWEEN'
+                            )
+                        )
+                    );
+
+                    $events = get_posts($args);
+
+                    // Agrupar eventos por día
+                    $events_by_day = array();
+                    foreach ($events as $event) {
+                        $event_date = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+                        $day = date('j', strtotime($event_date));
+                        if (!isset($events_by_day[$day])) {
+                            $events_by_day[$day] = array();
+                        }
+                        $events_by_day[$day][] = $event;
+                    }
+
+                    // Generar calendario
+                    $first_day_of_month = mktime(0, 0, 0, $month, 1, $year);
+                    $days_in_month = date('t', $first_day_of_month);
+                    $first_day_of_week = date('w', $first_day_of_month);
+
+                    // Días del mes anterior para completar la primera semana
+                    $prev_month_days = $first_day_of_week;
+                    $prev_month = $month == 1 ? 12 : $month - 1;
+                    $prev_year = $month == 1 ? $year - 1 : $year;
+                    $prev_month_last_day = date('t', mktime(0, 0, 0, $prev_month, 1, $prev_year));
+
+                    ob_start();
+
+                    // Días del mes anterior
+                    for ($i = $prev_month_days - 1; $i >= 0; $i--) {
+                        $day = $prev_month_last_day - $i;
+                        echo '<div class="calendar-day other-month">';
+                        echo '<div class="day-number">' . $day . '</div>';
+                        echo '</div>';
+                    }
+
+                    // Días del mes actual
+                    $today = date('Y-m-d');
+                    for ($day = 1; $day <= $days_in_month; $day++) {
+                        $current_date = sprintf('%04d-%02d-%02d', $year, $month, $day);
+                        $is_today = ($current_date === $today);
+
+                        echo '<div class="calendar-day' . ($is_today ? ' today' : '') . '">';
+                        echo '<div class="day-number">' . $day . '</div>';
+
+                        if (isset($events_by_day[$day])) {
+                            echo '<div class="day-events">';
+                            foreach ($events_by_day[$day] as $event) {
+                                echo '<div class="day-event" title="' . esc_attr($event->post_title) . '">';
+                                echo esc_html(substr($event->post_title, 0, 20) . (strlen($event->post_title) > 20 ? '...' : ''));
+                                echo '</div>';
+                            }
+                            echo '</div>';
+                        }
+
+                        echo '</div>';
+                    }
+
+                    // Completar la última semana con días del mes siguiente
+                    $total_cells = ceil(($days_in_month + $first_day_of_week) / 7) * 7;
+                    $remaining_cells = $total_cells - ($days_in_month + $first_day_of_week);
+
+                    for ($day = 1; $day <= $remaining_cells; $day++) {
+                        echo '<div class="calendar-day other-month">';
+                        echo '<div class="day-number">' . $day . '</div>';
+                        echo '</div>';
+                    }
+
+                    $html = ob_get_clean();
+
+                    wp_send_json_success(array(
+                        'html' => $html
+                    ));
                 }
             }
