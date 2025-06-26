@@ -99,8 +99,45 @@ class Obie_Events_CPT
         // Obtener roles de WP
         global $wp_roles;
         $roles = $wp_roles->roles;
+        // Recuperar fecha, hora de inicio, hora final y todo el día
+        $event_date = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+        $event_start_time = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_start_time', true);
+        $event_end_time = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_end_time', true);
+        $event_all_day = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_all_day', true);
 ?>
         <table class="form-table">
+            <tr>
+                <th><label for="event_date">Event Date</label></th>
+                <td><input type="date" id="event_date" name="event_date" value="<?php echo esc_attr($event_date); ?>" /></td>
+            </tr>
+            <tr>
+                <th><label for="event_all_day">
+                        <input type="checkbox" id="event_all_day" name="event_all_day" value="1" <?php checked($event_all_day, '1'); ?> />
+                        All Day Event
+                    </label></th>
+                <td></td>
+            </tr>
+            <tr id="event_start_time_row" style="display: <?php echo ($event_all_day == '1') ? 'none' : 'table-row'; ?>;">
+                <th><label for="event_start_time">Start Time</label></th>
+                <td><input type="time" id="event_start_time" name="event_start_time" value="<?php echo esc_attr($event_start_time); ?>" /></td>
+            </tr>
+            <tr id="event_end_time_row" style="display: <?php echo ($event_all_day == '1') ? 'none' : 'table-row'; ?>;">
+                <th><label for="event_end_time">End Time</label></th>
+                <td><input type="time" id="event_end_time" name="event_end_time" value="<?php echo esc_attr($event_end_time); ?>" /></td>
+            </tr>
+            <script>
+                jQuery(document).ready(function($) {
+                    $('#event_all_day').change(function() {
+                        if (this.checked) {
+                            $('#event_start_time_row').hide();
+                            $('#event_end_time_row').hide();
+                        } else {
+                            $('#event_start_time_row').show();
+                            $('#event_end_time_row').show();
+                        }
+                    });
+                });
+            </script>
             <tr>
                 <th>
                     <label for="with_capacity">
@@ -212,6 +249,16 @@ class Obie_Events_CPT
                     if (!current_user_can('edit_post', $post_id)) {
                         return;
                     }
+
+                    // Guardar fecha, hora de inicio, hora final y todo el día
+                    $event_date = isset($_POST['event_date']) ? sanitize_text_field($_POST['event_date']) : '';
+                    update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', $event_date);
+                    $event_start_time = isset($_POST['event_start_time']) ? sanitize_text_field($_POST['event_start_time']) : '';
+                    update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_start_time', $event_start_time);
+                    $event_end_time = isset($_POST['event_end_time']) ? sanitize_text_field($_POST['event_end_time']) : '';
+                    update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_end_time', $event_end_time);
+                    $event_all_day = isset($_POST['event_all_day']) ? '1' : '0';
+                    update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_all_day', $event_all_day);
 
                     $with_capacity = isset($_POST['with_capacity']) ? '1' : '0';
                     update_post_meta($post_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_with_capacity', $with_capacity);
