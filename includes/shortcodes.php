@@ -148,7 +148,7 @@ class Obie_Events_Shortcodes
 		$atts = shortcode_atts(array(
 			'view' => 'list', // 'list' o 'month'
 			'events_per_page' => 5
-		), $atts, 'obie_events_calendar');
+		), $atts, 'Obie_Events_Calendar');
 
 		$view = sanitize_text_field($atts['view']);
 		$events_per_page = intval($atts['events_per_page']);
@@ -161,6 +161,18 @@ class Obie_Events_Shortcodes
 			'eventsPerPage' => $events_per_page
 		));
 
+		// Obtener categorías y tipos de eventos para los filtros
+		$categories = get_terms(array(
+			'taxonomy' => 'event_category',
+			'hide_empty' => false,
+		));
+
+		$event_types = array(
+			'virtual' => 'Virtual',
+			'in_person' => 'In Person',
+			'hybrid' => 'Hybrid'
+		);
+
 		ob_start(); ?>
 
 		<div id="obie-events-calendar-container" class="obie-events-calendar">
@@ -172,6 +184,46 @@ class Obie_Events_Shortcodes
 				<button type="button" class="view-toggle-btn <?php echo $view === 'month' ? 'active' : ''; ?>" data-view="month">
 					Month
 				</button>
+			</div>
+
+			<!-- Filtros y Búsqueda (solo para vista lista) -->
+			<div id="calendar-filters" class="calendar-filters <?php echo $view === 'list' ? 'active' : ''; ?>">
+				<div class="filters-row">
+					<!-- Barra de búsqueda -->
+					<div class="search-container">
+						<input type="text" id="event-search" placeholder="Search events..." class="search-input">
+						<button type="button" id="clear-search" class="clear-search-btn">×</button>
+					</div>
+
+					<!-- Filtro por tipo de evento -->
+					<div class="filter-group">
+						<label for="event-type-filter">Event Type:</label>
+						<select id="event-type-filter" class="filter-select">
+							<option value="">All Types</option>
+							<?php foreach ($event_types as $value => $label): ?>
+								<option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</div>
+
+					<!-- Filtro por categoría -->
+					<div class="filter-group">
+						<label for="event-category-filter">Category:</label>
+						<select id="event-category-filter" class="filter-select">
+							<option value="">All Categories</option>
+							<?php if (!empty($categories) && !is_wp_error($categories)): ?>
+								<?php foreach ($categories as $category): ?>
+									<option value="<?php echo esc_attr($category->term_id); ?>"><?php echo esc_html($category->name); ?></option>
+								<?php endforeach; ?>
+							<?php endif; ?>
+						</select>
+					</div>
+
+					<!-- Botón para limpiar filtros -->
+					<div class="filter-actions">
+						<button type="button" id="clear-filters" class="clear-filters-btn">Clear Filters</button>
+					</div>
+				</div>
 			</div>
 
 			<!-- Vista Lista -->
@@ -253,6 +305,123 @@ class Obie_Events_Shortcodes
 				box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
 			}
 
+			/* Filtros y búsqueda */
+			.calendar-filters {
+				display: none;
+				background: #f8fafc;
+				border-radius: 12px;
+				padding: 1.5rem;
+				margin-bottom: 2rem;
+				border: 1px solid #e5e7eb;
+			}
+
+			.calendar-filters.active {
+				display: block;
+			}
+
+			.filters-row {
+				display: grid;
+				grid-template-columns: 2fr 1fr 1fr auto;
+				gap: 1rem;
+				align-items: end;
+			}
+
+			.search-container {
+				position: relative;
+			}
+
+			.search-input {
+				width: 100%;
+				padding: 0.75rem 2.5rem 0.75rem 1rem;
+				border: 1px solid #d1d5db;
+				border-radius: 8px;
+				font-size: 1rem;
+				background: white;
+				transition: border-color 0.2s ease, box-shadow 0.2s ease;
+			}
+
+			.search-input:focus {
+				outline: none;
+				border-color: #6366f1;
+				box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+			}
+
+			.clear-search-btn {
+				position: absolute;
+				right: 0.75rem;
+				top: 50%;
+				transform: translateY(-50%);
+				background: none;
+				border: none;
+				font-size: 1.5rem;
+				color: #9ca3af;
+				cursor: pointer;
+				padding: 0;
+				width: 24px;
+				height: 24px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-radius: 50%;
+				transition: all 0.2s ease;
+			}
+
+			.clear-search-btn:hover {
+				background: #f3f4f6;
+				color: #374151;
+			}
+
+			.filter-group {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.filter-group label {
+				font-size: 0.875rem;
+				font-weight: 500;
+				color: #374151;
+				margin-bottom: 0.5rem;
+			}
+
+			.filter-select {
+				padding: 0.75rem;
+				border: 1px solid #d1d5db;
+				border-radius: 8px;
+				font-size: 1rem;
+				background: white;
+				color: #374151;
+				cursor: pointer;
+				transition: border-color 0.2s ease, box-shadow 0.2s ease;
+			}
+
+			.filter-select:focus {
+				outline: none;
+				border-color: #6366f1;
+				box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+			}
+
+			.filter-actions {
+				display: flex;
+				align-items: end;
+			}
+
+			.clear-filters-btn {
+				background: #ef4444;
+				color: white;
+				border: none;
+				padding: 0.75rem 1rem;
+				border-radius: 8px;
+				cursor: pointer;
+				font-size: 0.875rem;
+				font-weight: 500;
+				transition: background-color 0.2s ease;
+				white-space: nowrap;
+			}
+
+			.clear-filters-btn:hover {
+				background: #dc2626;
+			}
+
 			.calendar-view {
 				display: none;
 			}
@@ -323,6 +492,50 @@ class Obie_Events_Shortcodes
 				transform: translateY(-2px);
 				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 				border-color: #d1d5db;
+			}
+
+			.event-meta {
+				display: flex;
+				gap: 1rem;
+				margin-bottom: 1rem;
+				flex-wrap: wrap;
+			}
+
+			.event-type-badge,
+			.event-category-badge {
+				display: inline-flex;
+				align-items: center;
+				padding: 0.25rem 0.75rem;
+				border-radius: 20px;
+				font-size: 0.75rem;
+				font-weight: 500;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+
+			.event-type-badge {
+				background: #dbeafe;
+				color: #1e40af;
+			}
+
+			.event-type-badge.virtual {
+				background: #fef3c7;
+				color: #92400e;
+			}
+
+			.event-type-badge.in_person {
+				background: #d1fae5;
+				color: #065f46;
+			}
+
+			.event-type-badge.hybrid {
+				background: #e0e7ff;
+				color: #3730a3;
+			}
+
+			.event-category-badge {
+				background: #f3f4f6;
+				color: #374151;
 			}
 
 			.event-title {
@@ -468,6 +681,18 @@ class Obie_Events_Shortcodes
 				background: #4f46e5;
 			}
 
+			.day-event.virtual {
+				background: #f59e0b;
+			}
+
+			.day-event.in_person {
+				background: #10b981;
+			}
+
+			.day-event.hybrid {
+				background: #8b5cf6;
+			}
+
 			/* Loading and empty states */
 			.loading {
 				text-align: center;
@@ -492,6 +717,15 @@ class Obie_Events_Shortcodes
 				.obie-events-calendar {
 					margin: 1rem;
 					padding: 1.5rem;
+				}
+
+				.filters-row {
+					grid-template-columns: 1fr;
+					gap: 1rem;
+				}
+
+				.filter-group {
+					margin-bottom: 0.5rem;
 				}
 
 				.calendar-days {
@@ -531,6 +765,10 @@ class Obie_Events_Shortcodes
 				.month-title {
 					font-size: 1.25rem;
 				}
+
+				.event-meta {
+					gap: 0.5rem;
+				}
 			}
 
 			@media (max-width: 480px) {
@@ -552,6 +790,14 @@ class Obie_Events_Shortcodes
 				.day-events {
 					font-size: 0.625rem;
 				}
+
+				.filters-row {
+					grid-template-columns: 1fr;
+				}
+
+				.search-container {
+					margin-bottom: 1rem;
+				}
 			}
 		</style>
 
@@ -562,6 +808,12 @@ class Obie_Events_Shortcodes
 				var currentYear = new Date().getFullYear();
 				var currentView = '<?php echo $view; ?>';
 				var isLoading = false;
+				var searchTimeout;
+
+				// Variables para filtros
+				var currentSearch = '';
+				var currentEventType = '';
+				var currentCategory = '';
 
 				// Cambio de vista
 				$('.view-toggle-btn').on('click', function() {
@@ -573,13 +825,73 @@ class Obie_Events_Shortcodes
 					$('.calendar-view').removeClass('active');
 					$('#calendar-' + newView + '-view').addClass('active');
 
+					// Mostrar/ocultar filtros
+					if (newView === 'list') {
+						$('.calendar-filters').addClass('active');
+					} else {
+						$('.calendar-filters').removeClass('active');
+					}
+
 					currentView = newView;
 
 					if (newView === 'list') {
+						currentPage = 0;
 						loadEventsList(0);
 					} else {
 						loadEventsMonth(currentMonth, currentYear);
 					}
+				});
+
+				// Búsqueda en tiempo real
+				$('#event-search').on('input', function() {
+					var searchTerm = $(this).val().trim();
+					currentSearch = searchTerm;
+
+					// Mostrar/ocultar botón de limpiar búsqueda
+					if (searchTerm) {
+						$('#clear-search').show();
+					} else {
+						$('#clear-search').hide();
+					}
+
+					// Debounce para evitar demasiadas peticiones
+					clearTimeout(searchTimeout);
+					searchTimeout = setTimeout(function() {
+						currentPage = 0;
+						loadEventsList(0);
+					}, 300);
+				});
+
+				// Limpiar búsqueda
+				$('#clear-search').on('click', function() {
+					$('#event-search').val('');
+					currentSearch = '';
+					$(this).hide();
+					currentPage = 0;
+					loadEventsList(0);
+				});
+
+				// Filtros
+				$('#event-type-filter, #event-category-filter').on('change', function() {
+					currentEventType = $('#event-type-filter').val();
+					currentCategory = $('#event-category-filter').val();
+					currentPage = 0;
+					loadEventsList(0);
+				});
+
+				// Limpiar todos los filtros
+				$('#clear-filters').on('click', function() {
+					$('#event-search').val('');
+					$('#event-type-filter').val('');
+					$('#event-category-filter').val('');
+					$('#clear-search').hide();
+
+					currentSearch = '';
+					currentEventType = '';
+					currentCategory = '';
+					currentPage = 0;
+
+					loadEventsList(0);
 				});
 
 				// Navegación lista
@@ -636,6 +948,9 @@ class Obie_Events_Shortcodes
 							action: 'obie_events_get_list',
 							page: page,
 							per_page: obieCalendarData.eventsPerPage,
+							search: currentSearch,
+							event_type: currentEventType,
+							category: currentCategory,
 							nonce: obieCalendarData.nonce
 						},
 						success: function(response) {
@@ -644,7 +959,7 @@ class Obie_Events_Shortcodes
 								$('#list-prev').prop('disabled', page === 0);
 								$('#list-next').prop('disabled', !response.data.has_more);
 							} else {
-								$('#events-list-container').html('<div class="no-events">Error loading events</div>');
+								$('#events-list-container').html('<div class="no-events">No events found</div>');
 							}
 						},
 						error: function() {
@@ -694,191 +1009,297 @@ class Obie_Events_Shortcodes
 			});
 		</script>
 
-		<?php
-		return ob_get_clean();
+<?php return ob_get_clean();
 	}
 
+	// Función AJAX para obtener eventos en vista mensual
 	public static function ajax_get_events_month()
 	{
-		if (!wp_verify_nonce($_POST['nonce'], 'obie_events_calendar_nonce')) {
-			wp_die('Security check failed');
-		}
+		check_ajax_referer('obie_events_calendar_nonce', 'nonce');
 
 		$month = intval($_POST['month']);
 		$year = intval($_POST['year']);
 
-		// Obtener eventos del mes
+		// Crear fechas de inicio y fin del mes
 		$start_date = sprintf('%04d-%02d-01', $year, $month);
 		$end_date = date('Y-m-t', strtotime($start_date));
 
+		// Obtener eventos del mes
 		$args = array(
 			'post_type' => 'event',
-			'post_status' => 'publish',
 			'posts_per_page' => -1,
-			'meta_key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
-			'orderby' => 'meta_value',
-			'order' => 'ASC',
+			'post_status' => 'publish',
 			'meta_query' => array(
 				array(
 					'key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
 					'value' => array($start_date, $end_date),
-					'compare' => 'BETWEEN'
+					'compare' => 'BETWEEN',
+					'type' => 'DATE'
 				)
-			)
+			),
+			'orderby' => 'meta_value',
+			'meta_key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
+			'order' => 'ASC'
 		);
 
-		$events = get_posts($args);
+		$events = new WP_Query($args);
 
-		// Agrupar eventos por día
-		$events_by_day = array();
-		foreach ($events as $event) {
-			$event_date = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
-			$day = date('j', strtotime($event_date));
-			if (!isset($events_by_day[$day])) {
-				$events_by_day[$day] = array();
+		// Organizar eventos por fecha
+		$events_by_date = array();
+		if ($events->have_posts()) {
+			while ($events->have_posts()) {
+				$events->the_post();
+				$event_id = get_the_ID();
+				$event_date = get_post_meta($event_id, 'event_date', true);
+				$event_type = get_post_meta($event_id, 'event_type', true);
+
+				if (!isset($events_by_date[$event_date])) {
+					$events_by_date[$event_date] = array();
+				}
+
+				$events_by_date[$event_date][] = array(
+					'title' => get_the_title(),
+					'url' => get_permalink(),
+					'type' => $event_type
+				);
 			}
-			$events_by_day[$day][] = $event;
 		}
+		wp_reset_postdata();
 
 		// Generar calendario
-		$first_day_of_month = mktime(0, 0, 0, $month, 1, $year);
-		$days_in_month = date('t', $first_day_of_month);
-		$first_day_of_week = date('w', $first_day_of_month);
+		$html = '';
+
+		// Obtener el primer día del mes y cuántos días tiene
+		$first_day = date('w', strtotime($start_date)); // 0 = domingo
+		$days_in_month = date('t', strtotime($start_date));
 
 		// Días del mes anterior para completar la primera semana
-		$prev_month_days = $first_day_of_week;
-		$prev_month = $month == 1 ? 12 : $month - 1;
-		$prev_year = $month == 1 ? $year - 1 : $year;
-		$prev_month_last_day = date('t', mktime(0, 0, 0, $prev_month, 1, $prev_year));
-
-		ob_start();
-
-		// Días del mes anterior
-		for ($i = $prev_month_days - 1; $i >= 0; $i--) {
-			$day = $prev_month_last_day - $i;
-			echo '<div class="calendar-day other-month">';
-			echo '<div class="day-number">' . $day . '</div>';
-			echo '</div>';
+		$prev_month = $month - 1;
+		$prev_year = $year;
+		if ($prev_month < 1) {
+			$prev_month = 12;
+			$prev_year--;
 		}
+		$days_in_prev_month = date('t', strtotime("$prev_year-$prev_month-01"));
 
-		// Días del mes actual
-		$today = date('Y-m-d');
-		for ($day = 1; $day <= $days_in_month; $day++) {
-			$current_date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-			$is_today = ($current_date === $today);
+		$day_counter = 1;
+		$next_month_day = 1;
 
-			echo '<div class="calendar-day' . ($is_today ? ' today' : '') . '">';
-			echo '<div class="day-number">' . $day . '</div>';
+		// Generar 6 semanas (42 días) para asegurar que el calendario esté completo
+		for ($i = 0; $i < 42; $i++) {
+			$day_class = 'calendar-day';
+			$day_number = '';
+			$current_date = '';
 
-			if (isset($events_by_day[$day])) {
-				echo '<div class="day-events">';
-				foreach ($events_by_day[$day] as $event) {
-					echo '<div class="day-event" title="' . esc_attr($event->post_title) . '">';
-					echo esc_html(substr($event->post_title, 0, 20) . (strlen($event->post_title) > 20 ? '...' : ''));
-					echo '</div>';
+			if ($i < $first_day) {
+				// Días del mes anterior
+				$day_number = $days_in_prev_month - $first_day + $i + 1;
+				$day_class .= ' other-month';
+				$prev_month_padded = sprintf('%02d', $prev_month);
+				$current_date = "$prev_year-$prev_month_padded-" . sprintf('%02d', $day_number);
+			} elseif ($day_counter <= $days_in_month) {
+				// Días del mes actual
+				$day_number = $day_counter;
+				$current_date = sprintf('%04d-%02d-%02d', $year, $month, $day_counter);
+
+				// Verificar si es hoy
+				if ($current_date === current_time('Y-m-d')) {
+					$day_class .= ' today';
 				}
-				echo '</div>';
+
+				$day_counter++;
+			} else {
+				// Días del mes siguiente
+				$day_number = $next_month_day;
+				$day_class .= ' other-month';
+				$next_month = $month + 1;
+				$next_year = $year;
+				if ($next_month > 12) {
+					$next_month = 1;
+					$next_year++;
+				}
+				$current_date = sprintf('%04d-%02d-%02d', $next_year, $next_month, $next_month_day);
+				$next_month_day++;
 			}
 
-			echo '</div>';
+			$html .= '<div class="' . $day_class . '" data-date="' . $current_date . '">';
+			$html .= '<div class="day-number">' . $day_number . '</div>';
+
+			// Agregar eventos del día
+			if (isset($events_by_date[$current_date])) {
+				$html .= '<div class="day-events">';
+				foreach ($events_by_date[$current_date] as $event) {
+					$event_class = 'day-event';
+					if ($event['type']) {
+						$event_class .= ' ' . esc_attr($event['type']);
+					}
+					$html .= '<div class="' . $event_class . '" title="' . esc_attr($event['title']) . '">';
+					$html .= '<a href="' . esc_url($event['url']) . '">' . esc_html(wp_trim_words($event['title'], 3)) . '</a>';
+					$html .= '</div>';
+				}
+				$html .= '</div>';
+			}
+
+			$html .= '</div>';
+
+			// Si hemos completado una semana y ya pasamos todos los días del mes, podemos parar
+			if ($i % 7 === 6 && $day_counter > $days_in_month && $next_month_day > 7) {
+				break;
+			}
 		}
-
-		// Completar la última semana con días del mes siguiente
-		$total_cells = ceil(($days_in_month + $first_day_of_week) / 7) * 7;
-		$remaining_cells = $total_cells - ($days_in_month + $first_day_of_week);
-
-		for ($day = 1; $day <= $remaining_cells; $day++) {
-			echo '<div class="calendar-day other-month">';
-			echo '<div class="day-number">' . $day . '</div>';
-			echo '</div>';
-		}
-
-		$html = ob_get_clean();
 
 		wp_send_json_success(array(
 			'html' => $html
 		));
 	}
 
+	// Función AJAX para obtener eventos en vista lista con filtros
 	public static function ajax_get_events_list()
 	{
-		if (!wp_verify_nonce($_POST['nonce'], 'obie_events_calendar_nonce')) {
-			wp_die('Security check failed');
-		}
+		check_ajax_referer('obie_events_calendar_nonce', 'nonce');
 
 		$page = intval($_POST['page']);
-		$per_page = intval($_POST['per_page']) ?: 5;
-		$offset = $page * $per_page;
+		$per_page = intval($_POST['per_page']);
+		$search = sanitize_text_field($_POST['search'] ?? '');
+		$event_type = sanitize_text_field($_POST['event_type'] ?? '');
+		$category = intval($_POST['category'] ?? 0);
 
 		$args = array(
 			'post_type' => 'event',
-			'post_status' => 'publish',
 			'posts_per_page' => $per_page,
-			'offset' => $offset,
-			'meta_key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
+			'offset' => $page * $per_page,
+			'post_status' => 'publish',
 			'orderby' => 'meta_value',
+			'meta_key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
 			'order' => 'ASC',
 			'meta_query' => array(
 				array(
 					'key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_date',
-					'value' => date('Y-m-d'),
+					'value' => current_time('Y-m-d'),
 					'compare' => '>='
 				)
-			)
+			),
+			'tax_query' => array()
 		);
 
-		$events = get_posts($args);
-
-		// Verificar si hay más eventos
-		$check_args = $args;
-		$check_args['posts_per_page'] = 1;
-		$check_args['offset'] = $offset + $per_page;
-		$has_more = !empty(get_posts($check_args));
-
-		ob_start();
-
-		if (!empty($events)) {
-			foreach ($events as $event) {
-				$event_date = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
-				$event_start_time = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_start_time', true);
-				$event_end_time = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_end_time', true);
-				$event_all_day = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_all_day', true);
-				$event_type = get_post_meta($event->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_type', true);
-
-				$formatted_date = date('l, j F Y', strtotime($event_date));
-		?>
-				<div class="event-item">
-					<div class="event-title">
-						<a href="<?php echo get_permalink($event->ID); ?>">
-							<?php echo esc_html($event->post_title); ?>
-						</a>
-					</div>
-					<div class="event-date"><?php echo $formatted_date; ?></div>
-					<div class="event-type"><strong>Type:</strong> <?php echo $event_type === 'virtual' ? 'Virtual' : 'In Person'; ?></div>
-					<?php if (!$event_all_day && ($event_start_time || $event_end_time)) : ?>
-						<div class="event-time">
-							<?php
-							if ($event_start_time) echo date('g:i A', strtotime($event_start_time));
-							if ($event_start_time && $event_end_time) echo ' - ';
-							if ($event_end_time) echo date('g:i A', strtotime($event_end_time));
-							?>
-						</div>
-					<?php endif; ?>
-					<?php if ($event->post_excerpt) : ?>
-						<div class="event-excerpt"><?php echo esc_html($event->post_excerpt); ?></div>
-					<?php endif; ?>
-				</div>
-<?php
-			}
-		} else {
-			echo '<div class="no-events">No upcoming events found</div>';
+		// Agregar búsqueda por título y contenido
+		if (!empty($search)) {
+			$args['s'] = $search;
 		}
 
-		$html = ob_get_clean();
+		// Filtro por tipo de evento
+		if (!empty($event_type)) {
+			$args['meta_query'][] = array(
+				'key' => 'event_type',
+				'value' => $event_type,
+				'compare' => '='
+			);
+		}
+
+		// Filtro por categoría
+		if (!empty($category)) {
+			$args['tax_query'][] = array(
+				'taxonomy' => 'event_category',
+				'field' => 'term_id',
+				'terms' => $category
+			);
+		}
+
+		$events = new WP_Query($args);
+
+		$html = '';
+
+		if ($events->have_posts()) {
+			while ($events->have_posts()) {
+				$events->the_post();
+				$event_id = get_the_ID();
+				$event_date = get_post_meta($event_id, 'event_date', true);
+				$event_time = get_post_meta($event_id, 'event_time', true);
+				$event_type = get_post_meta($event_id, 'event_type', true);
+				$categories = get_the_terms($event_id, 'event_category');
+
+				// Formatear fecha
+				$formatted_date = '';
+				if ($event_date) {
+					$date_obj = DateTime::createFromFormat('Y-m-d', $event_date);
+					if ($date_obj) {
+						$formatted_date = $date_obj->format('F j, Y');
+					}
+				}
+
+				// Formatear hora
+				$formatted_time = '';
+				if ($event_time) {
+					$time_obj = DateTime::createFromFormat('H:i', $event_time);
+					if ($time_obj) {
+						$formatted_time = $time_obj->format('g:i A');
+					}
+				}
+
+				// Obtener extracto
+				$excerpt = get_the_excerpt();
+				if (empty($excerpt)) {
+					$excerpt = wp_trim_words(get_the_content(), 20);
+				}
+
+				$html .= '<div class="event-item">';
+
+				// Meta información (badges)
+				$html .= '<div class="event-meta">';
+
+				// Badge de tipo de evento
+				if ($event_type) {
+					$type_labels = array(
+						'virtual' => 'Virtual',
+						'in_person' => 'In Person',
+						'hybrid' => 'Hybrid'
+					);
+					$type_label = isset($type_labels[$event_type]) ? $type_labels[$event_type] : ucfirst($event_type);
+					$html .= '<span class="event-type-badge ' . esc_attr($event_type) . '">' . esc_html($type_label) . '</span>';
+				}
+
+				// Badge de categoría
+				if ($categories && !is_wp_error($categories)) {
+					foreach ($categories as $category) {
+						$html .= '<span class="event-category-badge">' . esc_html($category->name) . '</span>';
+						break; // Solo mostrar la primera categoría
+					}
+				}
+
+				$html .= '</div>';
+
+				// Título del evento
+				$html .= '<h3 class="event-title"><a href="' . get_permalink() . '">' . get_the_title() . '</a></h3>';
+
+				// Fecha y hora
+				if ($formatted_date) {
+					$html .= '<div class="event-date">' . esc_html($formatted_date) . '</div>';
+				}
+				if ($formatted_time) {
+					$html .= '<div class="event-time">' . esc_html($formatted_time) . '</div>';
+				}
+
+				// Extracto
+				if ($excerpt) {
+					$html .= '<div class="event-excerpt">' . wp_kses_post($excerpt) . '</div>';
+				}
+
+				$html .= '</div>';
+			}
+		} else {
+			$html = '<div class="no-events">No events found matching your criteria.</div>';
+		}
+
+		wp_reset_postdata();
+
+		// Verificar si hay más eventos
+		$total_events = $events->found_posts;
+		$has_more = ($page + 1) * $per_page < $total_events;
 
 		wp_send_json_success(array(
 			'html' => $html,
-			'has_more' => $has_more
+			'has_more' => $has_more,
+			'total' => $total_events
 		));
 	}
 }
