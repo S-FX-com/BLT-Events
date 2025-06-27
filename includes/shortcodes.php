@@ -1050,8 +1050,8 @@ class Obie_Events_Shortcodes
 			while ($events->have_posts()) {
 				$events->the_post();
 				$event_id = get_the_ID();
-				$event_date = get_post_meta($event_id, 'event_date', true);
-				$event_type = get_post_meta($event_id, 'event_type', true);
+				$event_date = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+				$event_type = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_type', true);
 
 				if (!isset($events_by_date[$event_date])) {
 					$events_by_date[$event_date] = array();
@@ -1190,7 +1190,7 @@ class Obie_Events_Shortcodes
 		// Filtro por tipo de evento
 		if (!empty($event_type)) {
 			$args['meta_query'][] = array(
-				'key' => 'event_type',
+				'key' => OBIE_EVENTS_PLUGIN_PREFIX . 'event_type',
 				'value' => $event_type,
 				'compare' => '='
 			);
@@ -1213,9 +1213,9 @@ class Obie_Events_Shortcodes
 			while ($events->have_posts()) {
 				$events->the_post();
 				$event_id = get_the_ID();
-				$event_date = get_post_meta($event_id, 'event_date', true);
-				$event_time = get_post_meta($event_id, 'event_time', true);
-				$event_type = get_post_meta($event_id, 'event_type', true);
+				$event_date = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+				$event_time = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_time', true);
+				$event_type = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_type', true);
 				$categories = get_the_terms($event_id, 'event_category');
 
 				// Formatear fecha
