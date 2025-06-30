@@ -28,6 +28,12 @@ class Obie_Events_Admin_Settings
 		register_setting('obie_events_settings', 'obie_events_currency');
 		register_setting('obie_events_settings', 'obie_events_display_currency');
 		register_setting('obie_events_settings', 'obie_events_display_currency_sign');
+		register_setting('obie_events_settings', 'obie_events_email_template_registration');
+		register_setting('obie_events_settings', 'obie_events_email_template_reminder_24h');
+		register_setting('obie_events_settings', 'obie_events_email_template_reminder_1h');
+		register_setting('obie_events_settings', 'obie_events_email_subject_registration');
+		register_setting('obie_events_settings', 'obie_events_email_subject_reminder_24h');
+		register_setting('obie_events_settings', 'obie_events_email_subject_reminder_1h');
 
 		if (get_option('obie_events_date_format') === false) {
 			update_option('obie_events_date_format', 'Y-m-d');
@@ -157,6 +163,73 @@ class Obie_Events_Admin_Settings
 								</label>
 								<p class="description">Display the currency symbol (e.g., $) before prices</p>
 							</fieldset>
+						</td>
+					</tr>
+
+					<!-- Email Templates Section -->
+					<tr>
+						<th colspan="2">
+							<h2 class="title">Email Templates</h2>
+						</th>
+					</tr>
+					<tr>
+						<th scope="row">Asunto confirmación de registro</th>
+						<td>
+							<input type="text" name="obie_events_email_subject_registration" value="<?php echo esc_attr(get_option('obie_events_email_subject_registration', 'Confirmación de registro para {event_name}')); ?>" class="regular-text" />
+							<p class="description">Variables disponibles: {customer_name}, {event_name}, {event_date} (fecha), {event_time} (hora), {event_url} (enlace al evento)</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Confirmación de registro</th>
+						<td>
+							<?php
+							wp_editor(
+								get_option('obie_events_email_template_registration', 'Hola {customer_name}, tu registro para el evento {event_name} el {event_date} a las {event_time} ha sido recibido.'),
+								'obie_events_email_template_registration',
+								array('textarea_name' => 'obie_events_email_template_registration', 'textarea_rows' => 6)
+							);
+							?>
+							<p class="description">Variables disponibles: {customer_name}, {event_name}, {event_date} (fecha), {event_time} (hora), {event_url} (enlace al evento)</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Asunto recordatorio 24h antes</th>
+						<td>
+							<input type="text" name="obie_events_email_subject_reminder_24h" value="<?php echo esc_attr(get_option('obie_events_email_subject_reminder_24h', 'Recordatorio: tu evento {event_name} es mañana')); ?>" class="regular-text" />
+							<p class="description">Variables disponibles: {customer_name}, {event_name}, {event_date} (fecha), {event_time} (hora), {event_url} (enlace al evento)</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Recordatorio 24h antes</th>
+						<td>
+							<?php
+							wp_editor(
+								get_option('obie_events_email_template_reminder_24h', 'Hola {customer_name}, te recordamos que el evento {event_name} es mañana ({event_date}) a las {event_time}.'),
+								'obie_events_email_template_reminder_24h',
+								array('textarea_name' => 'obie_events_email_template_reminder_24h', 'textarea_rows' => 6)
+							);
+							?>
+							<p class="description">Variables disponibles: {customer_name}, {event_name}, {event_date} (fecha), {event_time} (hora), {event_url} (enlace al evento)</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Asunto recordatorio 1h antes</th>
+						<td>
+							<input type="text" name="obie_events_email_subject_reminder_1h" value="<?php echo esc_attr(get_option('obie_events_email_subject_reminder_1h', 'Recordatorio: tu evento {event_name} comienza en 1 hora')); ?>" class="regular-text" />
+							<p class="description">Variables disponibles: {customer_name}, {event_name}, {event_date} (fecha), {event_time} (hora), {event_url} (enlace al evento)</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Recordatorio 1h antes</th>
+						<td>
+							<?php
+							wp_editor(
+								get_option('obie_events_email_template_reminder_1h', 'Hola {customer_name}, tu evento {event_name} comienza en 1 hora, a las {event_time}.'),
+								'obie_events_email_template_reminder_1h',
+								array('textarea_name' => 'obie_events_email_template_reminder_1h', 'textarea_rows' => 6)
+							);
+							?>
+							<p class="description">Variables disponibles: {customer_name}, {event_name}, {event_date} (fecha), {event_time} (hora), {event_url} (enlace al evento)</p>
 						</td>
 					</tr>
 				</table>

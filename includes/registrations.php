@@ -11,46 +11,46 @@ class Obie_Events_Registrations
 
     public static function event_registration()
     {
-		check_ajax_referer(self::$nonce, self::$nonce);
-		
+        check_ajax_referer(self::$nonce, self::$nonce);
+
         $event_id = intval($_POST['event_id']);
         $name = sanitize_text_field($_POST['customer_name']);
         $email = sanitize_email($_POST['customer_email']);
-		$tickets = !empty($_POST['tickets']) ? json_decode(stripslashes($_POST['tickets']), true) : [];
+        $tickets = !empty($_POST['tickets']) ? json_decode(stripslashes($_POST['tickets']), true) : [];
 
         if (empty($event_id) || empty($name) || empty($email)) {
             wp_send_json_error('Missing required fields');
         }
-		
-		$ticket_types = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
-		$selected_tickets = [];
+
+        $ticket_types = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
+        $selected_tickets = [];
         foreach ($tickets as $ticket) {
             $ticket_type = $ticket_types[$ticket['index']];
-			$selected_tickets[] = [
-				"name" => $ticket_type['name'],
-				"quantity" => $ticket['quantity'],
-				"price" => $ticket_type['price'],
-			];
+            $selected_tickets[] = [
+                "name" => $ticket_type['name'],
+                "quantity" => $ticket['quantity'],
+                "price" => $ticket_type['price'],
+            ];
         }
 
         self::process_registration($event_id, $name, $email, $selected_tickets);
     }
-	
-	public static function process_registration($event_id, $name, $email, $tickets, $coupon = null, $amount_saved = 0, $payment_intent = null)
-	{
+
+    public static function process_registration($event_id, $name, $email, $tickets, $coupon = null, $amount_saved = 0, $payment_intent = null)
+    {
         if (!empty($payment_intent)) {
-			$payment_intent_id = $payment_intent['id'];
-			$amount_paid = $payment_intent['amount'] / 100;
-			$payment_date = $payment_intent['created'];
+            $payment_intent_id = $payment_intent['id'];
+            $amount_paid = $payment_intent['amount'] / 100;
+            $payment_date = $payment_intent['created'];
 
             $registration_data = array(
                 OBIE_EVENTS_PLUGIN_PREFIX . 'event_id' => $event_id,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name' => $name,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email' => $email,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'tickets' => $tickets,
-				OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id' => $payment_intent_id,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id' => $payment_intent_id,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid'      => $amount_paid,
-				OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date'     => $payment_date,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date'     => $payment_date,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'status'           => 'registered'
             );
         } else {
@@ -58,7 +58,7 @@ class Obie_Events_Registrations
                 OBIE_EVENTS_PLUGIN_PREFIX . 'event_id' => $event_id,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name' => $name,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email' => $email,
-				OBIE_EVENTS_PLUGIN_PREFIX . 'tickets' => $tickets,
+                OBIE_EVENTS_PLUGIN_PREFIX . 'tickets' => $tickets,
                 OBIE_EVENTS_PLUGIN_PREFIX . 'status' => 'registered',
             );
         }
@@ -68,7 +68,7 @@ class Obie_Events_Registrations
             'post_type' => Obie_Events_Registrations_CPT::$slug,
             'post_title' =>  'Registration for Event #' . $event_id,
             'post_status' => 'publish',
-			'meta_input' => $registration_data
+            'meta_input' => $registration_data
         ));
 
         if (!empty($coupon)) {
@@ -81,9 +81,32 @@ class Obie_Events_Registrations
         }
 
         if ($registration_id) {
+            // Enviar email de confirmación
+            $event = get_post($event_id);
+            $event_name = $event ? $event->post_title : '';
+            $event_date = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+            $event_time = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_start_time', true);
+            $event_url = get_permalink($event_id);
+
+            $variables = array(
+                '{customer_name}' => $name,
+                '{event_name}'   => $event_name,
+                '{event_date}'   => $event_date,
+                '{event_time}'   => $event_time,
+                '{event_url}'    => $event_url,
+            );
+
+            $subject = get_option('obie_events_email_subject_registration', 'Confirmación de registro para {event_name}');
+            $body = get_option('obie_events_email_template_registration', 'Hola {customer_name}, tu registro para el evento {event_name} el {event_date} a las {event_time} ha sido recibido.');
+
+            $subject = strtr($subject, $variables);
+            $body = strtr($body, $variables);
+
+            wp_mail($email, $subject, $body);
+
             wp_send_json_success('Registration successful');
         } else {
             wp_send_json_error('Failed to save registration');
         }
-	}
+    }
 }
