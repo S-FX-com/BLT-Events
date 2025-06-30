@@ -98,8 +98,8 @@ class Obie_Events_Registrations
                 '{event_url}'    => $event_url,
             );
 
-            $subject = get_option('obie_events_email_subject_registration', 'Confirmación de registro para {event_name}');
-            $body = get_option('obie_events_email_template_registration', 'Hola {customer_name}, tu registro para el evento {event_name} el {event_date} a las {event_time} ha sido recibido.');
+            $subject = get_option('obie_events_email_subject_registration', 'Registration confirmation for {event_name}');
+            $body = get_option('obie_events_email_template_registration', 'Hello {customer_name}, your registration for the event {event_name} on {event_date} at {event_time} has been received.');
 
             $subject = strtr($subject, $variables);
             $body = strtr($body, $variables);
@@ -156,11 +156,11 @@ class Obie_Events_Registrations
             '{event_url}'    => $event_url,
         );
         if ($type === '24h') {
-            $subject = get_option('obie_events_email_subject_reminder_24h', 'Recordatorio: tu evento {event_name} es mañana');
-            $body = get_option('obie_events_email_template_reminder_24h', 'Hola {customer_name}, te recordamos que el evento {event_name} es mañana ({event_date}) a las {event_time}.');
+            $subject = get_option('obie_events_email_subject_reminder_24h', 'Reminder: your event {event_name} is tomorrow');
+            $body = get_option('obie_events_email_template_reminder_24h', 'Hello {customer_name}, this is a reminder that your event {event_name} is tomorrow ({event_date}) at {event_time}.');
         } else {
-            $subject = get_option('obie_events_email_subject_reminder_1h', 'Recordatorio: tu evento {event_name} comienza en 1 hora');
-            $body = get_option('obie_events_email_template_reminder_1h', 'Hola {customer_name}, tu evento {event_name} comienza en 1 hora, a las {event_time}.');
+            $subject = get_option('obie_events_email_subject_reminder_1h', 'Reminder: your event {event_name} starts in 1 hour');
+            $body = get_option('obie_events_email_template_reminder_1h', 'Hello {customer_name}, your event {event_name} starts in 1 hour, at {event_time}.');
         }
         $subject = strtr($subject, $variables);
         $body = strtr($body, $variables);
