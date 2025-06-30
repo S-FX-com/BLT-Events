@@ -173,14 +173,14 @@ class Obie_Events_Admin_Settings
 						</th>
 					</tr>
 					<tr>
-						<th scope="row">Asunto confirmación de registro</th>
+						<th scope="row">Registration confirmation subject</th>
 						<td>
 							<input type="text" name="obie_events_email_subject_registration" value="<?php echo esc_attr(get_option('obie_events_email_subject_registration', 'Registration confirmation for {event_name}')); ?>" class="regular-text" />
 							<p class="description">Available variables: {customer_name}, {event_name}, {event_date} (date), {event_time} (time), {event_url} (event link)</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Confirmación de registro</th>
+						<th scope="row">Registration confirmation</th>
 						<td>
 							<?php
 							wp_editor(
@@ -193,14 +193,14 @@ class Obie_Events_Admin_Settings
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Asunto recordatorio 24h antes</th>
+						<th scope="row">24h reminder subject</th>
 						<td>
 							<input type="text" name="obie_events_email_subject_reminder_24h" value="<?php echo esc_attr(get_option('obie_events_email_subject_reminder_24h', 'Reminder: your event {event_name} is tomorrow')); ?>" class="regular-text" />
 							<p class="description">Available variables: {customer_name}, {event_name}, {event_date} (date), {event_time} (time), {event_url} (event link)</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Recordatorio 24h antes</th>
+						<th scope="row">24h reminder</th>
 						<td>
 							<?php
 							wp_editor(
@@ -213,14 +213,14 @@ class Obie_Events_Admin_Settings
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Asunto recordatorio 1h antes</th>
+						<th scope="row">1h reminder subject</th>
 						<td>
 							<input type="text" name="obie_events_email_subject_reminder_1h" value="<?php echo esc_attr(get_option('obie_events_email_subject_reminder_1h', 'Reminder: your event {event_name} starts in 1 hour')); ?>" class="regular-text" />
 							<p class="description">Available variables: {customer_name}, {event_name}, {event_date} (date), {event_time} (time), {event_url} (event link)</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Recordatorio 1h antes</th>
+						<th scope="row">1h reminder</th>
 						<td>
 							<?php
 							wp_editor(
