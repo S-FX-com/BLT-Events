@@ -7,6 +7,8 @@ class Obie_Events_Registrations
     {
         add_action('wp_ajax_obie_event_registration', array(__CLASS__, 'event_registration'));
         add_action('wp_ajax_nopriv_obie_event_registration', array(__CLASS__, 'event_registration'));
+        add_action('obie_events_send_reminder_24h', array(__CLASS__, 'send_reminder_24h'));
+        add_action('obie_events_send_reminder_1h', array(__CLASS__, 'send_reminder_1h'));
     }
 
     public static function event_registration()
@@ -104,9 +106,64 @@ class Obie_Events_Registrations
 
             wp_mail($email, $subject, $body);
 
+            // Programar recordatorio 24h antes
+            if ($event_date && $event_time) {
+                $event_datetime = strtotime($event_date . ' ' . $event_time);
+                $reminder_24h = $event_datetime - 24 * 3600;
+                $reminder_1h = $event_datetime - 3600;
+                if ($reminder_24h > time()) {
+                    wp_schedule_single_event($reminder_24h, 'obie_events_send_reminder_24h', array($registration_id));
+                }
+                if ($reminder_1h > time()) {
+                    wp_schedule_single_event($reminder_1h, 'obie_events_send_reminder_1h', array($registration_id));
+                }
+            }
+
             wp_send_json_success('Registration successful');
         } else {
             wp_send_json_error('Failed to save registration');
         }
+    }
+
+    // Función para enviar recordatorio 24h antes
+    public static function send_reminder_24h($registration_id)
+    {
+        self::send_reminder($registration_id, '24h');
+    }
+
+    // Función para enviar recordatorio 1h antes
+    public static function send_reminder_1h($registration_id)
+    {
+        self::send_reminder($registration_id, '1h');
+    }
+
+    // Lógica común para enviar recordatorio
+    private static function send_reminder($registration_id, $type)
+    {
+        $event_id = get_post_meta($registration_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_id', true);
+        $name = get_post_meta($registration_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_name', true);
+        $email = get_post_meta($registration_id, OBIE_EVENTS_PLUGIN_PREFIX . 'customer_email', true);
+        $event = get_post($event_id);
+        $event_name = $event ? $event->post_title : '';
+        $event_date = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_date', true);
+        $event_time = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_start_time', true);
+        $event_url = get_permalink($event_id);
+        $variables = array(
+            '{customer_name}' => $name,
+            '{event_name}'   => $event_name,
+            '{event_date}'   => $event_date,
+            '{event_time}'   => $event_time,
+            '{event_url}'    => $event_url,
+        );
+        if ($type === '24h') {
+            $subject = get_option('obie_events_email_subject_reminder_24h', 'Recordatorio: tu evento {event_name} es mañana');
+            $body = get_option('obie_events_email_template_reminder_24h', 'Hola {customer_name}, te recordamos que el evento {event_name} es mañana ({event_date}) a las {event_time}.');
+        } else {
+            $subject = get_option('obie_events_email_subject_reminder_1h', 'Recordatorio: tu evento {event_name} comienza en 1 hora');
+            $body = get_option('obie_events_email_template_reminder_1h', 'Hola {customer_name}, tu evento {event_name} comienza en 1 hora, a las {event_time}.');
+        }
+        $subject = strtr($subject, $variables);
+        $body = strtr($body, $variables);
+        wp_mail($email, $subject, $body);
     }
 }
