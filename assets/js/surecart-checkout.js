@@ -1,5 +1,5 @@
 /**
- * Obie Events — SureCart Checkout Integration
+ * CMT Events — SureCart Checkout Integration
  *
  * Handles ticket quantity selection and builds SureCart checkout URLs
  * with the appropriate line items (price_id + quantity).
@@ -8,23 +8,7 @@
 	"use strict";
 
 	var totalPrice = 0;
-	var checkoutUrl = obieEventSurecartData.checkoutUrl || "/checkout";
-
-	// Handle plus button click
-	$(document).on("click", ".obie-events-surecart-form .plus-btn", function () {
-		var input = $(this).siblings(".sc-ticket-quantity");
-		var value = parseInt(input.val(), 10);
-		input.val(value + 1).trigger("change");
-	});
-
-	// Handle minus button click
-	$(document).on("click", ".obie-events-surecart-form .minus-btn", function () {
-		var input = $(this).siblings(".sc-ticket-quantity");
-		var value = parseInt(input.val(), 10);
-		if (value > 0) {
-			input.val(value - 1).trigger("change");
-		}
-	});
+	var checkoutUrl = (window.cmtSurecartData && cmtSurecartData.checkoutUrl) || "/checkout";
 
 	// Calculate total when quantities change and update checkout button
 	$(document).on("change", ".sc-ticket-quantity", function () {
@@ -43,12 +27,12 @@
 		totalPrice = total;
 
 		// Update total display
-		$(".obie-events-surecart-form .total-amount").text(
+		$(".cmt-surecart-form .cmt-total-amount, .obie-events-surecart-form .total-amount").text(
 			formatPrice(totalPrice, true)
 		);
 
 		// Enable/disable checkout button
-		var checkoutBtn = $("#obie-sc-checkout-btn");
+		var checkoutBtn = $("#cmt-sc-checkout-btn, #obie-sc-checkout-btn");
 		if (hasTickets) {
 			checkoutBtn.prop("disabled", false);
 			checkoutBtn.text(
@@ -61,7 +45,7 @@
 	});
 
 	// Handle checkout button click — build URL and redirect
-	$(document).on("click", "#obie-sc-checkout-btn", function (e) {
+	$(document).on("click", "#cmt-sc-checkout-btn, #obie-sc-checkout-btn", function (e) {
 		e.preventDefault();
 
 		var lineItems = [];
@@ -98,24 +82,18 @@
 
 	/**
 	 * Build a SureCart checkout URL with line items as query parameters.
-	 *
-	 * Format: /checkout?line_items[0][price_id]=xxx&line_items[0][quantity]=1
 	 */
 	function buildCheckoutUrl(lineItems) {
 		var params = [];
 
 		for (var i = 0; i < lineItems.length; i++) {
 			params.push(
-				"line_items[" +
-					i +
-					"][price_id]=" +
-					encodeURIComponent(lineItems[i].price_id)
+				"line_items[" + i + "][price_id]=" +
+				encodeURIComponent(lineItems[i].price_id)
 			);
 			params.push(
-				"line_items[" +
-					i +
-					"][quantity]=" +
-					encodeURIComponent(lineItems[i].quantity)
+				"line_items[" + i + "][quantity]=" +
+				encodeURIComponent(lineItems[i].quantity)
 			);
 		}
 
@@ -127,14 +105,14 @@
 	 * Show a message in the checkout message area.
 	 */
 	function showMessage(message, type) {
-		var el = $("#sc-checkout-message");
+		var el = $("#cmt-sc-message, #sc-checkout-message");
 		if (!message) {
 			el.hide().text("");
 			return;
 		}
 		el.text(message)
-			.removeClass("sc-message-error sc-message-success")
-			.addClass(type === "error" ? "sc-message-error" : "sc-message-success")
+			.removeClass("cmt-msg-error cmt-msg-success sc-message-error sc-message-success")
+			.addClass(type === "error" ? "cmt-msg-error" : "cmt-msg-success")
 			.show();
 	}
 })(jQuery);

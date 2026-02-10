@@ -1,19 +1,102 @@
+/* ========================================
+   CMT Events - Admin Styles
+   ======================================== */
+
+/* --- Settings Page --- */
+.cmt-events-settings .form-table th {
+	width: 200px;
+}
+
+.cmt-events-settings h2.title {
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid #e5e7eb;
+	margin-top: 1.5rem;
+}
+
+/* --- Event Metabox --- */
+.cmt-event-details .form-table {
+	margin-top: 0;
+}
+
+.cmt-event-details .form-table th {
+	width: 140px;
+	padding: 10px 10px 10px 0;
+}
+
+.cmt-event-details .form-table td {
+	padding: 8px 10px;
+}
+
+/* --- Ticket Types Table --- */
+.cmt-tickets-table {
+	margin-top: 0.5rem;
+}
+
+.cmt-tickets-table thead th {
+	padding: 8px 10px;
+	font-weight: 600;
+}
+
+.cmt-tickets-table tbody td {
+	padding: 6px 8px;
+	vertical-align: middle;
+}
+
+.cmt-ticket-row .widefat {
+	width: 100%;
+}
+
+.cmt-remove-ticket {
+	color: #dc2626;
+}
+
+#cmt-add-ticket {
+	margin-top: 0.5rem;
+}
+
+/* --- Registration Config --- */
+.cmt-group-discount-settings {
+	margin-top: 0.5rem;
+	padding: 1rem;
+	background: #f9fafb;
+	border-radius: 6px;
+}
+
+.cmt-group-discount-settings label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+/* --- Registrations Summary Sidebar --- */
+.cmt-registrations-summary p {
+	margin: 0.5rem 0;
+}
+
+.cmt-registrations-summary .button {
+	margin-top: 0.75rem;
+}
+
+/* --- Status Badges --- */
 .status-active {
-	color: #46b450;
-	font-weight: bold;
+	color: #059669;
+	font-weight: 600;
 }
+
 .status-inactive {
-	color: #dc3232;
-	font-weight: bold;
+	color: #dc2626;
+	font-weight: 600;
 }
+
 .expired {
-	color: #dc3232;
-	font-style: italic;
+	color: #dc2626;
+	font-weight: 600;
 }
 
 .status-pending,
-.status-registered,
-.status-cancelled {
+.status-confirmed,
+.status-cancelled,
+.status-refunded {
 	display: inline-block;
 	padding: 3px 8px;
 	border-radius: 3px;
@@ -21,33 +104,31 @@
 }
 
 .status-pending {
-	background-color: #f0f0f1;
-	color: #646970;
+	background-color: #fef3c7;
+	color: #92400e;
 }
 
-.status-registered {
-	background-color: #00a32a;
-	color: #fff;
+.status-confirmed {
+	background-color: #d1fae5;
+	color: #065f46;
 }
 
 .status-cancelled {
-	background-color: #d63638;
-	color: #fff;
+	background-color: #fee2e2;
+	color: #991b1b;
 }
 
+.status-refunded {
+	background-color: #f3f4f6;
+	color: #4b5563;
+}
+
+/* --- Coupon Generate Button --- */
+#generate_coupon_code {
+	margin-left: 0.5rem;
+}
+
+/* --- General Admin Tweaks --- */
 .widefat td {
 	vertical-align: middle;
-}
-
-/* Settings Page */
-.wrap.obie-events h2.title {
-	padding: 1rem 0 0.5rem;
-	margin: 0;
-	font-size: 1.3em;
-	border-bottom: 1px solid #ccc;
-}
-
-.wrap.obie-events .form-table fieldset label {
-	display: block;
-	margin: 0.5em 0;
 }
