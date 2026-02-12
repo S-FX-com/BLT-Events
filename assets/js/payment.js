@@ -1,228 +1,151 @@
+/**
+ * CMT Events - Stripe Payment Integration
+ *
+ * Handles Stripe card element, payment intent creation,
+ * and payment confirmation flow.
+ */
 (function ($) {
 	"use strict";
 
-	// Import Stripe.js
-	let stripe = null;
-	if (typeof Stripe === "function") {
-		stripe = Stripe(obieEventPaymentData.stripeKey);
-	} else {
-		console.error("Stripe.js is not loaded.");
-		return; // Exit early if Stripe.js is not loaded
+	var stripe, cardElement;
+
+	$(document).ready(function () {
+		var data = window.cmtStripeData;
+		if (!data || !data.publishableKey) return;
+
+		stripe = Stripe(data.publishableKey);
+		var elements = stripe.elements();
+
+		cardElement = elements.create("card", {
+			style: {
+				base: {
+					fontSize: "16px",
+					color: "#374151",
+					"::placeholder": { color: "#9ca3af" },
+				},
+			},
+		});
+
+		var cardEl = document.getElementById("cmt-card-element");
+		if (cardEl) {
+			cardElement.mount("#cmt-card-element");
+		}
+
+		cardElement.on("change", function (event) {
+			var errorsEl = document.getElementById("cmt-card-errors");
+			if (errorsEl) {
+				errorsEl.textContent = event.error ? event.error.message : "";
+			}
+		});
+	});
+
+	// Intercept form submission for Stripe payments
+	$(document).on("submit", "#cmt-registration-form", function (e) {
+		var data = window.cmtRegData || {};
+
+		// Only handle Stripe paid events
+		if (data.provider !== "stripe") return;
+
+		var totalEl = $(".cmt-registration-form .cmt-total-amount");
+		var totalText = totalEl.text();
+		var amount = parseFloat(totalText.replace(/[^0-9.]/g, ""));
+		if (!amount || amount <= 0) return; // Free event — let registration-form.js handle
+
+		e.preventDefault();
+
+		var btn = $("#cmt-submit-btn");
+		btn.prop("disabled", true).text("Processing payment...");
+
+		// Step 1: Create Payment Intent
+		$.ajax({
+			url: cmtStripeData.ajaxUrl,
+			method: "POST",
+			data: {
+				action: "cmt_create_payment_intent",
+				nonce: cmtStripeData.nonce,
+				event_id: data.eventId,
+				amount: amount,
+			},
+			success: function (response) {
+				if (!response.success) {
+					showError(response.data.message);
+					btn.prop("disabled", false).text("Register & Pay");
+					return;
+				}
+
+				// Step 2: Confirm card payment
+				stripe
+					.confirmCardPayment(response.data.clientSecret, {
+						payment_method: { card: cardElement },
+					})
+					.then(function (result) {
+						if (result.error) {
+							showError(result.error.message);
+							btn.prop("disabled", false).text("Register & Pay");
+							return;
+						}
+
+						if (result.paymentIntent.status === "succeeded") {
+							// Step 3: Create registration with confirmed payment
+							confirmRegistration(
+								result.paymentIntent.id,
+								data.eventId
+							);
+						}
+					});
+			},
+			error: function () {
+				showError("Could not create payment. Please try again.");
+				btn.prop("disabled", false).text("Register & Pay");
+			},
+		});
+	});
+
+	function confirmRegistration(paymentIntentId, eventId) {
+		var formData = $("#cmt-registration-form").serializeArray();
+		formData.push({
+			name: "action",
+			value: "cmt_confirm_stripe_payment",
+		});
+		formData.push({ name: "nonce", value: cmtStripeData.nonce });
+		formData.push({ name: "payment_intent_id", value: paymentIntentId });
+
+		$.ajax({
+			url: cmtStripeData.ajaxUrl,
+			method: "POST",
+			data: $.param(formData),
+			success: function (response) {
+				var msgEl = $("#cmt-form-messages");
+				if (response.success) {
+					msgEl
+						.text(response.data.message)
+						.removeClass("cmt-msg-error")
+						.addClass("cmt-msg-success")
+						.show();
+					$(
+						"#cmt-registration-form fieldset, #cmt-registration-form input, #cmt-registration-form select, #cmt-registration-form textarea, #cmt-registration-form button"
+					).prop("disabled", true);
+					$("#cmt-submit-btn").text("Registration Complete");
+				} else {
+					showError(response.data.message);
+					$("#cmt-submit-btn")
+						.prop("disabled", false)
+						.text("Register & Pay");
+				}
+			},
+			error: function () {
+				showError(
+					"Payment succeeded but registration failed. Please contact support."
+				);
+			},
+		});
 	}
 
-	let elements = stripe.elements();
-	let card = null;
-	let totalPrice = 0;
-	let couponApplied = null;
-	let cardDestroyed = true; // Add flag to track if card has been properly destroyed
-
-	// Function to cleanup card element
-	const destroyCard = () => {
-		if (!card) return;
-
-		card.destroy(); // Use destroy() instead of unmount()
-		card = null;
-		cardDestroyed = true;
-
-		const errorElement = $("#card-errors");
-		if (errorElement) errorElement.text("");
-	};
-
-	// Function to create and mount card element
-	const createCard = () => {
-		// Only create new card if previous one was destroyed
-		if (!cardDestroyed) return;
-
-		card = elements.create("card");
-		card.mount("#card-element");
-		card.addEventListener("change", function (event) {
-			let displayError = $("#card-errors");
-			if (displayError) displayError.text(event.error ? event.error.message : "");
-		});
-		cardDestroyed = false;
-	};
-
-	// Handle plus button click
-	$(".plus-btn").on("click", function () {
-		var input = $(this).siblings(".ticket-quantity");
-		var value = parseInt(input.val());
-		input.val(value + 1).trigger("change");
-	});
-
-	// Handle minus button click
-	$(".minus-btn").on("click", function () {
-		var input = $(this).siblings(".ticket-quantity");
-		var value = parseInt(input.val());
-		if (value > 0) input.val(value - 1).trigger("change");
-	});
-
-	// Calculate the total when quantities change
-	$(".ticket-quantity").on("change", function () {
-		let total = 0;
-		let totalDiscount = 0;
-
-		$(".ticket-quantity").each(function () {
-			const quantity = Number.parseInt($(this).val(), 10);
-			const price = Number.parseFloat($(this).data("price"));
-			if (!isNaN(quantity) && !isNaN(price)) {
-				total += quantity * price;
-			}
-		});
-
-		totalPrice = total;
-
-		if (couponApplied) {
-			totalDiscount = couponApplied.discount_type == "percentage" ? (totalPrice * couponApplied.amount) / 100 : couponApplied.amount;
-			$(".coupon-discount-amount").text(formatPrice(totalDiscount));
-		}
-
-		$(".total-amount").text(formatPrice(totalPrice - totalDiscount, true));
-
-		if (totalPrice > 0) {
-			createCard();
-			$("#obie-events-reserve-button").text("Purchase tickets");
-		} else {
-			destroyCard();
-			$("#obie-events-reserve-button").text("Reserve now");
-		}
-	});
-
-	const applyCoupon = (coupon) => {
-		$("#coupon-form").hide();
-		$("#coupon-discount").show();
-
-		$('input[name="coupon_code"]').val("");
-		$('input[name="applied_coupon"]').val(coupon.coupon_code);
-
-		$("#coupon-message").text("Coupon applied");
-
-		couponApplied = coupon;
-
-		const discount_amount = coupon.discount_type == "percentage" ? (totalPrice * coupon.amount) / 100 : coupon.amount;
-		$(".coupon-discount-amount").text(formatPrice(discount_amount));
-
-		$(".total-amount").text(formatPrice(totalPrice - discount_amount, true));
-	};
-
-	const removeCoupon = () => {
-		$("#coupon-form").show();
-		$("#coupon-discount").hide();
-
-		$('input[name="coupon_code"]').val("");
-		$('input[name="applied_coupon"]').val("");
-
-		$("#coupon-message").text("");
-
-		couponApplied = null;
-
-		$(".coupon-discount-amount").text("");
-
-		$(".total-amount").text(formatPrice(totalPrice, true));
-	};
-
-	//
-	$("#obie-events-apply-coupon").on("click", async function () {
-		const code = $("#coupon_code").val();
-		if (!code) {
-			$("#coupon-message").text("Please enter a coupon code.");
-			return;
-		}
-
-		try {
-			const response = await $.ajax({
-				url: obieEventPaymentData.ajaxUrl,
-				type: "POST",
-				data: {
-					action: "obie_validate_coupon",
-					coupon_code: code,
-					event_id: $('input[name="event_id"]').val(),
-					oe_coupon_nonce: $('input[name="oe_coupon_nonce"]').val(),
-				},
-			});
-
-			if (!response.success) throw response?.data;
-			applyCoupon(response.data.coupon);
-		} catch (error) {
-			const errorElement = $("#coupon-message");
-			if (errorElement) {
-				errorElement.text(error.message);
-			}
-			console.error("Coupon error:", error);
-		}
-	});
-
-	//
-	$("#obie-events-remove-coupon").on("click", function () {
-		removeCoupon();
-	});
-
-	// Manage form submission
-	let form = $("#obie-events-registration-form");
-	if (form) {
-		form.on("submit", async function (event) {
-			event.preventDefault();
-			let tickets = [];
-			let totalTickets = 0;
-
-			$(".ticket-quantity").each(function () {
-				const quantity = Number.parseInt($(this).val(), 10);
-				if (!isNaN(quantity) && quantity > 0) {
-					totalTickets += quantity;
-					tickets.push({
-						index: $(this).data("index"),
-						quantity: quantity,
-					});
-				}
-			});
-
-			let ticketSelection = $(".ticket-selection");
-			if (ticketSelection.length !== 0 && totalTickets <= 0) {
-				alert("Please select at least one ticket");
-				return;
-			}
-
-			try {
-				const response = await $.ajax({
-					url: obieEventPaymentData.ajaxUrl,
-					type: "POST",
-					data: {
-						action: totalPrice > 0 ? "obie_create_payment_intent" : "obie_event_registration",
-						event_id: $('input[name="event_id"]').val(),
-						customer_name: $('input[name="customer_name"]').val(),
-						customer_email: $('input[name="customer_email"]').val(),
-						tickets: JSON.stringify(tickets),
-						coupon_code: couponApplied ? couponApplied.coupon_code : null,
-						oe_registration_nonce: $('input[name="oe_registration_nonce"]').val(),
-					},
-				});
-
-				if (!response.success) throw new Error(response.data.error);
-
-				if (totalPrice > 0) {
-					// Confirm Payment
-					const result = await stripe.confirmCardPayment(response.data.clientSecret, {
-						payment_method: {
-							card: card,
-							billing_details: {
-								name: $('input[name="customer_name"]').val(),
-								email: $('input[name="customer_email"]').val(),
-							},
-						},
-					});
-
-					if (result.error) throw new Error(result.error.message);
-				}
-
-				// Registered
-				alert("Your tickets have been registered.");
-				window.location.reload();
-			} catch (error) {
-				const errorElement = $("#card-errors");
-				if (errorElement) {
-					errorElement.text(error.message);
-				}
-				console.error("Payment error:", error);
-			}
-		});
+	function showError(message) {
+		$("#cmt-form-messages")
+			.text(message)
+			.removeClass("cmt-msg-success")
+			.addClass("cmt-msg-error")
+			.show();
 	}
 })(jQuery);

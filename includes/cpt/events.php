@@ -86,6 +86,52 @@ class Obie_Events_CPT
             'normal',
             'high'
         );
+
+        // Add SureCart sync status meta box when SureCart is the payment provider
+        if (get_option('obie_events_payment_provider') === 'surecart') {
+            add_meta_box(
+                'event_surecart_sync',
+                'SureCart Integration',
+                array(__CLASS__, 'render_surecart_meta_box'),
+                self::$slug,
+                'side',
+                'default'
+            );
+        }
+    }
+
+    public static function render_surecart_meta_box($post)
+    {
+        $sc_product_ids = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'sc_product_ids', true) ?: array();
+        $sc_price_ids   = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'sc_price_ids', true) ?: array();
+        $ticket_types   = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
+        $by_tickets     = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', true);
+
+        if (!$by_tickets || empty($ticket_types)) {
+            echo '<p>Enable tickets and save the event to sync with SureCart.</p>';
+            return;
+        }
+
+        $has_synced = !empty($sc_product_ids) && !empty($sc_price_ids);
+        $status_class = $has_synced ? 'color: #059669;' : 'color: #dc2626;';
+        $status_text  = $has_synced ? 'Synced' : 'Not synced';
+
+        echo '<p><strong>Status:</strong> <span style="' . esc_attr($status_class) . '">' . esc_html($status_text) . '</span></p>';
+
+        if ($has_synced) {
+            echo '<table class="widefat fixed" style="font-size: 12px;">';
+            echo '<thead><tr><th>Ticket</th><th>SureCart ID</th></tr></thead><tbody>';
+            foreach ($ticket_types as $index => $ticket) {
+                $synced = isset($sc_product_ids[$index]) && isset($sc_price_ids[$index]);
+                echo '<tr>';
+                echo '<td>' . esc_html($ticket['name']) . '</td>';
+                echo '<td>' . ($synced ? '<span style="color:#059669;">OK</span>' : '<span style="color:#dc2626;">Missing</span>') . '</td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table>';
+        }
+
+        echo '<p class="description">Products sync automatically when you save the event. SureCart checkout will use these synced products.</p>';
     }
 
     public static function render_meta_box($post)

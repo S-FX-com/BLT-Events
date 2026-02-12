@@ -1,0 +1,230 @@
+/* ========================================
+   CMT Events - Calendar / Event List Styles
+   ======================================== */
+
+.cmt-events-calendar {
+	max-width: 960px;
+	margin: 0 auto;
+}
+
+.cmt-events-empty {
+	padding: 3rem;
+	text-align: center;
+	color: #6b7280;
+	font-size: 1.1rem;
+}
+
+/* --- List View --- */
+.cmt-events-list .cmt-event-card {
+	display: flex;
+	gap: 1.5rem;
+	padding: 1.5rem;
+	margin-bottom: 1rem;
+	background: #ffffff;
+	border-radius: 12px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	transition: box-shadow 0.2s;
+}
+
+.cmt-events-list .cmt-event-card:hover {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.cmt-events-list .cmt-event-image {
+	flex-shrink: 0;
+	width: 200px;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.cmt-events-list .cmt-event-image img {
+	width: 100%;
+	height: 140px;
+	object-fit: cover;
+}
+
+.cmt-event-content {
+	display: flex;
+	gap: 1rem;
+	flex: 1;
+	min-width: 0;
+}
+
+/* --- Date Badge --- */
+.cmt-event-date-badge {
+	flex-shrink: 0;
+	width: 56px;
+	text-align: center;
+	padding: 0.5rem;
+	background: #f0f0ff;
+	border-radius: 8px;
+	height: fit-content;
+}
+
+.cmt-date-month {
+	display: block;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: #6366f1;
+	letter-spacing: 0.05em;
+}
+
+.cmt-date-day {
+	display: block;
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #1f2937;
+	line-height: 1.2;
+}
+
+/* --- Event Details --- */
+.cmt-event-details {
+	flex: 1;
+	min-width: 0;
+}
+
+.cmt-event-title {
+	margin: 0 0 0.5rem;
+	font-size: 1.15rem;
+	line-height: 1.3;
+}
+
+.cmt-event-title a {
+	color: #1f2937;
+	text-decoration: none;
+}
+
+.cmt-event-title a:hover {
+	color: #6366f1;
+}
+
+.cmt-event-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+	margin-bottom: 0.5rem;
+	color: #6b7280;
+	font-size: 0.875rem;
+}
+
+.cmt-event-meta span::before {
+	margin-right: 0.25rem;
+}
+
+.cmt-event-excerpt {
+	color: #6b7280;
+	font-size: 0.9rem;
+	margin: 0.5rem 0;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* --- Event Footer --- */
+.cmt-event-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 0.75rem;
+}
+
+.cmt-event-price {
+	font-weight: 600;
+	color: #1f2937;
+	font-size: 1rem;
+}
+
+.cmt-event-price.cmt-free {
+	color: #059669;
+}
+
+.cmt-btn-register {
+	display: inline-block;
+	padding: 0.5rem 1.25rem;
+	background: #6366f1;
+	color: #ffffff;
+	border-radius: 6px;
+	font-size: 0.9rem;
+	font-weight: 500;
+	text-decoration: none;
+	transition: background 0.15s;
+}
+
+.cmt-btn-register:hover {
+	background: #4f46e5;
+	color: #ffffff;
+}
+
+/* --- Grid View --- */
+.cmt-events-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1.5rem;
+}
+
+.cmt-events-grid .cmt-event-card {
+	display: flex;
+	flex-direction: column;
+	background: #ffffff;
+	border-radius: 12px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+	transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.cmt-events-grid .cmt-event-card:hover {
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+	transform: translateY(-2px);
+}
+
+.cmt-events-grid .cmt-event-image {
+	width: 100%;
+	height: 180px;
+	overflow: hidden;
+}
+
+.cmt-events-grid .cmt-event-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.cmt-events-grid .cmt-event-content {
+	padding: 1.25rem;
+	flex-direction: column;
+}
+
+.cmt-events-grid .cmt-event-date-badge {
+	position: absolute;
+	top: -28px;
+	right: 12px;
+	background: #ffffff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cmt-events-grid .cmt-event-details {
+	position: relative;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+	.cmt-events-list .cmt-event-card {
+		flex-direction: column;
+	}
+
+	.cmt-events-list .cmt-event-image {
+		width: 100%;
+	}
+
+	.cmt-events-list .cmt-event-image img {
+		height: 200px;
+	}
+
+	.cmt-event-footer {
+		flex-direction: column;
+		gap: 0.75rem;
+		align-items: flex-start;
+	}
+}

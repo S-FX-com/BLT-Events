@@ -164,14 +164,22 @@ class Obie_Events_Registrations_CPT
                 {
                     wp_nonce_field('payment_details', 'payment_details_nonce');
 
-                    $payment_intent_id = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id', true) ?: "No payment processed";
-                    $amount_paid = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
-                    $payment_date = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date', true) ?: 0;
+                    $payment_intent_id = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_intent_id', true) ?: 'No payment processed';
+                    $amount_paid       = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'amount_paid', true) ?: 0;
+                    $payment_date      = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_date', true) ?: 0;
+                    $payment_provider  = get_post_meta($post->ID, OBIE_EVENTS_PLUGIN_PREFIX . 'payment_provider', true) ?: 'stripe';
+
+                    $provider_label = ($payment_provider === 'surecart') ? 'SureCart' : 'Stripe';
+                    $id_label       = ($payment_provider === 'surecart') ? 'SureCart Checkout ID' : 'Stripe Payment Intent ID';
 
                     ?>
         <table class="form-table">
             <tr>
-                <th><label>Payment Intent ID</label></th>
+                <th><label>Payment Provider</label></th>
+                <td><?php echo esc_html($provider_label); ?></td>
+            </tr>
+            <tr>
+                <th><label><?php echo esc_html($id_label); ?></label></th>
                 <td><?php echo esc_html($payment_intent_id); ?></td>
             </tr>
             <tr>

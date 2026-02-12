@@ -3,7 +3,7 @@
 Plugin Name: Obie Events
 Plugin URI: edit.php?post_type=event&page=obie-events-settings
 Description: A plugin to manage events, tickets, and registrations
-Version: 1.0
+Version: 1.1
 Author: S-FX.COM
 Author URI: https://s-fx.com
 License: GPL2
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('OBIE_EVENTS_VERSION', '1.0');
+define('OBIE_EVENTS_VERSION', '1.1');
 define('OBIE_EVENTS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OBIE_EVENTS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('OBIE_EVENTS_PLUGIN_PATH', 'obie-events');
@@ -32,6 +32,7 @@ $includes = [
     'includes/registrations.php',
     'includes/coupons.php',
     'includes/payment/stripe-handler.php',
+    'includes/surecart/class-surecart-integration.php',
 ];
 
 foreach ($includes as $file) {
@@ -78,21 +79,28 @@ function Obie_Events_Init()
     if (class_exists('Obie_Events_Stripe')) {
         Obie_Events_Stripe::init();
     }
+
+    if (class_exists('Obie_Events_SureCart')) {
+        Obie_Events_SureCart::init();
+    }
 }
 
 add_action('plugins_loaded', 'Obie_Events_Init');
 
-function obie_events_enqueue_assets() 
+function obie_events_enqueue_assets()
 {
-    wp_enqueue_style('obie-events-styles', OBIE_EVENTS_PLUGIN_URL . 'assets/css/obie-events.css', array(), false);
-    wp_enqueue_script('obie-events-js', OBIE_EVENTS_PLUGIN_URL . 'assets/js/obie-events.js', array('jquery'), false, true);
+    wp_enqueue_style('obie-events-styles', OBIE_EVENTS_PLUGIN_URL . 'assets/css/obie-events.css', array(), OBIE_EVENTS_VERSION);
+    wp_enqueue_script('obie-events-js', OBIE_EVENTS_PLUGIN_URL . 'assets/js/obie-events.js', array('jquery'), OBIE_EVENTS_VERSION, true);
+
+    $payment_provider = get_option('obie_events_payment_provider', 'stripe');
 
     wp_localize_script('obie-events-js', 'obieEventData', array(
-        'ajaxUrl' => admin_url('admin-ajax.php'),
-        'currency' => get_option('obie_events_currency'),
-        'showCurrency' => get_option('obie_events_display_currency'),
-        'showSymbol' => get_option('obie_events_display_currency_sign'),
-        'currencySymbol' => array('USD' => '$'),
+        'ajaxUrl'         => admin_url('admin-ajax.php'),
+        'currency'        => get_option('obie_events_currency'),
+        'showCurrency'    => get_option('obie_events_display_currency'),
+        'showSymbol'      => get_option('obie_events_display_currency_sign'),
+        'currencySymbol'  => array('USD' => '$'),
+        'paymentProvider' => $payment_provider,
     ));
 }
 

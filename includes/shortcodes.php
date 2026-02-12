@@ -16,13 +16,32 @@ class Obie_Events_Shortcodes
 
 	public static function enqueue_scripts()
 	{
-		wp_enqueue_script('stripe-js', 'https://js.stripe.com/v3/', array(), null, true);
-		wp_enqueue_script('obie-events-payment', OBIE_EVENTS_PLUGIN_URL . 'assets/js/payment.js', array('jquery', 'obie-events-js', 'stripe-js'), '1.0', true);
+		$payment_provider = get_option('obie_events_payment_provider', 'stripe');
 
-		wp_localize_script('obie-events-payment', 'obieEventPaymentData', array(
-			'ajaxUrl' => admin_url('admin-ajax.php'),
-			'stripeKey' => get_option('obie_events_stripe_publishable_key')
-		));
+		if ($payment_provider === 'surecart') {
+			// Enqueue SureCart checkout JS
+			wp_enqueue_script(
+				'obie-events-surecart',
+				OBIE_EVENTS_PLUGIN_URL . 'assets/js/surecart-checkout.js',
+				array('jquery', 'obie-events-js'),
+				OBIE_EVENTS_VERSION,
+				true
+			);
+
+			wp_localize_script('obie-events-surecart', 'obieEventSurecartData', array(
+				'ajaxUrl'     => admin_url('admin-ajax.php'),
+				'checkoutUrl' => class_exists('Obie_Events_SureCart') ? Obie_Events_SureCart::get_checkout_url() : home_url('/checkout'),
+			));
+		} else {
+			// Enqueue Stripe JS (existing behavior)
+			wp_enqueue_script('stripe-js', 'https://js.stripe.com/v3/', array(), null, true);
+			wp_enqueue_script('obie-events-payment', OBIE_EVENTS_PLUGIN_URL . 'assets/js/payment.js', array('jquery', 'obie-events-js', 'stripe-js'), OBIE_EVENTS_VERSION, true);
+
+			wp_localize_script('obie-events-payment', 'obieEventPaymentData', array(
+				'ajaxUrl'   => admin_url('admin-ajax.php'),
+				'stripeKey' => get_option('obie_events_stripe_publishable_key'),
+			));
+		}
 	}
 
 	public static function registration_shortcode($atts)
@@ -34,16 +53,17 @@ class Obie_Events_Shortcodes
 		$event_id = intval($atts['id']);
 		$by_tickets = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_by_tickets', true);
 		$ticket_types = get_post_meta($event_id, OBIE_EVENTS_PLUGIN_PREFIX . 'event_ticket_types', true);
+		$payment_provider = get_option('obie_events_payment_provider', 'stripe');
 
-		// FILTRO de tickets por rol y expiración
+		// Filter tickets by role and expiration
 		$user = wp_get_current_user();
 		$user_roles = (array) $user->roles;
 		$is_logged_in = is_user_logged_in();
 		$today = date('Y-m-d');
 		$filtered_tickets = array();
+		$filtered_indices = array(); // Track original indices for SureCart price mapping
 		if (!empty($ticket_types)) {
-			foreach ($ticket_types as $ticket) {
-				// Filtrar por roles
+			foreach ($ticket_types as $original_index => $ticket) {
 				$roles_ok = true;
 				if (!empty($ticket['roles'])) {
 					$roles_ok = false;
@@ -56,24 +76,41 @@ class Obie_Events_Shortcodes
 						}
 					}
 				}
-				// Si no está logueado y el ticket tiene roles, no mostrar
 				if (!$is_logged_in && !empty($ticket['roles'])) {
 					$roles_ok = false;
 				}
-				// Filtrar por expiración
 				$expiration_ok = true;
 				if (!empty($ticket['expiration'])) {
 					$expiration_ok = ($ticket['expiration'] >= $today);
 				}
 				if ($roles_ok && $expiration_ok) {
 					$filtered_tickets[] = $ticket;
+					$filtered_indices[] = $original_index;
 				}
 			}
 		}
 
+		// Get SureCart price IDs if SureCart is the provider
+		$sc_price_ids = array();
+		if ($payment_provider === 'surecart' && class_exists('Obie_Events_SureCart')) {
+			$sc_price_ids = Obie_Events_SureCart::get_event_price_ids($event_id);
+		}
+
+		if ($payment_provider === 'surecart') {
+			return self::render_surecart_registration($event_id, $by_tickets, $filtered_tickets, $filtered_indices, $sc_price_ids);
+		}
+
+		return self::render_stripe_registration($event_id, $by_tickets, $filtered_tickets);
+	}
+
+	/**
+	 * Render the registration form for Stripe payment (original behavior).
+	 */
+	private static function render_stripe_registration($event_id, $by_tickets, $filtered_tickets)
+	{
 		ob_start(); ?>
 		<form id="obie-events-registration-form" class="obie-events-registration-form">
-			<input type="hidden" name="event_id" value="<?php echo $event_id; ?>" />
+			<input type="hidden" name="event_id" value="<?php echo esc_attr($event_id); ?>" />
 			<?php wp_nonce_field(Obie_Events_Registrations::$nonce, Obie_Events_Registrations::$nonce); ?>
 
 			<div class="form-row">
@@ -98,7 +135,7 @@ class Obie_Events_Shortcodes
 									<input type="number"
 										name="ticket_quantity[]"
 										data-index="<?php echo $index; ?>"
-										data-price="<?php echo $ticket['price']; ?>"
+										data-price="<?php echo esc_attr($ticket['price']); ?>"
 										min="0"
 										value="0"
 										class="ticket-quantity"
@@ -140,6 +177,95 @@ class Obie_Events_Shortcodes
 				Reserve now
 			</button>
 		</form>
+	<?php return ob_get_clean();
+	}
+
+	/**
+	 * Render the registration form for SureCart checkout.
+	 * Replaces the Stripe card element with SureCart cart/checkout buttons.
+	 */
+	private static function render_surecart_registration($event_id, $by_tickets, $filtered_tickets, $filtered_indices, $sc_price_ids)
+	{
+		$has_synced_prices = false;
+		foreach ($filtered_indices as $original_index) {
+			if (isset($sc_price_ids[$original_index]) && !empty($sc_price_ids[$original_index])) {
+				$has_synced_prices = true;
+				break;
+			}
+		}
+
+		ob_start(); ?>
+		<div id="obie-events-surecart-registration" class="obie-events-registration-form obie-events-surecart-form" data-event-id="<?php echo esc_attr($event_id); ?>">
+			<?php if ($by_tickets) : ?>
+				<?php if (!empty($filtered_tickets) && $has_synced_prices) : ?>
+					<div class="ticket-selection">
+						<h4>Select Tickets</h4>
+						<?php foreach ($filtered_tickets as $display_index => $ticket) :
+							$original_index = $filtered_indices[$display_index];
+							$price_id = isset($sc_price_ids[$original_index]) ? $sc_price_ids[$original_index] : '';
+							if (empty($price_id)) continue;
+						?>
+							<div class="ticket-type" data-price-id="<?php echo esc_attr($price_id); ?>">
+								<span class="ticket-name"><?php echo esc_html($ticket['name']); ?></span>
+								<div class="ticket-quantity-controls">
+									<button type="button" class="quantity-btn minus-btn" data-index="<?php echo $display_index; ?>">-</button>
+									<input type="number"
+										name="ticket_quantity[]"
+										data-index="<?php echo $display_index; ?>"
+										data-price="<?php echo esc_attr($ticket['price']); ?>"
+										data-price-id="<?php echo esc_attr($price_id); ?>"
+										min="0"
+										value="0"
+										class="ticket-quantity sc-ticket-quantity"
+										readonly />
+									<button type="button" class="quantity-btn plus-btn" data-index="<?php echo $display_index; ?>">+</button>
+								</div>
+								<span class="ticket-price"><?php echo Obie_Events_Helper::format_price($ticket['price']); ?></span>
+							</div>
+						<?php endforeach; ?>
+
+						<p class="total-amount">
+							<?php echo Obie_Events_Helper::format_price(0, true); ?>
+						</p>
+					</div>
+
+					<div id="sc-checkout-actions" class="sc-checkout-actions">
+						<button type="button" id="obie-sc-checkout-btn" class="submit-button sc-checkout-button" disabled>
+							Proceed to Checkout
+						</button>
+						<p class="sc-checkout-note">You will be redirected to our secure checkout page to complete your purchase.</p>
+					</div>
+
+					<div id="sc-checkout-message" class="sc-checkout-message" style="display: none;"></div>
+
+				<?php elseif (!$has_synced_prices) : ?>
+					<div class="sc-sync-notice">
+						<p>Tickets for this event are being set up. Please check back shortly.</p>
+					</div>
+				<?php endif; ?>
+
+			<?php else : ?>
+				<?php // Free event with no tickets — allow RSVP via SureCart or direct registration ?>
+				<form id="obie-events-registration-form" class="obie-events-rsvp-form">
+					<input type="hidden" name="event_id" value="<?php echo esc_attr($event_id); ?>" />
+					<?php wp_nonce_field(Obie_Events_Registrations::$nonce, Obie_Events_Registrations::$nonce); ?>
+
+					<div class="form-row">
+						<label for="customer_name">Name</label>
+						<input type="text" id="customer_name" name="customer_name" required />
+					</div>
+
+					<div class="form-row">
+						<label for="customer_email">Email</label>
+						<input type="email" id="customer_email" name="customer_email" required />
+					</div>
+
+					<button type="submit" id="obie-events-reserve-button" class="submit-button">
+						Reserve now
+					</button>
+				</form>
+			<?php endif; ?>
+		</div>
 	<?php return ob_get_clean();
 	}
 
