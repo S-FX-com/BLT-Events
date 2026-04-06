@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: CMT Events
+ * Plugin Name: ZymEvents
  * Plugin URI:  https://s-fx.com
  * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
  * Version:     2.0.0
  * Author:      S-FX.COM
  * Author URI:  https://s-fx.com
  * License:     GPL2
- * Text Domain: cmt-events
+ * Text Domain: zymevents
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,17 +15,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'CMT_EVENTS_VERSION', '2.0.0' );
-define( 'CMT_EVENTS_DB_VERSION', '1.0' );
-define( 'CMT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'CMT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'CMT_EVENTS_PLUGIN_FILE', __FILE__ );
-define( 'CMT_EVENTS_PREFIX', '_cmt_' );
-define( 'CMT_EVENTS_TEXT_DOMAIN', 'cmt-events' );
+define( 'ZYMEVENTS_VERSION', '2.0.0' );
+define( 'ZYMEVENTS_DB_VERSION', '1.0' );
+define( 'ZYMEVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'ZYMEVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'ZYMEVENTS_PLUGIN_FILE', __FILE__ );
+define( 'ZYMEVENTS_PREFIX', '_zymevents_' );
+define( 'ZYMEVENTS_TEXT_DOMAIN', 'zymevents' );
+
+// Stripe Connect platform client ID.
+// Override in wp-config.php: define( 'ZYMEVENTS_STRIPE_CLIENT_ID', 'ca_XXXXXXXXXX' );
+if ( ! defined( 'ZYMEVENTS_STRIPE_CLIENT_ID' ) ) {
+	define( 'ZYMEVENTS_STRIPE_CLIENT_ID', '' );
+}
 
 // ---------- Autoloader ----------
 spl_autoload_register( function ( $class ) {
-	$prefix = 'CMT_Events_';
+	$prefix = 'ZymEvents_';
 	if ( strpos( $class, $prefix ) !== 0 ) {
 		return;
 	}
@@ -70,7 +76,7 @@ spl_autoload_register( function ( $class ) {
 	);
 
 	if ( isset( $map[ $relative ] ) ) {
-		$file = CMT_EVENTS_PLUGIN_DIR . $map[ $relative ];
+		$file = ZYMEVENTS_PLUGIN_DIR . $map[ $relative ];
 		if ( file_exists( $file ) ) {
 			require_once $file;
 		}
@@ -78,92 +84,92 @@ spl_autoload_register( function ( $class ) {
 });
 
 // ---------- Activation / Deactivation ----------
-register_activation_hook( __FILE__, array( 'CMT_Events_Activator', 'activate' ) );
+register_activation_hook( __FILE__, array( 'ZymEvents_Activator', 'activate' ) );
 register_deactivation_hook( __FILE__, function () {
 	flush_rewrite_rules();
 });
 
 // ---------- Boot ----------
-function cmt_events_init() {
+function zymevents_init() {
 	// Data layer is loaded on-demand via autoloader.
 
 	// CPTs
-	CMT_Events_Event_CPT::init();
-	CMT_Events_Coupon_CPT::init();
+	ZymEvents_Event_CPT::init();
+	ZymEvents_Coupon_CPT::init();
 
 	// Business logic
-	CMT_Events_Fieldsets::init();
-	CMT_Events_Registrations::init();
-	CMT_Events_Coupons::init();
+	ZymEvents_Fieldsets::init();
+	ZymEvents_Registrations::init();
+	ZymEvents_Coupons::init();
 
 	// Payment
-	CMT_Events_Stripe_Handler::init();
-	CMT_Events_SureCart_Integration::init();
+	ZymEvents_Stripe_Handler::init();
+	ZymEvents_SureCart_Integration::init();
 
 	// Admin
 	if ( is_admin() ) {
-		CMT_Events_Admin::init();
-		CMT_Events_Admin_Settings::init();
-		CMT_Events_Event_Metabox::init();
-		CMT_Events_Fieldset_Builder::init();
-		CMT_Events_Registrations_List::init();
+		ZymEvents_Admin::init();
+		ZymEvents_Admin_Settings::init();
+		ZymEvents_Event_Metabox::init();
+		ZymEvents_Fieldset_Builder::init();
+		ZymEvents_Registrations_List::init();
 	}
 
 	// Shortcodes
-	CMT_Events_Registration_Shortcode::init();
-	CMT_Events_Calendar_Shortcode::init();
+	ZymEvents_Registration_Shortcode::init();
+	ZymEvents_Calendar_Shortcode::init();
 
 	// REST API
-	CMT_Events_REST_Registrations::init();
-	CMT_Events_REST_Fieldsets::init();
+	ZymEvents_REST_Registrations::init();
+	ZymEvents_REST_Fieldsets::init();
 
 	// FluentCRM add-on (only when FluentCRM is active)
 	if ( defined( 'FLUENTCRM' ) ) {
-		CMT_Events_FluentCRM_Addon::init();
+		ZymEvents_FluentCRM_Addon::init();
 	}
 }
-add_action( 'plugins_loaded', 'cmt_events_init' );
+add_action( 'plugins_loaded', 'zymevents_init' );
 
 // ---------- Assets ----------
-function cmt_events_enqueue_public_assets() {
+function zymevents_enqueue_public_assets() {
 	wp_enqueue_style(
-		'cmt-events',
-		CMT_EVENTS_PLUGIN_URL . 'assets/css/cmt-events.css',
+		'zymevents',
+		ZYMEVENTS_PLUGIN_URL . 'assets/css/zymevents.css',
 		array(),
-		CMT_EVENTS_VERSION
+		ZYMEVENTS_VERSION
 	);
 
 	wp_enqueue_script(
-		'cmt-events',
-		CMT_EVENTS_PLUGIN_URL . 'assets/js/cmt-events.js',
+		'zymevents',
+		ZYMEVENTS_PLUGIN_URL . 'assets/js/zymevents.js',
 		array( 'jquery' ),
-		CMT_EVENTS_VERSION,
+		ZYMEVENTS_VERSION,
 		true
 	);
 
-	wp_localize_script( 'cmt-events', 'cmtEventsData', array(
+	wp_localize_script( 'zymevents', 'zymEventsData', array(
 		'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-		'restUrl'  => rest_url( 'cmt-events/v1/' ),
+		'restUrl'  => rest_url( 'zymevents/v1/' ),
 		'nonce'    => wp_create_nonce( 'wp_rest' ),
-		'currency' => CMT_Events_Helpers::get_currency_config(),
+		'currency' => ZymEvents_Helpers::get_currency_config(),
 	));
 }
-add_action( 'wp_enqueue_scripts', 'cmt_events_enqueue_public_assets' );
+add_action( 'wp_enqueue_scripts', 'zymevents_enqueue_public_assets' );
 
-function cmt_events_enqueue_admin_assets( $hook ) {
+function zymevents_enqueue_admin_assets( $hook ) {
 	wp_enqueue_style(
-		'cmt-events-admin',
-		CMT_EVENTS_PLUGIN_URL . 'assets/css/admin.css',
+		'zymevents-admin',
+		ZYMEVENTS_PLUGIN_URL . 'assets/css/admin.css',
 		array(),
-		CMT_EVENTS_VERSION
+		ZYMEVENTS_VERSION
 	);
 
 	wp_enqueue_script(
-		'cmt-events-admin',
-		CMT_EVENTS_PLUGIN_URL . 'assets/js/admin.js',
+		'zymevents-admin',
+		ZYMEVENTS_PLUGIN_URL . 'assets/js/admin.js',
 		array( 'jquery' ),
-		CMT_EVENTS_VERSION,
+		ZYMEVENTS_VERSION,
 		true
 	);
 }
-add_action( 'admin_enqueue_scripts', 'cmt_events_enqueue_admin_assets' );
+add_action( 'admin_enqueue_scripts', 'zymevents_enqueue_admin_assets' );

@@ -2,22 +2,22 @@
 /**
  * Attendees database class.
  *
- * Handles CRUD operations for the cmt_attendees table.
+ * Handles CRUD operations for the zymevents_attendees table.
  *
- * @package CMT_Events
+ * @package ZymEvents
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Attendees_DB extends CMT_Events_DB {
+class ZymEvents_Attendees_DB extends ZymEvents_DB {
 
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		parent::__construct( 'cmt_attendees' );
+		parent::__construct( 'zymevents_attendees' );
 	}
 
 	/**
@@ -62,7 +62,7 @@ class CMT_Events_Attendees_DB extends CMT_Events_DB {
 	 * Bulk insert multiple attendees for a registration.
 	 *
 	 * Each entry in $attendees_data should be an associative array with keys
-	 * matching the cmt_attendees columns (attendee_name, attendee_email, etc.).
+	 * matching the zymevents_attendees columns (attendee_name, attendee_email, etc.).
 	 *
 	 * @param int   $registration_id The registration row ID.
 	 * @param int   $event_id        The event post ID.

@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Event Custom Post Type
+ * ZymEvents - Event Custom Post Type
  *
  * Registers the "event" custom post type and the "event_category" taxonomy.
  * Meta boxes are handled separately in the event metabox class.
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class CMT_Events_Event_CPT {
+class ZymEvents_Event_CPT {
 
     /**
      * Post type slug.

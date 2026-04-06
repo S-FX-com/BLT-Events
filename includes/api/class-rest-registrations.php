@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - REST API for Registrations
+ * ZymEvents - REST API for Registrations
  *
  * Provides REST endpoints for registrations and attendees.
  */
@@ -9,9 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_REST_Registrations {
+class ZymEvents_REST_Registrations {
 
-	private static $namespace = 'cmt-events/v1';
+	private static $namespace = 'zymevents/v1';
 
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
@@ -80,7 +80,7 @@ class CMT_Events_REST_Registrations {
 		$per_page = min( $request->get_param( 'per_page' ), 100 );
 		$status   = $request->get_param( 'status' );
 
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new ZymEvents_Registrations_DB();
 
 		$args = array(
 			'limit'  => $per_page,
@@ -106,12 +106,12 @@ class CMT_Events_REST_Registrations {
 	public static function get_registration( $request ) {
 		$id = $request->get_param( 'id' );
 
-		$reg = CMT_Events_Registrations::get_registration( $id );
+		$reg = ZymEvents_Registrations::get_registration( $id );
 		if ( ! $reg ) {
 			return new WP_Error( 'not_found', 'Registration not found.', array( 'status' => 404 ) );
 		}
 
-		$attendees = CMT_Events_Registrations::get_attendees( $id );
+		$attendees = ZymEvents_Registrations::get_attendees( $id );
 		$event     = get_post( $reg->event_id );
 
 		return new WP_REST_Response( array(
@@ -128,7 +128,7 @@ class CMT_Events_REST_Registrations {
 		$id     = $request->get_param( 'id' );
 		$status = $request->get_param( 'status' );
 
-		$result = CMT_Events_Registrations::update_status( $id, $status );
+		$result = ZymEvents_Registrations::update_status( $id, $status );
 
 		if ( $result === false ) {
 			return new WP_Error( 'update_failed', 'Failed to update registration status.', array( 'status' => 500 ) );
@@ -145,7 +145,7 @@ class CMT_Events_REST_Registrations {
 		$id     = $request->get_param( 'id' );
 		$status = $request->get_param( 'status' );
 
-		$att_db = new CMT_Events_Attendees_DB();
+		$att_db = new ZymEvents_Attendees_DB();
 		$result = $att_db->update_check_in( $id, $status );
 
 		if ( $result === false ) {
@@ -167,7 +167,7 @@ class CMT_Events_REST_Registrations {
 			return new WP_Error( 'not_found', 'Event not found.', array( 'status' => 404 ) );
 		}
 
-		$ics_content = CMT_Events_Helpers::generate_ics_content( $event );
+		$ics_content = ZymEvents_Helpers::generate_ics_content( $event );
 
 		$response = new WP_REST_Response( $ics_content );
 		$response->header( 'Content-Type', 'text/calendar; charset=utf-8' );

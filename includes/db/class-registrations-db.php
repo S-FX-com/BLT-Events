@@ -2,22 +2,22 @@
 /**
  * Registrations database class.
  *
- * Handles CRUD operations for the cmt_registrations table.
+ * Handles CRUD operations for the zymevents_registrations table.
  *
- * @package CMT_Events
+ * @package ZymEvents
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Registrations_DB extends CMT_Events_DB {
+class ZymEvents_Registrations_DB extends ZymEvents_DB {
 
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		parent::__construct( 'cmt_registrations' );
+		parent::__construct( 'zymevents_registrations' );
 	}
 
 	/**

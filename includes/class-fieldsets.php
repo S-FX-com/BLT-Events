@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Fieldsets Business Logic
+ * ZymEvents - Fieldsets Business Logic
  *
  * Manages fieldset operations: rendering form fields, validating submitted data,
  * and providing the fieldset for a specific event.
@@ -10,19 +10,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Fieldsets {
+class ZymEvents_Fieldsets {
 
 	private static $db;
 
 	public static function init() {
-		self::$db = new CMT_Events_Fieldsets_DB();
+		self::$db = new ZymEvents_Fieldsets_DB();
 	}
 
 	/**
 	 * Get the fieldset assigned to an event, or the default fieldset.
 	 */
 	public static function get_event_fieldset( $event_id ) {
-		$fieldset_id = get_post_meta( $event_id, '_cmt_fieldset_id', true );
+		$fieldset_id = get_post_meta( $event_id, '_zymevents_fieldset_id', true );
 
 		if ( $fieldset_id ) {
 			$fieldset = self::$db->get( absint( $fieldset_id ) );
@@ -159,7 +159,7 @@ class CMT_Events_Fieldsets {
 					}
 					break;
 				case 'tel':
-					$value = CMT_Events_Helpers::sanitize_phone( $value );
+					$value = ZymEvents_Helpers::sanitize_phone( $value );
 					break;
 				case 'number':
 					$value = is_numeric( $value ) ? floatval( $value ) : '';

@@ -1,5 +1,5 @@
 /**
- * CMT Events — SureCart Checkout Integration
+ * ZymEvents — SureCart Checkout Integration
  *
  * Handles ticket quantity selection and builds SureCart checkout URLs
  * with the appropriate line items (price_id + quantity).
@@ -8,7 +8,7 @@
 	"use strict";
 
 	var totalPrice = 0;
-	var checkoutUrl = (window.cmtSurecartData && cmtSurecartData.checkoutUrl) || "/checkout";
+	var checkoutUrl = (window.zymSurecartData && zymSurecartData.checkoutUrl) || "/checkout";
 
 	// Calculate total when quantities change and update checkout button
 	$(document).on("change", ".sc-ticket-quantity", function () {
@@ -27,12 +27,12 @@
 		totalPrice = total;
 
 		// Update total display
-		$(".cmt-surecart-form .cmt-total-amount, .obie-events-surecart-form .total-amount").text(
+		$(".zymevents-surecart-form .zymevents-total-amount, .obie-events-surecart-form .total-amount").text(
 			formatPrice(totalPrice, true)
 		);
 
 		// Enable/disable checkout button
-		var checkoutBtn = $("#cmt-sc-checkout-btn, #obie-sc-checkout-btn");
+		var checkoutBtn = $("#zymevents-sc-checkout-btn, #obie-sc-checkout-btn");
 		if (hasTickets) {
 			checkoutBtn.prop("disabled", false);
 			checkoutBtn.text(
@@ -45,7 +45,7 @@
 	});
 
 	// Handle checkout button click — build URL and redirect
-	$(document).on("click", "#cmt-sc-checkout-btn, #obie-sc-checkout-btn", function (e) {
+	$(document).on("click", "#zymevents-sc-checkout-btn, #obie-sc-checkout-btn", function (e) {
 		e.preventDefault();
 
 		var lineItems = [];
@@ -105,14 +105,14 @@
 	 * Show a message in the checkout message area.
 	 */
 	function showMessage(message, type) {
-		var el = $("#cmt-sc-message, #sc-checkout-message");
+		var el = $("#zymevents-sc-message, #sc-checkout-message");
 		if (!message) {
 			el.hide().text("");
 			return;
 		}
 		el.text(message)
-			.removeClass("cmt-msg-error cmt-msg-success sc-message-error sc-message-success")
-			.addClass(type === "error" ? "cmt-msg-error" : "cmt-msg-success")
+			.removeClass("zymevents-msg-error cmt-msg-success sc-message-error sc-message-success")
+			.addClass(type === "error" ? "zymevents-msg-error" : "zymevents-msg-success")
 			.show();
 	}
 })(jQuery);

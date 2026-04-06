@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Registrations List Table
+ * ZymEvents - Registrations List Table
  *
  * Admin page displaying all event registrations using WP_List_Table.
  */
@@ -13,7 +13,7 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
-class CMT_Events_Registrations_List_Table extends WP_List_Table {
+class ZymEvents_Registrations_List_Table extends WP_List_Table {
 
 	private $reg_db;
 	private $att_db;
@@ -24,8 +24,8 @@ class CMT_Events_Registrations_List_Table extends WP_List_Table {
 			'plural'   => 'registrations',
 			'ajax'     => false,
 		) );
-		$this->reg_db = new CMT_Events_Registrations_DB();
-		$this->att_db = new CMT_Events_Attendees_DB();
+		$this->reg_db = new ZymEvents_Registrations_DB();
+		$this->att_db = new ZymEvents_Attendees_DB();
 	}
 
 	public function get_columns() {
@@ -109,7 +109,7 @@ class CMT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 
 	public function column_amount_paid( $item ) {
-		return CMT_Events_Helpers::format_price( $item->amount_paid );
+		return ZymEvents_Helpers::format_price( $item->amount_paid );
 	}
 
 	public function column_payment_provider( $item ) {
@@ -168,14 +168,14 @@ class CMT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 }
 
-class CMT_Events_Registrations_List {
+class ZymEvents_Registrations_List {
 
 	public static function init() {
-		add_action( 'wp_ajax_cmt_export_registrations', array( __CLASS__, 'ajax_export_csv' ) );
+		add_action( 'wp_ajax_zymevents_export_registrations', array( __CLASS__, 'ajax_export_csv' ) );
 	}
 
 	public static function render_page() {
-		$table = new CMT_Events_Registrations_List_Table();
+		$table = new ZymEvents_Registrations_List_Table();
 		$table->prepare_items();
 		?>
 		<div class="wrap">
@@ -183,13 +183,13 @@ class CMT_Events_Registrations_List {
 
 			<form method="get">
 				<input type="hidden" name="post_type" value="event" />
-				<input type="hidden" name="page" value="cmt-registrations" />
+				<input type="hidden" name="page" value="zymevents-registrations" />
 				<?php $table->search_box( 'Search', 'search_registration' ); ?>
 				<?php $table->display(); ?>
 			</form>
 
 			<p>
-				<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=cmt_export_registrations&event_id=' . absint( $_GET['event_id'] ?? 0 ) . '&_wpnonce=' . wp_create_nonce( 'cmt_export' ) ) ); ?>" class="button">
+				<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=cmt_export_registrations&event_id=' . absint( $_GET['event_id'] ?? 0 ) . '&_wpnonce=' . wp_create_nonce( 'zymevents_export' ) ) ); ?>" class="button">
 					Export CSV
 				</a>
 			</p>
@@ -198,11 +198,11 @@ class CMT_Events_Registrations_List {
 	}
 
 	public static function ajax_export_csv() {
-		if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'cmt_export' ) ) {
+		if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'zymevents_export' ) ) {
 			wp_die( 'Unauthorized' );
 		}
 
-		$reg_db   = new CMT_Events_Registrations_DB();
+		$reg_db   = new ZymEvents_Registrations_DB();
 		$event_id = absint( $_GET['event_id'] ?? 0 );
 
 		$where = array();

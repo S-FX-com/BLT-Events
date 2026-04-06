@@ -2,22 +2,22 @@
 /**
  * Fieldsets database class.
  *
- * Handles CRUD operations for the cmt_fieldsets table.
+ * Handles CRUD operations for the zymevents_fieldsets table.
  *
- * @package CMT_Events
+ * @package ZymEvents
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Fieldsets_DB extends CMT_Events_DB {
+class ZymEvents_Fieldsets_DB extends ZymEvents_DB {
 
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		parent::__construct( 'cmt_fieldsets' );
+		parent::__construct( 'zymevents_fieldsets' );
 	}
 
 	/**

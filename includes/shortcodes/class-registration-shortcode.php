@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Registration Shortcode
+ * ZymEvents - Registration Shortcode
  *
  * [cmt_event_registration] - Renders the event registration form.
  * Usage: [cmt_event_registration event_id="123"]
@@ -11,10 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Registration_Shortcode {
+class ZymEvents_Registration_Shortcode {
 
 	public static function init() {
-		add_shortcode( 'cmt_event_registration', array( __CLASS__, 'render' ) );
+		add_shortcode( 'zymevents_event_registration', array( __CLASS__, 'render' ) );
 	}
 
 	public static function render( $atts ) {
@@ -37,22 +37,22 @@ class CMT_Events_Registration_Shortcode {
 		}
 
 		// Check if registration is open
-		$registration_open = get_post_meta( $event_id, '_cmt_registration_open', true );
+		$registration_open = get_post_meta( $event_id, '_zymevents_registration_open', true );
 		if ( $registration_open !== '1' ) {
 			return '<div class="cmt-registration-closed"><p>Registration is currently closed for this event.</p></div>';
 		}
 
 		// Check capacity
-		$capacity = (int) get_post_meta( $event_id, '_cmt_capacity', true );
+		$capacity = (int) get_post_meta( $event_id, '_zymevents_capacity', true );
 		if ( $capacity > 0 ) {
-			$reg_db = new CMT_Events_Registrations_DB();
+			$reg_db = new ZymEvents_Registrations_DB();
 			$current_count = $reg_db->get_event_registration_count( $event_id );
 			if ( $current_count >= $capacity ) {
 				return '<div class="cmt-registration-closed"><p>This event is sold out.</p></div>';
 			}
 		}
 
-		$provider = CMT_Events_Helpers::get_payment_provider();
+		$provider = ZymEvents_Helpers::get_payment_provider();
 
 		// Route to appropriate renderer
 		if ( $provider === 'surecart' ) {
@@ -66,11 +66,11 @@ class CMT_Events_Registration_Shortcode {
 	 * Render the standard registration form (Stripe or free).
 	 */
 	private static function render_standard_form( $event_id, $event, $provider ) {
-		$fieldset = CMT_Events_Fieldsets::get_event_fieldset( $event_id );
-		$fields   = CMT_Events_Fieldsets::get_fields( $fieldset );
-		$consent_fields = CMT_Events_Fieldsets::get_consent_fields( $fieldset );
+		$fieldset = ZymEvents_Fieldsets::get_event_fieldset( $event_id );
+		$fields   = ZymEvents_Fieldsets::get_fields( $fieldset );
+		$consent_fields = ZymEvents_Fieldsets::get_consent_fields( $fieldset );
 
-		$ticket_types_raw = get_post_meta( $event_id, '_cmt_ticket_types', true );
+		$ticket_types_raw = get_post_meta( $event_id, '_zymevents_ticket_types', true );
 		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
 
@@ -83,18 +83,18 @@ class CMT_Events_Registration_Shortcode {
 		}
 
 		// Enqueue scripts
-		wp_enqueue_script( 'cmt-events-registration', CMT_EVENTS_PLUGIN_URL . 'assets/js/registration-form.js', array( 'jquery' ), CMT_EVENTS_VERSION, true );
-		wp_localize_script( 'cmt-events-registration', 'cmtRegData', array(
+		wp_enqueue_script( 'zymevents-registration', ZYMEVENTS_PLUGIN_URL . 'assets/js/registration-form.js', array( 'jquery' ), ZYMEVENTS_VERSION, true );
+		wp_localize_script( 'zymevents-registration', 'zymRegData', array(
 			'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-			'nonce'    => wp_create_nonce( 'cmt_registration_nonce' ),
+			'nonce'    => wp_create_nonce( 'zymevents_registration_nonce' ),
 			'eventId'  => $event_id,
-			'currency' => CMT_Events_Helpers::get_currency_config(),
+			'currency' => ZymEvents_Helpers::get_currency_config(),
 			'provider' => $provider,
 		) );
 
 		if ( $provider === 'stripe' && $has_paid_tickets ) {
 			wp_enqueue_script( 'stripe-js', 'https://js.stripe.com/v3/', array(), null, true );
-			wp_enqueue_script( 'cmt-events-payment' );
+			wp_enqueue_script( 'zymevents-payment' );
 		}
 
 		ob_start();
@@ -102,7 +102,7 @@ class CMT_Events_Registration_Shortcode {
 		<div class="cmt-registration-form" data-event-id="<?php echo esc_attr( $event_id ); ?>">
 			<form id="cmt-registration-form" method="post" novalidate>
 				<input type="hidden" name="event_id" value="<?php echo esc_attr( $event_id ); ?>" />
-				<input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( 'cmt_registration_nonce' ) ); ?>" />
+				<input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( 'zymevents_registration_nonce' ) ); ?>" />
 
 				<!-- Ticket Selection -->
 				<?php if ( ! empty( $ticket_types ) ) : ?>
@@ -114,7 +114,7 @@ class CMT_Events_Registration_Shortcode {
 						<?php if ( ! empty( $ticket['description'] ) ) : ?>
 							<span class="cmt-ticket-desc"><?php echo esc_html( $ticket['description'] ); ?></span>
 						<?php endif; ?>
-						<span class="cmt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( CMT_Events_Helpers::format_price( $ticket['price'] ) ) : 'Free'; ?></span>
+						<span class="cmt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( ZymEvents_Helpers::format_price( $ticket['price'] ) ) : 'Free'; ?></span>
 						<div class="cmt-quantity-controls">
 							<button type="button" class="cmt-qty-btn minus-btn">&minus;</button>
 							<input type="number" name="ticket_quantity_<?php echo $i; ?>" class="cmt-ticket-quantity" value="0" min="0" data-price="<?php echo esc_attr( $ticket['price'] ); ?>" data-index="<?php echo $i; ?>" />
@@ -122,7 +122,7 @@ class CMT_Events_Registration_Shortcode {
 						</div>
 					</div>
 					<?php endforeach; ?>
-					<div class="cmt-total-amount">Total: <?php echo esc_html( CMT_Events_Helpers::format_price( 0 ) ); ?></div>
+					<div class="cmt-total-amount">Total: <?php echo esc_html( ZymEvents_Helpers::format_price( 0 ) ); ?></div>
 				</div>
 				<?php endif; ?>
 
@@ -131,7 +131,7 @@ class CMT_Events_Registration_Shortcode {
 					<h3>Your Details</h3>
 					<div class="cmt-fields-grid">
 						<?php foreach ( $fields as $field ) : ?>
-							<?php echo CMT_Events_Fieldsets::render_field( $field ); ?>
+							<?php echo ZymEvents_Fieldsets::render_field( $field ); ?>
 						<?php endforeach; ?>
 					</div>
 				</div>
@@ -191,11 +191,11 @@ class CMT_Events_Registration_Shortcode {
 	 * Render the SureCart checkout form (ticket selection + redirect).
 	 */
 	private static function render_surecart_form( $event_id, $event ) {
-		$ticket_types_raw = get_post_meta( $event_id, '_cmt_ticket_types', true );
+		$ticket_types_raw = get_post_meta( $event_id, '_zymevents_ticket_types', true );
 		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
 
-		$price_ids = get_post_meta( $event_id, '_cmt_sc_price_ids', true ) ?: array();
+		$price_ids = get_post_meta( $event_id, '_zymevents_sc_price_ids', true ) ?: array();
 
 		// Check if products are synced
 		$all_synced = true;
@@ -206,7 +206,7 @@ class CMT_Events_Registration_Shortcode {
 			}
 		}
 
-		wp_enqueue_script( 'cmt-events-surecart-checkout' );
+		wp_enqueue_script( 'zymevents-surecart-checkout' );
 
 		ob_start();
 		?>
@@ -222,7 +222,7 @@ class CMT_Events_Registration_Shortcode {
 						<?php if ( empty( $price_ids[ $i ] ) ) continue; ?>
 						<div class="cmt-ticket-type">
 							<span class="cmt-ticket-name"><?php echo esc_html( $ticket['name'] ); ?></span>
-							<span class="cmt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( CMT_Events_Helpers::format_price( $ticket['price'] ) ) : 'Free'; ?></span>
+							<span class="cmt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( ZymEvents_Helpers::format_price( $ticket['price'] ) ) : 'Free'; ?></span>
 							<div class="cmt-quantity-controls">
 								<button type="button" class="cmt-qty-btn minus-btn">&minus;</button>
 								<input type="number" class="sc-ticket-quantity" value="0" min="0"
@@ -232,7 +232,7 @@ class CMT_Events_Registration_Shortcode {
 							</div>
 						</div>
 					<?php endforeach; ?>
-					<div class="cmt-total-amount">Total: <?php echo esc_html( CMT_Events_Helpers::format_price( 0 ) ); ?></div>
+					<div class="cmt-total-amount">Total: <?php echo esc_html( ZymEvents_Helpers::format_price( 0 ) ); ?></div>
 				</div>
 
 				<div class="cmt-checkout-actions">

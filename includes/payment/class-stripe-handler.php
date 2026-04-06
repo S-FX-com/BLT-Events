@@ -1,32 +1,33 @@
 <?php
 /**
- * CMT Events - Stripe Payment Handler
+ * ZymEvents - Stripe Payment Handler
  *
  * Handles Stripe Payment Intents creation, webhook processing,
- * and payment confirmation for event registrations.
+ * payment confirmation, and Stripe Connect OAuth for event registrations.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
-
-	private static $secret_key;
+class ZymEvents_Stripe_Handler extends ZymEvents_Payment_Provider {
 
 	public static function init() {
+		// Always register Connect OAuth endpoints (needed regardless of active provider).
+		add_action( 'admin_action_zymevents_stripe_connect', array( __CLASS__, 'handle_connect_redirect' ) );
+		add_action( 'admin_action_zymevents_stripe_disconnect', array( __CLASS__, 'handle_disconnect' ) );
+		add_action( 'admin_init', array( __CLASS__, 'handle_connect_callback' ) );
+
 		if ( ! self::is_active_provider( 'stripe' ) ) {
 			return;
 		}
 
-		self::$secret_key = get_option( 'cmt_events_stripe_secret_key', '' );
-
 		// AJAX endpoints
-		add_action( 'wp_ajax_cmt_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
-		add_action( 'wp_ajax_nopriv_cmt_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
+		add_action( 'wp_ajax_zymevents_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
+		add_action( 'wp_ajax_nopriv_zymevents_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
 
-		add_action( 'wp_ajax_cmt_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
-		add_action( 'wp_ajax_nopriv_cmt_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
+		add_action( 'wp_ajax_zymevents_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
+		add_action( 'wp_ajax_nopriv_zymevents_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
 
 		// Webhook handler
 		add_action( 'rest_api_init', array( __CLASS__, 'register_webhook_endpoint' ) );
@@ -36,9 +37,162 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	}
 
 	public static function is_configured() {
-		return ! empty( get_option( 'cmt_events_stripe_secret_key', '' ) )
-			&& ! empty( get_option( 'cmt_events_stripe_publishable_key', '' ) );
+		return ! empty( self::get_secret_key() )
+			&& ! empty( self::get_publishable_key() );
 	}
+
+	/**
+	 * Check if a Stripe account is connected via OAuth.
+	 */
+	public static function is_connected() {
+		return ! empty( get_option( 'zymevents_stripe_connect_account_id', '' ) );
+	}
+
+	/**
+	 * Get the active secret key (Connect token takes priority over manual key).
+	 */
+	public static function get_secret_key() {
+		$connect_key = get_option( 'zymevents_stripe_connect_secret_key', '' );
+		if ( ! empty( $connect_key ) ) {
+			return $connect_key;
+		}
+		return get_option( 'zymevents_stripe_secret_key', '' );
+	}
+
+	/**
+	 * Get the active publishable key (Connect token takes priority over manual key).
+	 */
+	public static function get_publishable_key() {
+		$connect_key = get_option( 'zymevents_stripe_connect_publishable_key', '' );
+		if ( ! empty( $connect_key ) ) {
+			return $connect_key;
+		}
+		return get_option( 'zymevents_stripe_publishable_key', '' );
+	}
+
+	// ------------------------------------------------------------------
+	// Stripe Connect OAuth
+	// ------------------------------------------------------------------
+
+	/**
+	 * Build the Stripe Connect OAuth authorization URL.
+	 */
+	public static function get_connect_url() {
+		$client_id = defined( 'ZYMEVENTS_STRIPE_CLIENT_ID' ) ? ZYMEVENTS_STRIPE_CLIENT_ID : '';
+
+		if ( empty( $client_id ) ) {
+			return '';
+		}
+
+		$redirect_uri = admin_url( 'admin.php?page=zymevents-settings&zymevents_stripe_return=1' );
+
+		$params = array(
+			'response_type' => 'code',
+			'client_id'     => $client_id,
+			'scope'         => 'read_write',
+			'redirect_uri'  => $redirect_uri,
+			'state'         => wp_create_nonce( 'zymevents_stripe_connect' ),
+		);
+
+		return 'https://connect.stripe.com/oauth/authorize?' . http_build_query( $params );
+	}
+
+	/**
+	 * Handle the "Connect with Stripe" button click (redirect to Stripe OAuth).
+	 */
+	public static function handle_connect_redirect() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Unauthorized.' );
+		}
+
+		check_admin_referer( 'zymevents_stripe_connect_action' );
+
+		$url = self::get_connect_url();
+		if ( empty( $url ) ) {
+			wp_redirect( admin_url( 'admin.php?page=zymevents-settings&zymevents_connect_error=no_client_id' ) );
+			exit;
+		}
+
+		wp_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Handle the OAuth callback from Stripe (runs on admin_init).
+	 */
+	public static function handle_connect_callback() {
+		if ( empty( $_GET['zymevents_stripe_return'] ) || empty( $_GET['code'] ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$state = sanitize_text_field( $_GET['state'] ?? '' );
+		if ( ! wp_verify_nonce( $state, 'zymevents_stripe_connect' ) ) {
+			wp_redirect( admin_url( 'admin.php?page=zymevents-settings&zymevents_connect_error=invalid_state' ) );
+			exit;
+		}
+
+		$code      = sanitize_text_field( $_GET['code'] );
+		$client_id = defined( 'ZYMEVENTS_STRIPE_CLIENT_ID' ) ? ZYMEVENTS_STRIPE_CLIENT_ID : '';
+
+		// Exchange authorization code for access token.
+		$response = wp_remote_post( 'https://connect.stripe.com/oauth/token', array(
+			'body' => array(
+				'client_secret' => $client_id,
+				'code'          => $code,
+				'grant_type'    => 'authorization_code',
+			),
+			'timeout' => 30,
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			wp_redirect( admin_url( 'admin.php?page=zymevents-settings&zymevents_connect_error=request_failed' ) );
+			exit;
+		}
+
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( ! empty( $body['error'] ) ) {
+			$err = urlencode( $body['error_description'] ?? $body['error'] );
+			wp_redirect( admin_url( 'admin.php?page=zymevents-settings&zymevents_connect_error=' . $err ) );
+			exit;
+		}
+
+		// Store the connected account credentials.
+		update_option( 'zymevents_stripe_connect_account_id',      sanitize_text_field( $body['stripe_user_id'] ?? '' ) );
+		update_option( 'zymevents_stripe_connect_secret_key',      sanitize_text_field( $body['access_token'] ?? '' ) );
+		update_option( 'zymevents_stripe_connect_publishable_key', sanitize_text_field( $body['stripe_publishable_key'] ?? '' ) );
+		update_option( 'zymevents_stripe_connect_livemode',        ! empty( $body['livemode'] ) ? '1' : '0' );
+
+		wp_redirect( admin_url( 'admin.php?page=zymevents-settings&zymevents_connect_success=1' ) );
+		exit;
+	}
+
+	/**
+	 * Handle Stripe account disconnect.
+	 */
+	public static function handle_disconnect() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Unauthorized.' );
+		}
+
+		check_admin_referer( 'zymevents_stripe_disconnect_action' );
+
+		delete_option( 'zymevents_stripe_connect_account_id' );
+		delete_option( 'zymevents_stripe_connect_secret_key' );
+		delete_option( 'zymevents_stripe_connect_publishable_key' );
+		delete_option( 'zymevents_stripe_connect_livemode' );
+
+		wp_redirect( admin_url( 'admin.php?page=zymevents-settings&zymevents_disconnected=1' ) );
+		exit;
+	}
+
+	// ------------------------------------------------------------------
+	// Scripts
+	// ------------------------------------------------------------------
 
 	public static function enqueue_scripts() {
 		if ( ! self::is_active_provider( 'stripe' ) || ! self::is_configured() ) {
@@ -47,45 +201,56 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 
 		wp_register_script( 'stripe-js', 'https://js.stripe.com/v3/', array(), null, true );
 		wp_register_script(
-			'cmt-events-payment',
-			CMT_EVENTS_PLUGIN_URL . 'assets/js/payment.js',
+			'zymevents-payment',
+			ZYMEVENTS_PLUGIN_URL . 'assets/js/payment.js',
 			array( 'jquery', 'stripe-js' ),
-			CMT_EVENTS_VERSION,
+			ZYMEVENTS_VERSION,
 			true
 		);
 
-		wp_localize_script( 'cmt-events-payment', 'cmtStripeData', array(
-			'publishableKey' => get_option( 'cmt_events_stripe_publishable_key', '' ),
+		wp_localize_script( 'zymevents-payment', 'zymStripeData', array(
+			'publishableKey' => self::get_publishable_key(),
 			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
-			'nonce'          => wp_create_nonce( 'cmt_stripe_nonce' ),
+			'nonce'          => wp_create_nonce( 'zymevents_stripe_nonce' ),
 		) );
 	}
+
+	// ------------------------------------------------------------------
+	// AJAX: Payment Intent
+	// ------------------------------------------------------------------
 
 	/**
 	 * AJAX: Create a Stripe Payment Intent.
 	 */
 	public static function ajax_create_payment_intent() {
-		check_ajax_referer( 'cmt_stripe_nonce', 'nonce' );
+		check_ajax_referer( 'zymevents_stripe_nonce', 'nonce' );
 
 		$event_id = absint( $_POST['event_id'] ?? 0 );
 		$amount   = floatval( $_POST['amount'] ?? 0 );
-		$currency = strtolower( get_option( 'cmt_events_currency', 'USD' ) );
+		$currency = strtolower( get_option( 'zymevents_currency', 'USD' ) );
 
 		if ( ! $event_id || $amount <= 0 ) {
 			wp_send_json_error( array( 'message' => 'Invalid payment parameters.' ) );
 		}
 
-		// Amount in cents
 		$amount_cents = intval( round( $amount * 100 ) );
 
-		$response = self::api_request( 'payment_intents', array(
+		$payload = array(
 			'amount'   => $amount_cents,
 			'currency' => $currency,
 			'metadata' => array(
 				'event_id' => $event_id,
-				'source'   => 'cmt_events',
+				'source'   => 'zymevents',
 			),
-		) );
+		);
+
+		// Attach to connected account if available.
+		$account_id = get_option( 'zymevents_stripe_connect_account_id', '' );
+		if ( ! empty( $account_id ) ) {
+			$payload['on_behalf_of'] = $account_id;
+		}
+
+		$response = self::api_request( 'payment_intents', $payload );
 
 		if ( is_wp_error( $response ) ) {
 			wp_send_json_error( array( 'message' => $response->get_error_message() ) );
@@ -97,11 +262,15 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 		) );
 	}
 
+	// ------------------------------------------------------------------
+	// AJAX: Confirm Payment
+	// ------------------------------------------------------------------
+
 	/**
 	 * AJAX: Confirm payment and create registration.
 	 */
 	public static function ajax_confirm_payment() {
-		check_ajax_referer( 'cmt_stripe_nonce', 'nonce' );
+		check_ajax_referer( 'zymevents_stripe_nonce', 'nonce' );
 
 		$event_id  = absint( $_POST['event_id'] ?? 0 );
 		$intent_id = sanitize_text_field( $_POST['payment_intent_id'] ?? '' );
@@ -110,7 +279,6 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 			wp_send_json_error( array( 'message' => 'Missing payment data.' ) );
 		}
 
-		// Verify payment with Stripe
 		$intent = self::api_request( 'payment_intents/' . $intent_id, array(), 'GET' );
 
 		if ( is_wp_error( $intent ) ) {
@@ -128,7 +296,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 			'amount_paid'  => $intent['amount'] / 100,
 		);
 
-		$result = CMT_Events_Registrations::process_registration( $event_id, $_POST, $payment );
+		$result = ZymEvents_Registrations::process_registration( $event_id, $_POST, $payment );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
@@ -140,11 +308,15 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 		) );
 	}
 
+	// ------------------------------------------------------------------
+	// Webhooks
+	// ------------------------------------------------------------------
+
 	/**
 	 * Register the Stripe webhook REST endpoint.
 	 */
 	public static function register_webhook_endpoint() {
-		register_rest_route( 'cmt-events/v1', '/stripe-webhook', array(
+		register_rest_route( 'zymevents/v1', '/stripe-webhook', array(
 			'methods'             => 'POST',
 			'callback'            => array( __CLASS__, 'handle_webhook' ),
 			'permission_callback' => '__return_true',
@@ -157,13 +329,12 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	public static function handle_webhook( $request ) {
 		$payload = $request->get_body();
 		$sig     = $request->get_header( 'stripe-signature' );
-		$secret  = get_option( 'cmt_events_stripe_webhook_secret', '' );
+		$secret  = get_option( 'zymevents_stripe_webhook_secret', '' );
 
 		if ( empty( $secret ) ) {
 			return new WP_REST_Response( array( 'error' => 'Webhook secret not configured.' ), 400 );
 		}
 
-		// Verify webhook signature
 		if ( ! self::verify_webhook_signature( $payload, $sig, $secret ) ) {
 			return new WP_REST_Response( array( 'error' => 'Invalid signature.' ), 400 );
 		}
@@ -176,7 +347,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 
 		switch ( $event['type'] ) {
 			case 'payment_intent.succeeded':
-				// Payment confirmed via webhook — handled by frontend confirm flow
+				// Handled by frontend confirm flow.
 				break;
 
 			case 'charge.refunded':
@@ -197,7 +368,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	private static function handle_refund( $payment_intent_id ) {
 		global $wpdb;
 
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new ZymEvents_Registrations_DB();
 		$table  = $reg_db->get_table_name();
 
 		$registration = $wpdb->get_row(
@@ -209,10 +380,14 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 		);
 
 		if ( $registration ) {
-			CMT_Events_Registrations::update_status( $registration->id, 'refunded' );
-			do_action( 'cmt_registration_refunded', $registration->id );
+			ZymEvents_Registrations::update_status( $registration->id, 'refunded' );
+			do_action( 'zymevents_registration_refunded', $registration->id );
 		}
 	}
+
+	// ------------------------------------------------------------------
+	// Stripe API
+	// ------------------------------------------------------------------
 
 	/**
 	 * Make a Stripe API request.
@@ -223,7 +398,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 		$args = array(
 			'method'  => $method,
 			'headers' => array(
-				'Authorization' => 'Bearer ' . self::$secret_key,
+				'Authorization' => 'Bearer ' . self::get_secret_key(),
 				'Content-Type'  => 'application/x-www-form-urlencoded',
 			),
 			'timeout' => 30,
@@ -258,8 +433,8 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 			return false;
 		}
 
-		$elements = explode( ',', $sig_header );
-		$timestamp = null;
+		$elements   = explode( ',', $sig_header );
+		$timestamp  = null;
 		$signatures = array();
 
 		foreach ( $elements as $element ) {
@@ -278,7 +453,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 			return false;
 		}
 
-		// Tolerance: 5 minutes
+		// Tolerance: 5 minutes.
 		if ( abs( time() - $timestamp ) > 300 ) {
 			return false;
 		}

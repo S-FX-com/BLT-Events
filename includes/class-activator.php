@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Activator {
+class ZymEvents_Activator {
 
 	public static function activate() {
 		self::create_tables();
@@ -25,7 +25,7 @@ class CMT_Events_Activator {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		// Fieldsets table
-		$table_fieldsets = $wpdb->prefix . 'cmt_fieldsets';
+		$table_fieldsets = $wpdb->prefix . 'zymevents_fieldsets';
 		$sql_fieldsets = "CREATE TABLE {$table_fieldsets} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			name varchar(255) NOT NULL,
@@ -42,7 +42,7 @@ class CMT_Events_Activator {
 		) {$charset};";
 
 		// Registrations table
-		$table_registrations = $wpdb->prefix . 'cmt_registrations';
+		$table_registrations = $wpdb->prefix . 'zymevents_registrations';
 		$sql_registrations = "CREATE TABLE {$table_registrations} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			event_id bigint(20) unsigned NOT NULL,
@@ -73,7 +73,7 @@ class CMT_Events_Activator {
 		) {$charset};";
 
 		// Attendees table (multi-attendee support)
-		$table_attendees = $wpdb->prefix . 'cmt_attendees';
+		$table_attendees = $wpdb->prefix . 'zymevents_attendees';
 		$sql_attendees = "CREATE TABLE {$table_attendees} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			registration_id bigint(20) unsigned NOT NULL,
@@ -97,16 +97,16 @@ class CMT_Events_Activator {
 		dbDelta( $sql_registrations );
 		dbDelta( $sql_attendees );
 
-		update_option( 'cmt_events_db_version', CMT_EVENTS_DB_VERSION );
+		update_option( 'zymevents_db_version', ZYMEVENTS_DB_VERSION );
 	}
 
 	// ----- Default fieldset -----
 
 	private static function seed_default_fieldset() {
 		global $wpdb;
-		$table = $wpdb->prefix . 'cmt_fieldsets';
+		$table = $wpdb->prefix . 'zymevents_fieldsets';
 
-		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE slug = 'cmt-standard'" );
+		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE slug = 'zymevents-standard'" );
 		if ( $exists ) {
 			return;
 		}
@@ -250,9 +250,9 @@ class CMT_Events_Activator {
 		);
 
 		$wpdb->insert( $table, array(
-			'name'           => 'CMT Standard',
-			'slug'           => 'cmt-standard',
-			'description'    => 'Default registration fieldset for CMT Association events.',
+			'name'           => 'ZymEvents Standard',
+			'slug'           => 'zymevents-standard',
+			'description'    => 'Default registration fieldset for ZymEvents.',
 			'fields'         => wp_json_encode( $fields ),
 			'consent_fields' => wp_json_encode( $consent_fields ),
 			'is_default'     => 1,
@@ -266,9 +266,9 @@ class CMT_Events_Activator {
 
 	private static function set_default_options() {
 		$defaults = array(
-			'cmt_events_payment_provider' => 'none',
-			'cmt_events_currency'         => 'USD',
-			'cmt_events_date_format'      => 'F j, Y',
+			'zymevents_payment_provider' => 'none',
+			'zymevents_currency'         => 'USD',
+			'zymevents_date_format'      => 'F j, Y',
 		);
 
 		foreach ( $defaults as $key => $value ) {

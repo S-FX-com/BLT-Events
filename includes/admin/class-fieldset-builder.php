@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Fieldset Builder Admin Page
+ * ZymEvents - Fieldset Builder Admin Page
  *
  * Provides a drag-and-drop interface for creating and editing registration fieldsets.
  */
@@ -9,16 +9,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Fieldset_Builder {
+class ZymEvents_Fieldset_Builder {
 
 	public static function init() {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ) );
-		add_action( 'wp_ajax_cmt_save_fieldset', array( __CLASS__, 'ajax_save_fieldset' ) );
-		add_action( 'wp_ajax_cmt_delete_fieldset', array( __CLASS__, 'ajax_delete_fieldset' ) );
+		add_action( 'wp_ajax_zymevents_save_fieldset', array( __CLASS__, 'ajax_save_fieldset' ) );
+		add_action( 'wp_ajax_zymevents_delete_fieldset', array( __CLASS__, 'ajax_delete_fieldset' ) );
 	}
 
 	public static function enqueue_scripts( $hook ) {
-		if ( strpos( $hook, 'cmt-fieldsets' ) === false ) {
+		if ( strpos( $hook, 'zymevents-fieldsets' ) === false ) {
 			return;
 		}
 
@@ -26,22 +26,22 @@ class CMT_Events_Fieldset_Builder {
 
 		wp_enqueue_style(
 			'cmt-fieldset-builder',
-			CMT_EVENTS_PLUGIN_URL . 'assets/css/fieldset-builder.css',
+			ZYMEVENTS_PLUGIN_URL . 'assets/css/fieldset-builder.css',
 			array(),
-			CMT_EVENTS_VERSION
+			ZYMEVENTS_VERSION
 		);
 
 		wp_enqueue_script(
 			'cmt-fieldset-builder',
-			CMT_EVENTS_PLUGIN_URL . 'assets/js/fieldset-builder.js',
+			ZYMEVENTS_PLUGIN_URL . 'assets/js/fieldset-builder.js',
 			array( 'jquery', 'jquery-ui-sortable' ),
-			CMT_EVENTS_VERSION,
+			ZYMEVENTS_VERSION,
 			true
 		);
 
 		wp_localize_script( 'cmt-fieldset-builder', 'cmtFieldsetData', array(
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'cmt_fieldset_nonce' ),
+			'nonce'   => wp_create_nonce( 'zymevents_fieldset_nonce' ),
 		) );
 	}
 
@@ -52,12 +52,12 @@ class CMT_Events_Fieldset_Builder {
 		$consent_fields = array();
 
 		if ( $editing_id ) {
-			$fieldset       = CMT_Events_Fieldsets::get_fieldset( $editing_id );
-			$fields         = CMT_Events_Fieldsets::get_fields( $fieldset );
-			$consent_fields = CMT_Events_Fieldsets::get_consent_fields( $fieldset );
+			$fieldset       = ZymEvents_Fieldsets::get_fieldset( $editing_id );
+			$fields         = ZymEvents_Fieldsets::get_fields( $fieldset );
+			$consent_fields = ZymEvents_Fieldsets::get_consent_fields( $fieldset );
 		}
 
-		$all_fieldsets = CMT_Events_Fieldsets::get_active_fieldsets();
+		$all_fieldsets = ZymEvents_Fieldsets::get_active_fieldsets();
 		?>
 		<div class="wrap cmt-fieldset-builder">
 			<h1>Registration Fieldsets</h1>
@@ -85,7 +85,7 @@ class CMT_Events_Fieldset_Builder {
 									<td><?php echo is_array( $fs_fields ) ? count( $fs_fields ) : 0; ?></td>
 									<td><?php echo $fs->is_default ? 'Yes' : ''; ?></td>
 									<td>
-										<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=cmt-fieldsets&edit=' . $fs->id ) ); ?>" class="button button-small">Edit</a>
+										<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=zymevents-fieldsets&edit=' . $fs->id ) ); ?>" class="button button-small">Edit</a>
 										<?php if ( ! $fs->is_default ) : ?>
 											<button type="button" class="button button-small button-link-delete cmt-delete-fieldset" data-id="<?php echo esc_attr( $fs->id ); ?>">Delete</button>
 										<?php endif; ?>
@@ -177,7 +177,7 @@ class CMT_Events_Fieldset_Builder {
 					<p class="submit">
 						<button type="submit" class="button button-primary" id="cmt-save-fieldset">Save Fieldset</button>
 						<?php if ( ! $editing_id ) : ?>
-							<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=cmt-fieldsets' ) ); ?>" class="button">Cancel</a>
+							<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=zymevents-fieldsets' ) ); ?>" class="button">Cancel</a>
 						<?php endif; ?>
 					</p>
 				</form>
@@ -187,7 +187,7 @@ class CMT_Events_Fieldset_Builder {
 	}
 
 	public static function ajax_save_fieldset() {
-		check_ajax_referer( 'cmt_fieldset_nonce', 'nonce' );
+		check_ajax_referer( 'zymevents_fieldset_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
@@ -259,7 +259,7 @@ class CMT_Events_Fieldset_Builder {
 			$data['id'] = $id;
 		}
 
-		$result = CMT_Events_Fieldsets::save_fieldset( $data );
+		$result = ZymEvents_Fieldsets::save_fieldset( $data );
 
 		if ( $result === false ) {
 			wp_send_json_error( array( 'message' => 'Failed to save fieldset.' ) );
@@ -272,7 +272,7 @@ class CMT_Events_Fieldset_Builder {
 	}
 
 	public static function ajax_delete_fieldset() {
-		check_ajax_referer( 'cmt_fieldset_nonce', 'nonce' );
+		check_ajax_referer( 'zymevents_fieldset_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
@@ -283,7 +283,7 @@ class CMT_Events_Fieldset_Builder {
 			wp_send_json_error( array( 'message' => 'Invalid fieldset.' ) );
 		}
 
-		$result = CMT_Events_Fieldsets::delete_fieldset( $id );
+		$result = ZymEvents_Fieldsets::delete_fieldset( $id );
 		if ( $result === false ) {
 			wp_send_json_error( array( 'message' => 'Failed to delete fieldset.' ) );
 		}

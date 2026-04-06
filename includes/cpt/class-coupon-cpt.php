@@ -1,11 +1,11 @@
 <?php
 /**
- * CMT Events - Coupon Custom Post Type
+ * ZymEvents - Coupon Custom Post Type
  *
  * Registers the "cmt_coupon" custom post type with meta boxes,
  * custom admin columns, and save logic for coupon management.
  *
- * Ported from Obie_Events_Coupons_CPT (includes/cpt/coupons.php).
+ * Coupon custom post type for ZymEvents.
  */
 
 // Exit if accessed directly.
@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class CMT_Events_Coupon_CPT {
+class ZymEvents_Coupon_CPT {
 
     /**
      * Post type slug.
      *
      * @var string
      */
-    public static $slug = 'cmt_coupon';
+    public static $slug = 'zymevents_coupon';
 
     /**
      * Initialize hooks for the coupon CPT.
@@ -75,7 +75,7 @@ class CMT_Events_Coupon_CPT {
      */
     public static function add_meta_boxes() {
         add_meta_box(
-            'cmt_coupon_details',
+            'zymevents_coupon_details',
             'Coupon Details',
             array( __CLASS__, 'render_details_meta_box' ),
             self::$slug,
@@ -84,7 +84,7 @@ class CMT_Events_Coupon_CPT {
         );
 
         add_meta_box(
-            'cmt_coupon_usage',
+            'zymevents_coupon_usage',
             'Usage Statistics',
             array( __CLASS__, 'render_usage_meta_box' ),
             self::$slug,
@@ -99,15 +99,15 @@ class CMT_Events_Coupon_CPT {
      * @param WP_Post $post The current post object.
      */
     public static function render_details_meta_box( $post ) {
-        wp_nonce_field( 'cmt_coupon_details', 'cmt_coupon_details_nonce' );
+        wp_nonce_field( 'zymevents_coupon_details', 'zymevents_coupon_details_nonce' );
 
-        $code              = get_post_meta( $post->ID, '_cmt_coupon_code', true );
-        $discount_type     = get_post_meta( $post->ID, '_cmt_discount_type', true ) ?: 'fixed';
-        $amount            = get_post_meta( $post->ID, '_cmt_amount', true ) ?: '';
-        $expiration_date   = get_post_meta( $post->ID, '_cmt_expiration_date', true ) ?: '';
-        $usage_limit       = get_post_meta( $post->ID, '_cmt_usage_limit', true ) ?: '';
-        $status            = get_post_meta( $post->ID, '_cmt_status', true ) ?: 'active';
-        $applicable_events = get_post_meta( $post->ID, '_cmt_applicable_events', true ) ?: array( 'all' );
+        $code              = get_post_meta( $post->ID, '_zymevents_coupon_code', true );
+        $discount_type     = get_post_meta( $post->ID, '_zymevents_discount_type', true ) ?: 'fixed';
+        $amount            = get_post_meta( $post->ID, '_zymevents_amount', true ) ?: '';
+        $expiration_date   = get_post_meta( $post->ID, '_zymevents_expiration_date', true ) ?: '';
+        $usage_limit       = get_post_meta( $post->ID, '_zymevents_usage_limit', true ) ?: '';
+        $status            = get_post_meta( $post->ID, '_zymevents_status', true ) ?: 'active';
+        $applicable_events = get_post_meta( $post->ID, '_zymevents_applicable_events', true ) ?: array( 'all' );
 
         ?>
         <table class="form-table">
@@ -161,7 +161,7 @@ class CMT_Events_Coupon_CPT {
             $events = array();
 
             $query = new WP_Query( array(
-                'post_type'      => CMT_Events_Event_CPT::$slug,
+                'post_type'      => ZymEvents_Event_CPT::$slug,
                 'posts_per_page' => -1,
                 'post_status'    => 'publish',
             ) );
@@ -200,10 +200,10 @@ class CMT_Events_Coupon_CPT {
      * @param WP_Post $post The current post object.
      */
     public static function render_usage_meta_box( $post ) {
-        $total_uses    = get_post_meta( $post->ID, '_cmt_total_uses', true ) ?: 0;
-        $total_savings = get_post_meta( $post->ID, '_cmt_total_savings', true ) ?: 0;
-        $last_used     = get_post_meta( $post->ID, '_cmt_last_used', true ) ?: 0;
-        $usage_history = get_post_meta( $post->ID, '_cmt_usage_history', true ) ?: array();
+        $total_uses    = get_post_meta( $post->ID, '_zymevents_total_uses', true ) ?: 0;
+        $total_savings = get_post_meta( $post->ID, '_zymevents_total_savings', true ) ?: 0;
+        $last_used     = get_post_meta( $post->ID, '_zymevents_last_used', true ) ?: 0;
+        $usage_history = get_post_meta( $post->ID, '_zymevents_usage_history', true ) ?: array();
 
         ?>
         <table class="form-table">
@@ -247,8 +247,8 @@ class CMT_Events_Coupon_CPT {
                             </td>
                             <td>
                                 <?php
-                                $customer_name  = get_post_meta( $usage['registration_id'], '_cmt_customer_name', true );
-                                $customer_email = get_post_meta( $usage['registration_id'], '_cmt_customer_email', true );
+                                $customer_name  = get_post_meta( $usage['registration_id'], '_zymevents_customer_name', true );
+                                $customer_email = get_post_meta( $usage['registration_id'], '_zymevents_customer_email', true );
                                 ?>
                                 <?php echo esc_html( $customer_name ); ?>
                                 <br />
@@ -292,13 +292,13 @@ class CMT_Events_Coupon_CPT {
     public static function custom_column( $column, $post_id ) {
         switch ( $column ) {
             case 'code':
-                $code = get_post_meta( $post_id, '_cmt_coupon_code', true );
+                $code = get_post_meta( $post_id, '_zymevents_coupon_code', true );
                 echo '<code>' . esc_html( $code ) . '</code>';
                 break;
 
             case 'discount':
-                $discount_type = get_post_meta( $post_id, '_cmt_discount_type', true ) ?: 'fixed';
-                $amount        = get_post_meta( $post_id, '_cmt_amount', true ) ?: 0;
+                $discount_type = get_post_meta( $post_id, '_zymevents_discount_type', true ) ?: 'fixed';
+                $amount        = get_post_meta( $post_id, '_zymevents_amount', true ) ?: 0;
 
                 if ( $discount_type === 'percentage' ) {
                     echo esc_html( $amount ) . '%';
@@ -308,8 +308,8 @@ class CMT_Events_Coupon_CPT {
                 break;
 
             case 'usage':
-                $total_uses  = get_post_meta( $post_id, '_cmt_total_uses', true ) ?: 0;
-                $usage_limit = get_post_meta( $post_id, '_cmt_usage_limit', true );
+                $total_uses  = get_post_meta( $post_id, '_zymevents_total_uses', true ) ?: 0;
+                $usage_limit = get_post_meta( $post_id, '_zymevents_usage_limit', true );
 
                 if ( ! empty( $usage_limit ) ) {
                     echo esc_html( $total_uses ) . ' / ' . esc_html( $usage_limit );
@@ -319,7 +319,7 @@ class CMT_Events_Coupon_CPT {
                 break;
 
             case 'expiration':
-                $expiration_date = get_post_meta( $post_id, '_cmt_expiration_date', true );
+                $expiration_date = get_post_meta( $post_id, '_zymevents_expiration_date', true );
                 if ( ! empty( $expiration_date ) ) {
                     echo esc_html( $expiration_date );
 
@@ -334,7 +334,7 @@ class CMT_Events_Coupon_CPT {
                 break;
 
             case 'status':
-                $status       = get_post_meta( $post_id, '_cmt_status', true ) ?: 'active';
+                $status       = get_post_meta( $post_id, '_zymevents_status', true ) ?: 'active';
                 $status_class = 'status-' . $status;
                 echo '<span class="' . esc_attr( $status_class ) . '">' . esc_html( ucfirst( $status ) ) . '</span>';
                 break;
@@ -363,12 +363,12 @@ class CMT_Events_Coupon_CPT {
      */
     public static function save_post( $post_id ) {
         // Check if our nonce is set.
-        if ( ! isset( $_POST['cmt_coupon_details_nonce'] ) ) {
+        if ( ! isset( $_POST['zymevents_coupon_details_nonce'] ) ) {
             return;
         }
 
         // Verify that the nonce is valid.
-        if ( ! wp_verify_nonce( $_POST['cmt_coupon_details_nonce'], 'cmt_coupon_details' ) ) {
+        if ( ! wp_verify_nonce( $_POST['zymevents_coupon_details_nonce'], 'zymevents_coupon_details' ) ) {
             return;
         }
 
@@ -384,32 +384,32 @@ class CMT_Events_Coupon_CPT {
 
         // Update the meta fields.
         if ( isset( $_POST['coupon_code'] ) ) {
-            update_post_meta( $post_id, '_cmt_coupon_code', sanitize_text_field( $_POST['coupon_code'] ) );
+            update_post_meta( $post_id, '_zymevents_coupon_code', sanitize_text_field( $_POST['coupon_code'] ) );
         }
 
         if ( isset( $_POST['discount_type'] ) ) {
-            update_post_meta( $post_id, '_cmt_discount_type', sanitize_text_field( $_POST['discount_type'] ) );
+            update_post_meta( $post_id, '_zymevents_discount_type', sanitize_text_field( $_POST['discount_type'] ) );
         }
 
         if ( isset( $_POST['amount'] ) ) {
-            update_post_meta( $post_id, '_cmt_amount', (float) $_POST['amount'] );
+            update_post_meta( $post_id, '_zymevents_amount', (float) $_POST['amount'] );
         }
 
         if ( isset( $_POST['expiration_date'] ) ) {
-            update_post_meta( $post_id, '_cmt_expiration_date', sanitize_text_field( $_POST['expiration_date'] ) );
+            update_post_meta( $post_id, '_zymevents_expiration_date', sanitize_text_field( $_POST['expiration_date'] ) );
         }
 
         if ( isset( $_POST['usage_limit'] ) ) {
-            update_post_meta( $post_id, '_cmt_usage_limit', (int) $_POST['usage_limit'] );
+            update_post_meta( $post_id, '_zymevents_usage_limit', (int) $_POST['usage_limit'] );
         }
 
         if ( isset( $_POST['status'] ) ) {
-            update_post_meta( $post_id, '_cmt_status', sanitize_text_field( $_POST['status'] ) );
+            update_post_meta( $post_id, '_zymevents_status', sanitize_text_field( $_POST['status'] ) );
         }
 
         if ( isset( $_POST['applicable_events'] ) ) {
             $applicable_events = array_map( 'sanitize_text_field', $_POST['applicable_events'] );
-            update_post_meta( $post_id, '_cmt_applicable_events', $applicable_events );
+            update_post_meta( $post_id, '_zymevents_applicable_events', $applicable_events );
         }
     }
 }

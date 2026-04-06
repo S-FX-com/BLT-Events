@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Registrations Business Logic
+ * ZymEvents - Registrations Business Logic
  *
  * Processes new registrations, handles multi-attendee logic,
  * coupon application, confirmation emails, and AJAX endpoints.
@@ -10,32 +10,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Registrations {
+class ZymEvents_Registrations {
 
 	private static $reg_db;
 	private static $att_db;
 
 	public static function init() {
-		self::$reg_db = new CMT_Events_Registrations_DB();
-		self::$att_db = new CMT_Events_Attendees_DB();
+		self::$reg_db = new ZymEvents_Registrations_DB();
+		self::$att_db = new ZymEvents_Attendees_DB();
 
 		// AJAX endpoints for free/direct registrations
-		add_action( 'wp_ajax_cmt_register', array( __CLASS__, 'ajax_register' ) );
-		add_action( 'wp_ajax_nopriv_cmt_register', array( __CLASS__, 'ajax_register' ) );
+		add_action( 'wp_ajax_zymevents_register', array( __CLASS__, 'ajax_register' ) );
+		add_action( 'wp_ajax_nopriv_zymevents_register', array( __CLASS__, 'ajax_register' ) );
 
 		// AJAX endpoint for coupon validation
-		add_action( 'wp_ajax_cmt_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
-		add_action( 'wp_ajax_nopriv_cmt_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
+		add_action( 'wp_ajax_zymevents_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
+		add_action( 'wp_ajax_nopriv_zymevents_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
 
 		// Hooks
-		add_action( 'cmt_registration_created', array( __CLASS__, 'send_confirmation_email' ), 10, 2 );
+		add_action( 'zymevents_registration_created', array( __CLASS__, 'send_confirmation_email' ), 10, 2 );
 	}
 
 	/**
 	 * AJAX handler for direct registration (free events / no payment gateway).
 	 */
 	public static function ajax_register() {
-		check_ajax_referer( 'cmt_registration_nonce', 'nonce' );
+		check_ajax_referer( 'zymevents_registration_nonce', 'nonce' );
 
 		$event_id = absint( $_POST['event_id'] ?? 0 );
 		if ( ! $event_id || get_post_type( $event_id ) !== 'event' ) {
@@ -65,19 +65,19 @@ class CMT_Events_Registrations {
 	 */
 	public static function process_registration( $event_id, $data, $payment = array() ) {
 		// Get event fieldset and validate
-		$fieldset = CMT_Events_Fieldsets::get_event_fieldset( $event_id );
+		$fieldset = ZymEvents_Fieldsets::get_event_fieldset( $event_id );
 		if ( ! $fieldset ) {
 			return new WP_Error( 'no_fieldset', 'No fieldset configured for this event.' );
 		}
 
 		// Validate primary registrant data
-		$validated = CMT_Events_Fieldsets::validate_submission( $fieldset, $data );
+		$validated = ZymEvents_Fieldsets::validate_submission( $fieldset, $data );
 		if ( is_wp_error( $validated ) ) {
 			return $validated;
 		}
 
 		// Check capacity
-		$capacity = (int) get_post_meta( $event_id, '_cmt_capacity', true );
+		$capacity = (int) get_post_meta( $event_id, '_zymevents_capacity', true );
 		$ticket_data = self::parse_ticket_selections( $event_id, $data );
 		$total_attendees = $ticket_data['total_quantity'];
 
@@ -101,7 +101,7 @@ class CMT_Events_Registrations {
 		$customer_name = trim( ( $validated['first_name'] ?? '' ) . ' ' . ( $validated['last_name'] ?? '' ) );
 
 		// Group ID for multi-attendee
-		$group_id = $total_attendees > 1 ? CMT_Events_Helpers::generate_group_id() : null;
+		$group_id = $total_attendees > 1 ? ZymEvents_Helpers::generate_group_id() : null;
 
 		// Determine status
 		$is_free = $pricing['total'] <= 0;
@@ -123,10 +123,10 @@ class CMT_Events_Registrations {
 			'total_amount'    => $pricing['subtotal'],
 			'discount_amount' => $pricing['discount'],
 			'amount_paid'     => $pricing['total'],
-			'currency'        => get_option( 'cmt_events_currency', 'USD' ),
+			'currency'        => get_option( 'zymevents_currency', 'USD' ),
 			'coupon_id'       => $pricing['coupon_id'] ?? null,
 			'coupon_data'     => ! empty( $pricing['coupon_data'] ) ? wp_json_encode( $pricing['coupon_data'] ) : null,
-			'payment_provider' => $payment['provider'] ?? ( $is_free ? 'free' : CMT_Events_Helpers::get_payment_provider() ),
+			'payment_provider' => $payment['provider'] ?? ( $is_free ? 'free' : ZymEvents_Helpers::get_payment_provider() ),
 			'payment_id'      => $payment['payment_id'] ?? null,
 			'payment_date'    => $payment['payment_date'] ?? ( $is_free ? current_time( 'mysql' ) : null ),
 			'status'          => $status,
@@ -144,7 +144,7 @@ class CMT_Events_Registrations {
 
 		// Update coupon usage
 		if ( ! empty( $pricing['coupon_id'] ) ) {
-			CMT_Events_Coupons::record_usage( $pricing['coupon_id'], $registration_id, $pricing['discount'] );
+			ZymEvents_Coupons::record_usage( $pricing['coupon_id'], $registration_id, $pricing['discount'] );
 		}
 
 		$result = array(
@@ -154,7 +154,7 @@ class CMT_Events_Registrations {
 			'status'          => $status,
 		);
 
-		do_action( 'cmt_registration_created', $registration_id, $result );
+		do_action( 'zymevents_registration_created', $registration_id, $result );
 
 		return $result;
 	}
@@ -163,7 +163,7 @@ class CMT_Events_Registrations {
 	 * Parse ticket type selections from form data.
 	 */
 	private static function parse_ticket_selections( $event_id, $data ) {
-		$ticket_types_raw = get_post_meta( $event_id, '_cmt_ticket_types', true );
+		$ticket_types_raw = get_post_meta( $event_id, '_zymevents_ticket_types', true );
 		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
 
@@ -210,9 +210,9 @@ class CMT_Events_Registrations {
 		$coupon_data = null;
 
 		// Apply group discount
-		$group_rules = get_post_meta( $event_id, '_cmt_group_discount', true );
+		$group_rules = get_post_meta( $event_id, '_zymevents_group_discount', true );
 		if ( $group_rules ) {
-			$group_calc = CMT_Events_Helpers::calculate_group_discount(
+			$group_calc = ZymEvents_Helpers::calculate_group_discount(
 				$subtotal / max( $ticket_data['total_quantity'], 1 ),
 				$ticket_data['total_quantity'],
 				$group_rules
@@ -223,15 +223,15 @@ class CMT_Events_Registrations {
 		// Apply coupon
 		$coupon_code = isset( $form_data['coupon_code'] ) ? strtoupper( trim( $form_data['coupon_code'] ) ) : '';
 		if ( $coupon_code ) {
-			$coupon_result = CMT_Events_Coupons::validate_coupon( $coupon_code, $event_id, $ticket_data['total_quantity'] );
+			$coupon_result = ZymEvents_Coupons::validate_coupon( $coupon_code, $event_id, $ticket_data['total_quantity'] );
 			if ( ! is_wp_error( $coupon_result ) ) {
-				$coupon_discount = CMT_Events_Coupons::calculate_discount( $coupon_result, $subtotal - $discount );
+				$coupon_discount = ZymEvents_Coupons::calculate_discount( $coupon_result, $subtotal - $discount );
 				$discount  += $coupon_discount;
 				$coupon_id  = $coupon_result->ID;
 				$coupon_data = array(
 					'code'     => $coupon_code,
-					'type'     => get_post_meta( $coupon_result->ID, '_cmt_discount_type', true ),
-					'amount'   => get_post_meta( $coupon_result->ID, '_cmt_amount', true ),
+					'type'     => get_post_meta( $coupon_result->ID, '_zymevents_discount_type', true ),
+					'amount'   => get_post_meta( $coupon_result->ID, '_zymevents_amount', true ),
 					'saved'    => $coupon_discount,
 				);
 			}
@@ -270,7 +270,7 @@ class CMT_Events_Registrations {
 				$attendees[] = array(
 					'attendee_name'  => sanitize_text_field( $att['name'] ?? '' ),
 					'attendee_email' => sanitize_email( $att['email'] ?? '' ),
-					'attendee_phone' => CMT_Events_Helpers::sanitize_phone( $att['phone'] ?? '' ),
+					'attendee_phone' => ZymEvents_Helpers::sanitize_phone( $att['phone'] ?? '' ),
 					'ticket_type'    => sanitize_text_field( $att['ticket_type'] ?? '' ),
 					'ticket_price'   => floatval( $att['ticket_price'] ?? 0 ),
 					'custom_fields'  => isset( $att['custom_fields'] ) ? wp_json_encode( $att['custom_fields'] ) : null,
@@ -285,20 +285,20 @@ class CMT_Events_Registrations {
 	 * AJAX handler for coupon validation.
 	 */
 	public static function ajax_validate_coupon() {
-		check_ajax_referer( 'cmt_registration_nonce', 'nonce' );
+		check_ajax_referer( 'zymevents_registration_nonce', 'nonce' );
 
 		$code     = strtoupper( sanitize_text_field( $_POST['coupon_code'] ?? '' ) );
 		$event_id = absint( $_POST['event_id'] ?? 0 );
 		$quantity = absint( $_POST['quantity'] ?? 1 );
 
-		$result = CMT_Events_Coupons::validate_coupon( $code, $event_id, $quantity );
+		$result = ZymEvents_Coupons::validate_coupon( $code, $event_id, $quantity );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		$type   = get_post_meta( $result->ID, '_cmt_discount_type', true );
-		$amount = get_post_meta( $result->ID, '_cmt_amount', true );
+		$type   = get_post_meta( $result->ID, '_zymevents_discount_type', true );
+		$amount = get_post_meta( $result->ID, '_zymevents_amount', true );
 
 		wp_send_json_success( array(
 			'code'   => $code,
@@ -322,11 +322,11 @@ class CMT_Events_Registrations {
 			return;
 		}
 
-		$subject_template = get_option( 'cmt_events_email_subject_registration', 'Registration confirmation for {event_name}' );
-		$body_template    = get_option( 'cmt_events_email_template_registration', 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.' );
+		$subject_template = get_option( 'zymevents_email_subject_registration', 'Registration confirmation for {event_name}' );
+		$body_template    = get_option( 'zymevents_email_template_registration', 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.' );
 
-		$event_date = get_post_meta( $event->ID, '_cmt_event_date', true );
-		$event_time = get_post_meta( $event->ID, '_cmt_event_start_time', true );
+		$event_date = get_post_meta( $event->ID, '_zymevents_event_date', true );
+		$event_time = get_post_meta( $event->ID, '_zymevents_event_start_time', true );
 
 		$replacements = array(
 			'{customer_name}' => $reg->customer_name,
@@ -391,7 +391,7 @@ class CMT_Events_Registrations {
 		$result = self::$reg_db->update( $registration_id, $data );
 
 		if ( $result !== false ) {
-			do_action( 'cmt_registration_confirmed', $registration_id );
+			do_action( 'zymevents_registration_confirmed', $registration_id );
 		}
 
 		return $result;

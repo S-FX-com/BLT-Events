@@ -1,9 +1,9 @@
 /* ========================================
-   CMT Events - Frontend Styles
+   ZymEvents - Frontend Styles
    ======================================== */
 
 /* --- Registration Form --- */
-.cmt-registration-form {
+.zymevents-registration-form {
 	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
@@ -13,7 +13,7 @@
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.cmt-registration-form h3 {
+.zymevents-registration-form h3 {
 	margin: 0 0 1rem;
 	color: #1f2937;
 	font-size: 1.25rem;
@@ -21,14 +21,14 @@
 }
 
 /* --- Ticket Selection --- */
-.cmt-ticket-selection {
+.zymevents-ticket-selection {
 	margin-bottom: 1.5rem;
 	padding: 1.5rem;
 	background: #f8fafc;
 	border-radius: 8px;
 }
 
-.cmt-ticket-type {
+.zymevents-ticket-type {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -38,38 +38,38 @@
 	gap: 0.5rem;
 }
 
-.cmt-ticket-type:last-of-type {
+.zymevents-ticket-type:last-of-type {
 	border-bottom: none;
 }
 
-.cmt-ticket-name {
+.zymevents-ticket-name {
 	flex: 1;
 	color: #374151;
 	font-weight: 500;
 	min-width: 120px;
 }
 
-.cmt-ticket-desc {
+.zymevents-ticket-desc {
 	flex-basis: 100%;
 	color: #6b7280;
 	font-size: 0.875rem;
 	order: 10;
 }
 
-.cmt-ticket-price {
+.zymevents-ticket-price {
 	margin: 0 1rem;
 	color: #059669;
 	font-weight: 600;
 	white-space: nowrap;
 }
 
-.cmt-quantity-controls {
+.zymevents-quantity-controls {
 	display: flex;
 	align-items: center;
 	gap: 0.25rem;
 }
 
-.cmt-qty-btn {
+.zymevents-qty-btn {
 	cursor: pointer;
 	font-size: 18px;
 	background: #fff;
@@ -85,12 +85,12 @@
 	line-height: 1;
 }
 
-.cmt-qty-btn:hover {
+.zymevents-qty-btn:hover {
 	border-color: #6366f1;
 	color: #6366f1;
 }
 
-.cmt-ticket-quantity,
+.zymevents-ticket-quantity,
 .sc-ticket-quantity {
 	width: 48px;
 	text-align: center;
@@ -101,12 +101,12 @@
 	-moz-appearance: textfield;
 }
 
-.cmt-ticket-quantity::-webkit-inner-spin-button,
+.zymevents-ticket-quantity::-webkit-inner-spin-button,
 .sc-ticket-quantity::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 }
 
-.cmt-total-amount {
+.zymevents-total-amount {
 	margin-top: 1rem;
 	padding-top: 0.75rem;
 	border-top: 2px solid #e5e7eb;
@@ -117,32 +117,32 @@
 }
 
 /* --- Fields Grid --- */
-.cmt-fields-section {
+.zymevents-fields-section {
 	margin-bottom: 1.5rem;
 }
 
-.cmt-fields-grid {
+.zymevents-fields-grid {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 1rem;
 }
 
-.cmt-field-wrap {
+.zymevents-field-wrap {
 	margin-bottom: 0.25rem;
 }
 
-.cmt-field-full { flex: 0 0 100%; }
-.cmt-field-half { flex: 0 0 calc(50% - 0.5rem); }
-.cmt-field-third { flex: 0 0 calc(33.333% - 0.667rem); }
+.zymevents-field-full { flex: 0 0 100%; }
+.zymevents-field-half { flex: 0 0 calc(50% - 0.5rem); }
+.zymevents-field-third { flex: 0 0 calc(33.333% - 0.667rem); }
 
 @media (max-width: 600px) {
-	.cmt-field-half,
-	.cmt-field-third {
+	.zymevents-field-half,
+	.zymevents-field-third {
 		flex: 0 0 100%;
 	}
 }
 
-.cmt-field-wrap label {
+.zymevents-field-wrap label {
 	display: block;
 	margin-bottom: 0.375rem;
 	color: #374151;
@@ -150,18 +150,18 @@
 	font-size: 0.95rem;
 }
 
-.cmt-required {
+.zymevents-required {
 	color: #dc2626;
 }
 
-.cmt-field-wrap input[type="text"],
-.cmt-field-wrap input[type="email"],
-.cmt-field-wrap input[type="tel"],
-.cmt-field-wrap input[type="url"],
-.cmt-field-wrap input[type="number"],
-.cmt-field-wrap input[type="date"],
-.cmt-field-wrap select,
-.cmt-field-wrap textarea {
+.zymevents-field-wrap input[type="text"],
+.zymevents-field-wrap input[type="email"],
+.zymevents-field-wrap input[type="tel"],
+.zymevents-field-wrap input[type="url"],
+.zymevents-field-wrap input[type="number"],
+.zymevents-field-wrap input[type="date"],
+.zymevents-field-wrap select,
+.zymevents-field-wrap textarea {
 	width: 100%;
 	padding: 0.625rem 0.75rem;
 	border: 1px solid #e5e7eb;
@@ -172,29 +172,29 @@
 	box-sizing: border-box;
 }
 
-.cmt-field-wrap input:focus,
-.cmt-field-wrap select:focus,
-.cmt-field-wrap textarea:focus {
+.zymevents-field-wrap input:focus,
+.zymevents-field-wrap select:focus,
+.zymevents-field-wrap textarea:focus {
 	outline: none;
 	border-color: #6366f1;
 	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-.cmt-other-input {
+.zymevents-other-input {
 	margin-top: 0.5rem;
 }
 
 /* --- Coupon --- */
-.cmt-coupon-section {
+.zymevents-coupon-section {
 	margin-bottom: 1.5rem;
 }
 
-.cmt-coupon-input {
+.zymevents-coupon-input {
 	display: flex;
 	gap: 0.5rem;
 }
 
-.cmt-coupon-input input {
+.zymevents-coupon-input input {
 	flex: 1;
 	padding: 0.625rem 0.75rem;
 	border: 1px solid #e5e7eb;
@@ -203,7 +203,7 @@
 	background: #f9fafb;
 }
 
-.cmt-btn-secondary {
+.zymevents-btn-secondary {
 	padding: 0.625rem 1rem;
 	background: #f3f4f6;
 	color: #374151;
@@ -215,39 +215,39 @@
 	transition: background 0.15s;
 }
 
-.cmt-btn-secondary:hover {
+.zymevents-btn-secondary:hover {
 	background: #e5e7eb;
 }
 
-#cmt-coupon-message {
+#zymevents-coupon-message {
 	margin-top: 0.5rem;
 	padding: 0.5rem 0.75rem;
 	border-radius: 6px;
 	font-size: 0.875rem;
 }
 
-#cmt-coupon-message.cmt-msg-success {
+#zymevents-coupon-message.zymevents-msg-success {
 	background: #f0fdf4;
 	color: #059669;
 	border: 1px solid #bbf7d0;
 }
 
-#cmt-coupon-message.cmt-msg-error {
+#zymevents-coupon-message.zymevents-msg-error {
 	background: #fef2f2;
 	color: #dc2626;
 	border: 1px solid #fecaca;
 }
 
 /* --- Consent --- */
-.cmt-consent-section {
+.zymevents-consent-section {
 	margin-bottom: 1.5rem;
 }
 
-.cmt-consent-field {
+.zymevents-consent-field {
 	margin-bottom: 0.75rem;
 }
 
-.cmt-consent-field label {
+.zymevents-consent-field label {
 	display: flex;
 	align-items: flex-start;
 	gap: 0.5rem;
@@ -256,55 +256,55 @@
 	cursor: pointer;
 }
 
-.cmt-consent-field input[type="checkbox"] {
+.zymevents-consent-field input[type="checkbox"] {
 	margin-top: 0.2rem;
 	flex-shrink: 0;
 }
 
 /* --- Payment Section --- */
-.cmt-payment-section {
+.zymevents-payment-section {
 	margin-bottom: 1.5rem;
 }
 
-#cmt-card-element {
+#zymevents-card-element {
 	padding: 0.875rem;
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
 	background: #f9fafb;
 }
 
-#cmt-card-errors {
+#zymevents-card-errors {
 	color: #dc2626;
 	font-size: 0.875rem;
 	margin-top: 0.5rem;
 }
 
 /* --- Form Messages --- */
-#cmt-form-messages {
+#zymevents-form-messages {
 	margin-bottom: 1rem;
 	padding: 0.75rem 1rem;
 	border-radius: 8px;
 	font-size: 0.95rem;
 }
 
-#cmt-form-messages.cmt-msg-success {
+#zymevents-form-messages.zymevents-msg-success {
 	background: #f0fdf4;
 	color: #059669;
 	border: 1px solid #bbf7d0;
 }
 
-#cmt-form-messages.cmt-msg-error {
+#zymevents-form-messages.zymevents-msg-error {
 	background: #fef2f2;
 	color: #dc2626;
 	border: 1px solid #fecaca;
 }
 
 /* --- Submit Button --- */
-.cmt-form-actions {
+.zymevents-form-actions {
 	margin-top: 1.5rem;
 }
 
-.cmt-submit-btn {
+.zymevents-submit-btn {
 	width: 100%;
 	padding: 0.875rem 1rem;
 	min-height: 48px;
@@ -318,24 +318,24 @@
 	transition: background-color 0.2s, transform 0.1s;
 }
 
-.cmt-submit-btn:hover:not(:disabled) {
+.zymevents-submit-btn:hover:not(:disabled) {
 	background: #4f46e5;
 	transform: translateY(-1px);
 }
 
-.cmt-submit-btn:focus {
+.zymevents-submit-btn:focus {
 	outline: none;
 	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
 }
 
-.cmt-submit-btn:disabled {
+.zymevents-submit-btn:disabled {
 	background: #9ca3af;
 	cursor: not-allowed;
 	transform: none;
 }
 
 /* --- SureCart Form --- */
-.cmt-surecart-form {
+.zymevents-surecart-form {
 	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
@@ -344,26 +344,26 @@
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
 }
 
-.cmt-checkout-actions {
+.zymevents-checkout-actions {
 	margin-top: 1.5rem;
 	text-align: center;
 }
 
-.cmt-checkout-note {
+.zymevents-checkout-note {
 	margin-top: 0.5rem;
 	color: #6b7280;
 	font-size: 0.875rem;
 	font-style: italic;
 }
 
-.cmt-checkout-message {
+.zymevents-checkout-message {
 	margin-top: 1rem;
 	padding: 0.75rem 1rem;
 	border-radius: 8px;
 	font-size: 0.95rem;
 }
 
-.cmt-sync-notice {
+.zymevents-sync-notice {
 	padding: 1.5rem;
 	background: #fffbeb;
 	border: 1px solid #fde68a;
@@ -373,7 +373,7 @@
 }
 
 /* --- Registration Closed / Sold Out --- */
-.cmt-registration-closed {
+.zymevents-registration-closed {
 	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
@@ -383,7 +383,7 @@
 	color: #6b7280;
 }
 
-.cmt-error {
+.zymevents-error {
 	color: #dc2626;
 	padding: 1rem;
 }

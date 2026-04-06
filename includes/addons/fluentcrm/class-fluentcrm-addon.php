@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - FluentCRM Add-on
+ * ZymEvents - FluentCRM Add-on
  *
  * Syncs event registrations with FluentCRM contacts and lists.
  * Only loaded when FluentCRM is active (FLUENTCRM constant defined).
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_FluentCRM_Addon {
+class ZymEvents_FluentCRM_Addon {
 
 	public static function init() {
 		if ( ! defined( 'FLUENTCRM' ) ) {
@@ -18,12 +18,12 @@ class CMT_Events_FluentCRM_Addon {
 		}
 
 		// Sync on registration
-		add_action( 'cmt_registration_created', array( __CLASS__, 'sync_contact' ), 20, 2 );
-		add_action( 'cmt_registration_confirmed', array( __CLASS__, 'tag_confirmed' ), 20, 1 );
-		add_action( 'cmt_registration_refunded', array( __CLASS__, 'tag_refunded' ), 20, 1 );
+		add_action( 'zymevents_registration_created', array( __CLASS__, 'sync_contact' ), 20, 2 );
+		add_action( 'zymevents_registration_confirmed', array( __CLASS__, 'tag_confirmed' ), 20, 1 );
+		add_action( 'zymevents_registration_refunded', array( __CLASS__, 'tag_refunded' ), 20, 1 );
 
 		// Admin settings
-		add_filter( 'cmt_events_settings_sections', array( __CLASS__, 'add_settings_section' ) );
+		add_filter( 'zymevents_settings_sections', array( __CLASS__, 'add_settings_section' ) );
 	}
 
 	/**
@@ -34,7 +34,7 @@ class CMT_Events_FluentCRM_Addon {
 			return;
 		}
 
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new ZymEvents_Registrations_DB();
 		$reg    = $reg_db->get( $registration_id );
 
 		if ( ! $reg ) {
@@ -61,13 +61,13 @@ class CMT_Events_FluentCRM_Addon {
 		}
 
 		// Add to event-specific list if configured
-		$list_id = get_option( 'cmt_events_fluentcrm_list_id', '' );
+		$list_id = get_option( 'zymevents_fluentcrm_list_id', '' );
 		if ( $list_id ) {
 			$contact->attachLists( array( $list_id ) );
 		}
 
 		// Add registration tag
-		$tag_id = get_option( 'cmt_events_fluentcrm_registration_tag', '' );
+		$tag_id = get_option( 'zymevents_fluentcrm_registration_tag', '' );
 		if ( $tag_id ) {
 			$contact->attachTags( array( $tag_id ) );
 		}
@@ -75,7 +75,7 @@ class CMT_Events_FluentCRM_Addon {
 		// Add event-specific tag
 		$event = get_post( $reg->event_id );
 		if ( $event ) {
-			$event_tag = get_post_meta( $reg->event_id, '_cmt_fluentcrm_tag_id', true );
+			$event_tag = get_post_meta( $reg->event_id, '_zymevents_fluentcrm_tag_id', true );
 			if ( $event_tag ) {
 				$contact->attachTags( array( $event_tag ) );
 			}
@@ -110,7 +110,7 @@ class CMT_Events_FluentCRM_Addon {
 	 * Tag a contact as confirmed when payment is received.
 	 */
 	public static function tag_confirmed( $registration_id ) {
-		$tag_id = get_option( 'cmt_events_fluentcrm_confirmed_tag', '' );
+		$tag_id = get_option( 'zymevents_fluentcrm_confirmed_tag', '' );
 		if ( $tag_id ) {
 			self::apply_tag_to_registration( $registration_id, $tag_id );
 		}
@@ -120,13 +120,13 @@ class CMT_Events_FluentCRM_Addon {
 	 * Tag a contact as refunded.
 	 */
 	public static function tag_refunded( $registration_id ) {
-		$tag_id = get_option( 'cmt_events_fluentcrm_refunded_tag', '' );
+		$tag_id = get_option( 'zymevents_fluentcrm_refunded_tag', '' );
 		if ( $tag_id ) {
 			self::apply_tag_to_registration( $registration_id, $tag_id );
 		}
 
 		// Remove confirmed tag
-		$confirmed_tag = get_option( 'cmt_events_fluentcrm_confirmed_tag', '' );
+		$confirmed_tag = get_option( 'zymevents_fluentcrm_confirmed_tag', '' );
 		if ( $confirmed_tag ) {
 			self::remove_tag_from_registration( $registration_id, $confirmed_tag );
 		}
@@ -140,7 +140,7 @@ class CMT_Events_FluentCRM_Addon {
 			return;
 		}
 
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new ZymEvents_Registrations_DB();
 		$reg    = $reg_db->get( $registration_id );
 
 		if ( ! $reg ) {
@@ -163,7 +163,7 @@ class CMT_Events_FluentCRM_Addon {
 			return;
 		}
 
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new ZymEvents_Registrations_DB();
 		$reg    = $reg_db->get( $registration_id );
 
 		if ( ! $reg ) {
@@ -185,10 +185,10 @@ class CMT_Events_FluentCRM_Addon {
 		$sections['fluentcrm'] = array(
 			'title'  => 'FluentCRM Integration',
 			'fields' => array(
-				'cmt_events_fluentcrm_list_id'          => 'Default List ID',
-				'cmt_events_fluentcrm_registration_tag' => 'Registration Tag ID',
-				'cmt_events_fluentcrm_confirmed_tag'    => 'Confirmed Tag ID',
-				'cmt_events_fluentcrm_refunded_tag'     => 'Refunded Tag ID',
+				'zymevents_fluentcrm_list_id'          => 'Default List ID',
+				'zymevents_fluentcrm_registration_tag' => 'Registration Tag ID',
+				'zymevents_fluentcrm_confirmed_tag'    => 'Confirmed Tag ID',
+				'zymevents_fluentcrm_refunded_tag'     => 'Refunded Tag ID',
 			),
 		);
 		return $sections;

@@ -1,5 +1,5 @@
 /**
- * CMT Events - Admin JavaScript
+ * ZymEvents - Admin JavaScript
  *
  * Handles admin UI interactions: coupon code generation, payment provider toggle, etc.
  */
@@ -22,11 +22,11 @@ jQuery(document).ready(function ($) {
 	});
 
 	// Payment provider toggle on settings page
-	$('input[name="cmt_events_payment_provider"]').on("change", function () {
+	$('input[name="zymevents_payment_provider"]').on("change", function () {
 		var provider = $(this).val();
-		$(".cmt-provider-stripe, .cmt-provider-surecart").hide();
+		$(".zymevents-provider-stripe, .zymevents-provider-surecart").hide();
 		if (provider !== "none") {
-			$(".cmt-provider-" + provider).show();
+			$(".zymevents-provider-" + provider).show();
 		}
 	});
 });

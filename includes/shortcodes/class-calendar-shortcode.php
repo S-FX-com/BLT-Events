@@ -1,19 +1,19 @@
 <?php
 /**
- * CMT Events - Calendar Shortcode
+ * ZymEvents - Calendar Shortcode
  *
- * [cmt_events_calendar] - Renders events in list or grid view.
- * Usage: [cmt_events_calendar view="list" category="" limit="12"]
+ * [zymevents_calendar] - Renders events in list or grid view.
+ * Usage: [zymevents_calendar view="list" category="" limit="12"]
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Calendar_Shortcode {
+class ZymEvents_Calendar_Shortcode {
 
 	public static function init() {
-		add_shortcode( 'cmt_events_calendar', array( __CLASS__, 'render' ) );
+		add_shortcode( 'zymevents_calendar', array( __CLASS__, 'render' ) );
 	}
 
 	public static function render( $atts ) {
@@ -28,7 +28,7 @@ class CMT_Events_Calendar_Shortcode {
 			'post_type'      => 'event',
 			'post_status'    => 'publish',
 			'posts_per_page' => intval( $atts['limit'] ),
-			'meta_key'       => '_cmt_event_date',
+			'meta_key'       => '_zymevents_event_date',
 			'orderby'        => 'meta_value',
 			'order'          => 'ASC',
 		);
@@ -37,7 +37,7 @@ class CMT_Events_Calendar_Shortcode {
 		if ( $atts['past'] !== 'yes' ) {
 			$args['meta_query'] = array(
 				array(
-					'key'     => '_cmt_event_date',
+					'key'     => '_zymevents_event_date',
 					'value'   => current_time( 'Y-m-d' ),
 					'compare' => '>=',
 					'type'    => 'DATE',
@@ -58,32 +58,32 @@ class CMT_Events_Calendar_Shortcode {
 
 		$query = new WP_Query( $args );
 
-		wp_enqueue_style( 'cmt-events-calendar', CMT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), CMT_EVENTS_VERSION );
+		wp_enqueue_style( 'zymevents-calendar', ZYMEVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), ZYMEVENTS_VERSION );
 
 		ob_start();
 
 		if ( ! $query->have_posts() ) {
-			echo '<div class="cmt-events-empty"><p>No upcoming events found.</p></div>';
+			echo '<div class="zymevents-empty"><p>No upcoming events found.</p></div>';
 			wp_reset_postdata();
 			return ob_get_clean();
 		}
 
-		$view_class = $atts['view'] === 'grid' ? 'cmt-events-grid' : 'cmt-events-list';
+		$view_class = $atts['view'] === 'grid' ? 'zymevents-grid' : 'zymevents-list';
 		?>
-		<div class="cmt-events-calendar <?php echo esc_attr( $view_class ); ?>">
+		<div class="zymevents-calendar <?php echo esc_attr( $view_class ); ?>">
 			<?php while ( $query->have_posts() ) : $query->the_post(); ?>
 				<?php
 				$event_id    = get_the_ID();
-				$event_date  = get_post_meta( $event_id, '_cmt_event_date', true );
-				$start_time  = get_post_meta( $event_id, '_cmt_event_start_time', true );
-				$end_time    = get_post_meta( $event_id, '_cmt_event_end_time', true );
-				$all_day     = get_post_meta( $event_id, '_cmt_event_all_day', true );
-				$venue       = get_post_meta( $event_id, '_cmt_event_venue', true );
-				$event_type  = get_post_meta( $event_id, '_cmt_event_type', true );
-				$ticket_raw  = get_post_meta( $event_id, '_cmt_ticket_types', true );
+				$event_date  = get_post_meta( $event_id, '_zymevents_event_date', true );
+				$start_time  = get_post_meta( $event_id, '_zymevents_event_start_time', true );
+				$end_time    = get_post_meta( $event_id, '_zymevents_event_end_time', true );
+				$all_day     = get_post_meta( $event_id, '_zymevents_event_all_day', true );
+				$venue       = get_post_meta( $event_id, '_zymevents_event_venue', true );
+				$event_type  = get_post_meta( $event_id, '_zymevents_event_type', true );
+				$ticket_raw  = get_post_meta( $event_id, '_zymevents_ticket_types', true );
 				$tickets     = is_string( $ticket_raw ) ? json_decode( $ticket_raw, true ) : $ticket_raw;
 
-				$date_format = get_option( 'cmt_events_date_format', 'F j, Y' );
+				$date_format = get_option( 'zymevents_date_format', 'F j, Y' );
 				$formatted_date = ! empty( $event_date ) ? date_i18n( $date_format, strtotime( $event_date ) ) : '';
 
 				$time_display = '';
@@ -153,11 +153,11 @@ class CMT_Events_Calendar_Shortcode {
 								<?php if ( $max_price > 0 ) : ?>
 									<span class="cmt-event-price">
 										<?php if ( $min_price == $max_price ) : ?>
-											<?php echo esc_html( CMT_Events_Helpers::format_price( $min_price ) ); ?>
+											<?php echo esc_html( ZymEvents_Helpers::format_price( $min_price ) ); ?>
 										<?php elseif ( $min_price == 0 ) : ?>
-											Free - <?php echo esc_html( CMT_Events_Helpers::format_price( $max_price ) ); ?>
+											Free - <?php echo esc_html( ZymEvents_Helpers::format_price( $max_price ) ); ?>
 										<?php else : ?>
-											<?php echo esc_html( CMT_Events_Helpers::format_price( $min_price ) ); ?> - <?php echo esc_html( CMT_Events_Helpers::format_price( $max_price ) ); ?>
+											<?php echo esc_html( ZymEvents_Helpers::format_price( $min_price ) ); ?> - <?php echo esc_html( ZymEvents_Helpers::format_price( $max_price ) ); ?>
 										<?php endif; ?>
 									</span>
 								<?php else : ?>

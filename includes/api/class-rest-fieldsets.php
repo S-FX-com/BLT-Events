@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - REST API for Fieldsets
+ * ZymEvents - REST API for Fieldsets
  *
  * Provides REST endpoints for managing registration fieldsets.
  */
@@ -9,9 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_REST_Fieldsets {
+class ZymEvents_REST_Fieldsets {
 
-	private static $namespace = 'cmt-events/v1';
+	private static $namespace = 'zymevents/v1';
 
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
@@ -74,7 +74,7 @@ class CMT_Events_REST_Fieldsets {
 	}
 
 	public static function get_fieldsets() {
-		$fieldsets = CMT_Events_Fieldsets::get_active_fieldsets();
+		$fieldsets = ZymEvents_Fieldsets::get_active_fieldsets();
 
 		$data = array();
 		foreach ( $fieldsets as $fs ) {
@@ -86,7 +86,7 @@ class CMT_Events_REST_Fieldsets {
 
 	public static function get_fieldset( $request ) {
 		$id       = $request->get_param( 'id' );
-		$fieldset = CMT_Events_Fieldsets::get_fieldset( $id );
+		$fieldset = ZymEvents_Fieldsets::get_fieldset( $id );
 
 		if ( ! $fieldset ) {
 			return new WP_Error( 'not_found', 'Fieldset not found.', array( 'status' => 404 ) );
@@ -111,13 +111,13 @@ class CMT_Events_REST_Fieldsets {
 			return new WP_Error( 'missing_name', 'Fieldset name is required.', array( 'status' => 400 ) );
 		}
 
-		$id = CMT_Events_Fieldsets::save_fieldset( $data );
+		$id = ZymEvents_Fieldsets::save_fieldset( $data );
 
 		if ( ! $id ) {
 			return new WP_Error( 'create_failed', 'Failed to create fieldset.', array( 'status' => 500 ) );
 		}
 
-		$fieldset = CMT_Events_Fieldsets::get_fieldset( $id );
+		$fieldset = ZymEvents_Fieldsets::get_fieldset( $id );
 		return new WP_REST_Response( self::prepare_fieldset( $fieldset ), 201 );
 	}
 
@@ -125,7 +125,7 @@ class CMT_Events_REST_Fieldsets {
 		$id   = $request->get_param( 'id' );
 		$body = $request->get_json_params();
 
-		$existing = CMT_Events_Fieldsets::get_fieldset( $id );
+		$existing = ZymEvents_Fieldsets::get_fieldset( $id );
 		if ( ! $existing ) {
 			return new WP_Error( 'not_found', 'Fieldset not found.', array( 'status' => 404 ) );
 		}
@@ -151,20 +151,20 @@ class CMT_Events_REST_Fieldsets {
 			$data['status'] = sanitize_text_field( $body['status'] );
 		}
 
-		$result = CMT_Events_Fieldsets::save_fieldset( $data );
+		$result = ZymEvents_Fieldsets::save_fieldset( $data );
 
 		if ( $result === false ) {
 			return new WP_Error( 'update_failed', 'Failed to update fieldset.', array( 'status' => 500 ) );
 		}
 
-		$fieldset = CMT_Events_Fieldsets::get_fieldset( $id );
+		$fieldset = ZymEvents_Fieldsets::get_fieldset( $id );
 		return new WP_REST_Response( self::prepare_fieldset( $fieldset ), 200 );
 	}
 
 	public static function delete_fieldset( $request ) {
 		$id = $request->get_param( 'id' );
 
-		$existing = CMT_Events_Fieldsets::get_fieldset( $id );
+		$existing = ZymEvents_Fieldsets::get_fieldset( $id );
 		if ( ! $existing ) {
 			return new WP_Error( 'not_found', 'Fieldset not found.', array( 'status' => 404 ) );
 		}
@@ -173,7 +173,7 @@ class CMT_Events_REST_Fieldsets {
 			return new WP_Error( 'cannot_delete', 'Cannot delete the default fieldset.', array( 'status' => 403 ) );
 		}
 
-		$result = CMT_Events_Fieldsets::delete_fieldset( $id );
+		$result = ZymEvents_Fieldsets::delete_fieldset( $id );
 
 		if ( $result === false ) {
 			return new WP_Error( 'delete_failed', 'Failed to delete fieldset.', array( 'status' => 500 ) );
@@ -190,7 +190,7 @@ class CMT_Events_REST_Fieldsets {
 			return new WP_Error( 'not_found', 'Event not found.', array( 'status' => 404 ) );
 		}
 
-		$fieldset = CMT_Events_Fieldsets::get_event_fieldset( $event_id );
+		$fieldset = ZymEvents_Fieldsets::get_event_fieldset( $event_id );
 
 		if ( ! $fieldset ) {
 			return new WP_Error( 'no_fieldset', 'No fieldset configured.', array( 'status' => 404 ) );

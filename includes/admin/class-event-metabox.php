@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Event Meta Boxes
+ * ZymEvents - Event Meta Boxes
  *
  * Adds meta boxes to the event editor: date/time, tickets, capacity,
  * fieldset selection, group discounts, and registration overview.
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Event_Metabox {
+class ZymEvents_Event_Metabox {
 
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
@@ -19,7 +19,7 @@ class CMT_Events_Event_Metabox {
 
 	public static function add_meta_boxes() {
 		add_meta_box(
-			'cmt_event_details',
+			'zymevents_event_details',
 			'Event Details',
 			array( __CLASS__, 'render_details_box' ),
 			'event',
@@ -28,7 +28,7 @@ class CMT_Events_Event_Metabox {
 		);
 
 		add_meta_box(
-			'cmt_event_tickets',
+			'zymevents_event_tickets',
 			'Ticket Types',
 			array( __CLASS__, 'render_tickets_box' ),
 			'event',
@@ -37,7 +37,7 @@ class CMT_Events_Event_Metabox {
 		);
 
 		add_meta_box(
-			'cmt_event_registration_config',
+			'zymevents_event_registration_config',
 			'Registration Configuration',
 			array( __CLASS__, 'render_registration_config_box' ),
 			'event',
@@ -46,7 +46,7 @@ class CMT_Events_Event_Metabox {
 		);
 
 		add_meta_box(
-			'cmt_event_registrations_summary',
+			'zymevents_event_registrations_summary',
 			'Registrations Summary',
 			array( __CLASS__, 'render_registrations_summary_box' ),
 			'event',
@@ -56,8 +56,8 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_details_box( $post ) {
-		wp_nonce_field( 'cmt_event_details', 'cmt_event_details_nonce' );
-		$prefix = CMT_EVENTS_PREFIX;
+		wp_nonce_field( 'zymevents_event_details', 'zymevents_event_details_nonce' );
+		$prefix = ZYMEVENTS_PREFIX;
 
 		$event_date       = get_post_meta( $post->ID, $prefix . 'event_date', true );
 		$event_end_date   = get_post_meta( $post->ID, $prefix . 'event_end_date', true );
@@ -120,7 +120,7 @@ class CMT_Events_Event_Metabox {
 		<script>
 		jQuery(document).ready(function($){
 			$('input[name="event_all_day"]').on('change', function() {
-				$('.cmt-time-row').toggle(!this.checked);
+				$('.zymevents-time-row').toggle(!this.checked);
 			});
 		});
 		</script>
@@ -128,7 +128,7 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_tickets_box( $post ) {
-		$prefix = CMT_EVENTS_PREFIX;
+		$prefix = ZYMEVENTS_PREFIX;
 		$ticket_types_raw = get_post_meta( $post->ID, $prefix . 'ticket_types', true );
 		$ticket_types = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 		if ( ! is_array( $ticket_types ) ) {
@@ -164,19 +164,19 @@ class CMT_Events_Event_Metabox {
 		jQuery(document).ready(function($) {
 			var ticketIndex = <?php echo count( $ticket_types ); ?>;
 
-			$('#cmt-add-ticket').on('click', function() {
+			$('#zymevents-add-ticket').on('click', function() {
 				var row = '<tr class="cmt-ticket-row">' +
 					'<td><input type="text" name="ticket_types[' + ticketIndex + '][name]" class="widefat" required /></td>' +
 					'<td><input type="number" name="ticket_types[' + ticketIndex + '][price]" value="0" step="0.01" min="0" class="widefat" /></td>' +
 					'<td><input type="text" name="ticket_types[' + ticketIndex + '][description]" class="widefat" /></td>' +
 					'<td><button type="button" class="button cmt-remove-ticket">&times; Remove</button></td>' +
 					'</tr>';
-				$('#cmt-tickets-table tbody').append(row);
+				$('#zymevents-tickets-table tbody').append(row);
 				ticketIndex++;
 			});
 
-			$(document).on('click', '.cmt-remove-ticket', function() {
-				if ($('.cmt-ticket-row').length > 1) {
+			$(document).on('click', '.zymevents-remove-ticket', function() {
+				if ($('.zymevents-ticket-row').length > 1) {
 					$(this).closest('tr').remove();
 				}
 			});
@@ -186,7 +186,7 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_registration_config_box( $post ) {
-		$prefix = CMT_EVENTS_PREFIX;
+		$prefix = ZYMEVENTS_PREFIX;
 		$capacity        = get_post_meta( $post->ID, $prefix . 'capacity', true );
 		$fieldset_id     = get_post_meta( $post->ID, $prefix . 'fieldset_id', true );
 		$registration_open = get_post_meta( $post->ID, $prefix . 'registration_open', true );
@@ -198,8 +198,8 @@ class CMT_Events_Event_Metabox {
 		}
 
 		$fieldsets = array();
-		if ( class_exists( 'CMT_Events_Fieldsets' ) ) {
-			$fieldsets = CMT_Events_Fieldsets::get_active_fieldsets();
+		if ( class_exists( 'ZymEvents_Fieldsets' ) ) {
+			$fieldsets = ZymEvents_Fieldsets::get_active_fieldsets();
 		}
 		?>
 		<table class="form-table">
@@ -253,7 +253,7 @@ class CMT_Events_Event_Metabox {
 		<script>
 		jQuery(document).ready(function($) {
 			$('input[name="group_discount_enabled"]').on('change', function() {
-				$('.cmt-group-discount-settings').toggle(this.checked);
+				$('.zymevents-group-discount-settings').toggle(this.checked);
 			});
 		});
 		</script>
@@ -261,7 +261,7 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_registrations_summary_box( $post ) {
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new ZymEvents_Registrations_DB();
 		$total  = $reg_db->count( array( array( 'column' => 'event_id', 'value' => $post->ID ) ) );
 		$confirmed = $reg_db->count( array(
 			array( 'column' => 'event_id', 'value' => $post->ID ),
@@ -271,9 +271,9 @@ class CMT_Events_Event_Metabox {
 			array( 'column' => 'event_id', 'value' => $post->ID ),
 			array( 'column' => 'status', 'value' => 'pending' ),
 		) );
-		$capacity = (int) get_post_meta( $post->ID, CMT_EVENTS_PREFIX . 'capacity', true );
+		$capacity = (int) get_post_meta( $post->ID, ZYMEVENTS_PREFIX . 'capacity', true );
 		?>
-		<div class="cmt-registrations-summary">
+		<div class="zymevents-registrations-summary">
 			<p><strong>Total Registrations:</strong> <?php echo intval( $total ); ?></p>
 			<p><strong>Confirmed:</strong> <?php echo intval( $confirmed ); ?></p>
 			<p><strong>Pending:</strong> <?php echo intval( $pending ); ?></p>
@@ -281,7 +281,7 @@ class CMT_Events_Event_Metabox {
 				<p><strong>Capacity:</strong> <?php echo intval( $confirmed ) . ' / ' . intval( $capacity ); ?></p>
 			<?php endif; ?>
 			<p>
-				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=cmt-registrations&event_id=' . $post->ID ) ); ?>" class="button">
+				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=zymevents-registrations&event_id=' . $post->ID ) ); ?>" class="button">
 					View All Registrations
 				</a>
 			</p>
@@ -290,7 +290,7 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function save_meta( $post_id, $post ) {
-		if ( ! isset( $_POST['cmt_event_details_nonce'] ) || ! wp_verify_nonce( $_POST['cmt_event_details_nonce'], 'cmt_event_details' ) ) {
+		if ( ! isset( $_POST['zymevents_event_details_nonce'] ) || ! wp_verify_nonce( $_POST['zymevents_event_details_nonce'], 'zymevents_event_details' ) ) {
 			return;
 		}
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
@@ -300,7 +300,7 @@ class CMT_Events_Event_Metabox {
 			return;
 		}
 
-		$prefix = CMT_EVENTS_PREFIX;
+		$prefix = ZYMEVENTS_PREFIX;
 
 		// Event details
 		update_post_meta( $post_id, $prefix . 'event_date', sanitize_text_field( $_POST['event_date'] ?? '' ) );

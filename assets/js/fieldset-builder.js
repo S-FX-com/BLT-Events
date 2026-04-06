@@ -1,5 +1,5 @@
 /**
- * CMT Events - Fieldset Builder Admin JavaScript
+ * ZymEvents - Fieldset Builder Admin JavaScript
  *
  * Handles drag-and-drop field ordering, adding/removing fields,
  * and AJAX save/delete of fieldsets.
@@ -7,44 +7,44 @@
 jQuery(document).ready(function ($) {
 	"use strict";
 
-	var fieldIndex = $(".cmt-field-item").length;
-	var consentIndex = $(".cmt-consent-item").length;
+	var fieldIndex = $(".zymevents-field-item").length;
+	var consentIndex = $(".zymevents-consent-item").length;
 
 	// --- Sortable fields ---
 	if ($.fn.sortable) {
-		$("#cmt-fields-sortable").sortable({
-			handle: ".cmt-field-drag",
-			placeholder: "cmt-field-item ui-sortable-placeholder",
+		$("#zymevents-fields-sortable").sortable({
+			handle: ".zymevents-field-drag",
+			placeholder: "zymevents-field-item ui-sortable-placeholder",
 			tolerance: "pointer",
 		});
 	}
 
 	// --- Toggle field settings ---
-	$(document).on("click", ".cmt-field-toggle", function () {
-		$(this).closest(".cmt-field-item").find(".cmt-field-settings").slideToggle(200);
+	$(document).on("click", ".zymevents-field-toggle", function () {
+		$(this).closest(".zymevents-field-item").find(".zymevents-field-settings").slideToggle(200);
 	});
 
 	// --- Remove field ---
-	$(document).on("click", ".cmt-field-remove", function () {
+	$(document).on("click", ".zymevents-field-remove", function () {
 		if (confirm("Remove this field?")) {
-			$(this).closest(".cmt-field-item").fadeOut(200, function () {
+			$(this).closest(".zymevents-field-item").fadeOut(200, function () {
 				$(this).remove();
 			});
 		}
 	});
 
 	// --- Add field ---
-	$("#cmt-add-field").on("click", function () {
+	$("#zymevents-add-field").on("click", function () {
 		var html =
-			'<div class="cmt-field-item" data-index="' + fieldIndex + '">' +
-			'  <div class="cmt-field-header">' +
-			'    <span class="cmt-field-drag dashicons dashicons-move"></span>' +
-			'    <span class="cmt-field-label">New Field</span>' +
-			'    <span class="cmt-field-type">text</span>' +
-			'    <button type="button" class="cmt-field-toggle dashicons dashicons-arrow-down-alt2"></button>' +
-			'    <button type="button" class="cmt-field-remove dashicons dashicons-trash"></button>' +
+			'<div class="zymevents-field-item" data-index="' + fieldIndex + '">' +
+			'  <div class="zymevents-field-header">' +
+			'    <span class="zymevents-field-drag dashicons dashicons-move"></span>' +
+			'    <span class="zymevents-field-label">New Field</span>' +
+			'    <span class="zymevents-field-type">text</span>' +
+			'    <button type="button" class="zymevents-field-toggle dashicons dashicons-arrow-down-alt2"></button>' +
+			'    <button type="button" class="zymevents-field-remove dashicons dashicons-trash"></button>' +
 			'  </div>' +
-			'  <div class="cmt-field-settings">' +
+			'  <div class="zymevents-field-settings">' +
 			'    <input type="hidden" name="fields[' + fieldIndex + '][key]" value="field_' + fieldIndex + '" />' +
 			'    <label>Label: <input type="text" name="fields[' + fieldIndex + '][label]" value="New Field" /></label>' +
 			'    <label>Type: <select name="fields[' + fieldIndex + '][type]">' +
@@ -63,41 +63,41 @@ jQuery(document).ready(function ($) {
 			'  </div>' +
 			'</div>';
 
-		$("#cmt-fields-sortable").append(html);
+		$("#zymevents-fields-sortable").append(html);
 		fieldIndex++;
 	});
 
 	// Update label text in header when label input changes
-	$(document).on("input", ".cmt-field-settings input[name$='[label]']", function () {
-		$(this).closest(".cmt-field-item").find(".cmt-field-label").text($(this).val());
+	$(document).on("input", ".zymevents-field-settings input[name$='[label]']", function () {
+		$(this).closest(".zymevents-field-item").find(".zymevents-field-label").text($(this).val());
 	});
 
 	// Update type badge when type changes
-	$(document).on("change", ".cmt-field-settings select[name$='[type]']", function () {
-		$(this).closest(".cmt-field-item").find(".cmt-field-type").text($(this).val());
+	$(document).on("change", ".zymevents-field-settings select[name$='[type]']", function () {
+		$(this).closest(".zymevents-field-item").find(".zymevents-field-type").text($(this).val());
 	});
 
 	// --- Add consent field ---
-	$("#cmt-add-consent").on("click", function () {
+	$("#zymevents-add-consent").on("click", function () {
 		var html =
-			'<div class="cmt-consent-item">' +
+			'<div class="zymevents-consent-item">' +
 			'  <label>Key: <input type="text" name="consent[' + consentIndex + '][key]" value="consent_' + consentIndex + '" /></label>' +
 			'  <label>Label (HTML): <input type="text" name="consent[' + consentIndex + '][label]" class="large-text" /></label>' +
 			'  <label><input type="checkbox" name="consent[' + consentIndex + '][required]" value="1" checked /> Required</label>' +
 			'  <button type="button" class="button button-link-delete cmt-remove-consent">&times;</button>' +
 			'</div>';
 
-		$("#cmt-consent-fields").append(html);
+		$("#zymevents-consent-fields").append(html);
 		consentIndex++;
 	});
 
 	// Remove consent field
-	$(document).on("click", ".cmt-remove-consent", function () {
-		$(this).closest(".cmt-consent-item").remove();
+	$(document).on("click", ".zymevents-remove-consent", function () {
+		$(this).closest(".zymevents-consent-item").remove();
 	});
 
 	// --- Save fieldset via AJAX ---
-	$("#cmt-fieldset-form").on("submit", function (e) {
+	$("#zymevents-fieldset-form").on("submit", function (e) {
 		e.preventDefault();
 
 		var data = $(this).serialize();
@@ -125,7 +125,7 @@ jQuery(document).ready(function ($) {
 	});
 
 	// --- Delete fieldset ---
-	$(document).on("click", ".cmt-delete-fieldset", function () {
+	$(document).on("click", ".zymevents-delete-fieldset", function () {
 		if (!confirm("Are you sure you want to delete this fieldset?")) return;
 
 		var id = $(this).data("id");
@@ -134,7 +134,7 @@ jQuery(document).ready(function ($) {
 			url: cmtFieldsetData.ajaxUrl,
 			method: "POST",
 			data: {
-				action: "cmt_delete_fieldset",
+				action: "zymevents_delete_fieldset",
 				nonce: cmtFieldsetData.nonce,
 				fieldset_id: id,
 			},
