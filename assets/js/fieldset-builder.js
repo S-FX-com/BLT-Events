@@ -1,5 +1,5 @@
 /**
- * CMT Events - Fieldset Builder Admin JavaScript
+ * BLT Events - Fieldset Builder Admin JavaScript
  *
  * Handles drag-and-drop field ordering, adding/removing fields,
  * and AJAX save/delete of fieldsets.
@@ -7,44 +7,44 @@
 jQuery(document).ready(function ($) {
 	"use strict";
 
-	var fieldIndex = $(".cmt-field-item").length;
-	var consentIndex = $(".cmt-consent-item").length;
+	var fieldIndex = $(".blt-field-item").length;
+	var consentIndex = $(".blt-consent-item").length;
 
 	// --- Sortable fields ---
 	if ($.fn.sortable) {
-		$("#cmt-fields-sortable").sortable({
-			handle: ".cmt-field-drag",
-			placeholder: "cmt-field-item ui-sortable-placeholder",
+		$("#blt-fields-sortable").sortable({
+			handle: ".blt-field-drag",
+			placeholder: "blt-field-item ui-sortable-placeholder",
 			tolerance: "pointer",
 		});
 	}
 
 	// --- Toggle field settings ---
-	$(document).on("click", ".cmt-field-toggle", function () {
-		$(this).closest(".cmt-field-item").find(".cmt-field-settings").slideToggle(200);
+	$(document).on("click", ".blt-field-toggle", function () {
+		$(this).closest(".blt-field-item").find(".blt-field-settings").slideToggle(200);
 	});
 
 	// --- Remove field ---
-	$(document).on("click", ".cmt-field-remove", function () {
+	$(document).on("click", ".blt-field-remove", function () {
 		if (confirm("Remove this field?")) {
-			$(this).closest(".cmt-field-item").fadeOut(200, function () {
+			$(this).closest(".blt-field-item").fadeOut(200, function () {
 				$(this).remove();
 			});
 		}
 	});
 
 	// --- Add field ---
-	$("#cmt-add-field").on("click", function () {
+	$("#blt-add-field").on("click", function () {
 		var html =
-			'<div class="cmt-field-item" data-index="' + fieldIndex + '">' +
-			'  <div class="cmt-field-header">' +
-			'    <span class="cmt-field-drag dashicons dashicons-move"></span>' +
-			'    <span class="cmt-field-label">New Field</span>' +
-			'    <span class="cmt-field-type">text</span>' +
-			'    <button type="button" class="cmt-field-toggle dashicons dashicons-arrow-down-alt2"></button>' +
-			'    <button type="button" class="cmt-field-remove dashicons dashicons-trash"></button>' +
+			'<div class="blt-field-item" data-index="' + fieldIndex + '">' +
+			'  <div class="blt-field-header">' +
+			'    <span class="blt-field-drag dashicons dashicons-move"></span>' +
+			'    <span class="blt-field-label">New Field</span>' +
+			'    <span class="blt-field-type">text</span>' +
+			'    <button type="button" class="blt-field-toggle dashicons dashicons-arrow-down-alt2"></button>' +
+			'    <button type="button" class="blt-field-remove dashicons dashicons-trash"></button>' +
 			'  </div>' +
-			'  <div class="cmt-field-settings">' +
+			'  <div class="blt-field-settings">' +
 			'    <input type="hidden" name="fields[' + fieldIndex + '][key]" value="field_' + fieldIndex + '" />' +
 			'    <label>Label: <input type="text" name="fields[' + fieldIndex + '][label]" value="New Field" /></label>' +
 			'    <label>Type: <select name="fields[' + fieldIndex + '][type]">' +
@@ -63,48 +63,48 @@ jQuery(document).ready(function ($) {
 			'  </div>' +
 			'</div>';
 
-		$("#cmt-fields-sortable").append(html);
+		$("#blt-fields-sortable").append(html);
 		fieldIndex++;
 	});
 
 	// Update label text in header when label input changes
-	$(document).on("input", ".cmt-field-settings input[name$='[label]']", function () {
-		$(this).closest(".cmt-field-item").find(".cmt-field-label").text($(this).val());
+	$(document).on("input", ".blt-field-settings input[name$='[label]']", function () {
+		$(this).closest(".blt-field-item").find(".blt-field-label").text($(this).val());
 	});
 
 	// Update type badge when type changes
-	$(document).on("change", ".cmt-field-settings select[name$='[type]']", function () {
-		$(this).closest(".cmt-field-item").find(".cmt-field-type").text($(this).val());
+	$(document).on("change", ".blt-field-settings select[name$='[type]']", function () {
+		$(this).closest(".blt-field-item").find(".blt-field-type").text($(this).val());
 	});
 
 	// --- Add consent field ---
-	$("#cmt-add-consent").on("click", function () {
+	$("#blt-add-consent").on("click", function () {
 		var html =
-			'<div class="cmt-consent-item">' +
+			'<div class="blt-consent-item">' +
 			'  <label>Key: <input type="text" name="consent[' + consentIndex + '][key]" value="consent_' + consentIndex + '" /></label>' +
 			'  <label>Label (HTML): <input type="text" name="consent[' + consentIndex + '][label]" class="large-text" /></label>' +
 			'  <label><input type="checkbox" name="consent[' + consentIndex + '][required]" value="1" checked /> Required</label>' +
-			'  <button type="button" class="button button-link-delete cmt-remove-consent">&times;</button>' +
+			'  <button type="button" class="button button-link-delete blt-remove-consent">&times;</button>' +
 			'</div>';
 
-		$("#cmt-consent-fields").append(html);
+		$("#blt-consent-fields").append(html);
 		consentIndex++;
 	});
 
 	// Remove consent field
-	$(document).on("click", ".cmt-remove-consent", function () {
-		$(this).closest(".cmt-consent-item").remove();
+	$(document).on("click", ".blt-remove-consent", function () {
+		$(this).closest(".blt-consent-item").remove();
 	});
 
 	// --- Save fieldset via AJAX ---
-	$("#cmt-fieldset-form").on("submit", function (e) {
+	$("#blt-fieldset-form").on("submit", function (e) {
 		e.preventDefault();
 
 		var data = $(this).serialize();
-		data += "&action=cmt_save_fieldset&nonce=" + cmtFieldsetData.nonce;
+		data += "&action=blt_save_fieldset&nonce=" + bltFieldsetData.nonce;
 
 		$.ajax({
-			url: cmtFieldsetData.ajaxUrl,
+			url: bltFieldsetData.ajaxUrl,
 			method: "POST",
 			data: data,
 			success: function (response) {
@@ -112,7 +112,7 @@ jQuery(document).ready(function ($) {
 					alert(response.data.message);
 					if (!$('input[name="fieldset_id"]').val()) {
 						window.location.href = window.location.href.split("?")[0] +
-							"?post_type=event&page=cmt-fieldsets&edit=" + response.data.id;
+							"?post_type=event&page=blt-fieldsets&edit=" + response.data.id;
 					}
 				} else {
 					alert("Error: " + response.data.message);
@@ -125,17 +125,17 @@ jQuery(document).ready(function ($) {
 	});
 
 	// --- Delete fieldset ---
-	$(document).on("click", ".cmt-delete-fieldset", function () {
+	$(document).on("click", ".blt-delete-fieldset", function () {
 		if (!confirm("Are you sure you want to delete this fieldset?")) return;
 
 		var id = $(this).data("id");
 
 		$.ajax({
-			url: cmtFieldsetData.ajaxUrl,
+			url: bltFieldsetData.ajaxUrl,
 			method: "POST",
 			data: {
-				action: "cmt_delete_fieldset",
-				nonce: cmtFieldsetData.nonce,
+				action: "blt_delete_fieldset",
+				nonce: bltFieldsetData.nonce,
 				fieldset_id: id,
 			},
 			success: function (response) {

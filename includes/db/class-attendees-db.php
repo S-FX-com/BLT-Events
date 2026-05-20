@@ -2,22 +2,22 @@
 /**
  * Attendees database class.
  *
- * Handles CRUD operations for the cmt_attendees table.
+ * Handles CRUD operations for the blt_attendees table.
  *
- * @package CMT_Events
+ * @package BLT_Events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Attendees_DB extends CMT_Events_DB {
+class BLT_Events_Attendees_DB extends BLT_Events_DB {
 
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		parent::__construct( 'cmt_attendees' );
+		parent::__construct( 'blt_attendees' );
 	}
 
 	/**
@@ -62,7 +62,7 @@ class CMT_Events_Attendees_DB extends CMT_Events_DB {
 	 * Bulk insert multiple attendees for a registration.
 	 *
 	 * Each entry in $attendees_data should be an associative array with keys
-	 * matching the cmt_attendees columns (attendee_name, attendee_email, etc.).
+	 * matching the blt_attendees columns (attendee_name, attendee_email, etc.).
 	 *
 	 * @param int   $registration_id The registration row ID.
 	 * @param int   $event_id        The event post ID.

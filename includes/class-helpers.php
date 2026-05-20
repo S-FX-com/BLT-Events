@@ -1,8 +1,8 @@
 <?php
 /**
- * CMT Events Helpers
+ * BLT Events Helpers
  *
- * Static utility class providing common helper functions for the CMT Events plugin.
+ * Static utility class providing common helper functions for the BLT Events plugin.
  */
 
 // Exit if accessed directly.
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class CMT_Events_Helpers {
+class BLT_Events_Helpers {
 
     /**
      * Currency symbol mapping.
@@ -33,9 +33,9 @@ class CMT_Events_Helpers {
      * @return string The formatted price string.
      */
     public static function format_price( $amount, $include_total = false ) {
-        $currency      = get_option( 'cmt_events_currency', 'USD' );
-        $show_currency = get_option( 'cmt_events_display_currency', '0' );
-        $show_symbol   = get_option( 'cmt_events_display_currency_sign', '0' );
+        $currency      = get_option( 'blt_events_currency', 'USD' );
+        $show_currency = get_option( 'blt_events_display_currency', '0' );
+        $show_symbol   = get_option( 'blt_events_display_currency_sign', '0' );
 
         // Format the number with 2 decimal places.
         $formatted_price = number_format( (float) $amount, 2 );
@@ -69,12 +69,12 @@ class CMT_Events_Helpers {
      * @return array Currency settings including code, symbols, and display flags.
      */
     public static function get_currency_config() {
-        $currency = get_option( 'cmt_events_currency', 'USD' );
+        $currency = get_option( 'blt_events_currency', 'USD' );
 
         return array(
             'currency'       => $currency,
-            'showCurrency'   => get_option( 'cmt_events_display_currency', '0' ),
-            'showSymbol'     => get_option( 'cmt_events_display_currency_sign', '0' ),
+            'showCurrency'   => get_option( 'blt_events_display_currency', '0' ),
+            'showSymbol'     => get_option( 'blt_events_display_currency_sign', '0' ),
             'currencySymbol' => isset( self::$currency_symbols[ $currency ] )
                 ? self::$currency_symbols[ $currency ]
                 : '',
@@ -171,10 +171,10 @@ class CMT_Events_Helpers {
      * @return string The iCalendar file content.
      */
     public static function generate_ics_content( $event ) {
-        $event_date       = get_post_meta( $event->ID, '_cmt_event_date', true );
-        $event_start_time = get_post_meta( $event->ID, '_cmt_event_start_time', true );
-        $event_end_time   = get_post_meta( $event->ID, '_cmt_event_end_time', true );
-        $event_all_day    = get_post_meta( $event->ID, '_cmt_event_all_day', true );
+        $event_date       = get_post_meta( $event->ID, '_blt_event_date', true );
+        $event_start_time = get_post_meta( $event->ID, '_blt_event_start_time', true );
+        $event_end_time   = get_post_meta( $event->ID, '_blt_event_end_time', true );
+        $event_all_day    = get_post_meta( $event->ID, '_blt_event_all_day', true );
 
         $summary     = $event->post_title;
         $description = wp_strip_all_tags( $event->post_content );
@@ -188,7 +188,7 @@ class CMT_Events_Helpers {
 
         $ics  = "BEGIN:VCALENDAR\r\n";
         $ics .= "VERSION:2.0\r\n";
-        $ics .= "PRODID:-//CMT Events//CMT Events Plugin//EN\r\n";
+        $ics .= "PRODID:-//BLT Events//BLT Events Plugin//EN\r\n";
         $ics .= "CALSCALE:GREGORIAN\r\n";
         $ics .= "METHOD:PUBLISH\r\n";
         $ics .= "BEGIN:VEVENT\r\n";
@@ -229,10 +229,10 @@ class CMT_Events_Helpers {
      * @return string The Google Calendar URL.
      */
     public static function get_google_calendar_url( $event ) {
-        $event_date       = get_post_meta( $event->ID, '_cmt_event_date', true );
-        $event_start_time = get_post_meta( $event->ID, '_cmt_event_start_time', true );
-        $event_end_time   = get_post_meta( $event->ID, '_cmt_event_end_time', true );
-        $event_all_day    = get_post_meta( $event->ID, '_cmt_event_all_day', true );
+        $event_date       = get_post_meta( $event->ID, '_blt_event_date', true );
+        $event_start_time = get_post_meta( $event->ID, '_blt_event_start_time', true );
+        $event_end_time   = get_post_meta( $event->ID, '_blt_event_end_time', true );
+        $event_all_day    = get_post_meta( $event->ID, '_blt_event_all_day', true );
 
         $title   = $event->post_title;
         $details = wp_strip_all_tags( $event->post_content );
@@ -273,7 +273,7 @@ class CMT_Events_Helpers {
      * @return string The active payment provider slug (default: 'none').
      */
     public static function get_payment_provider() {
-        return get_option( 'cmt_events_payment_provider', 'none' );
+        return get_option( 'blt_events_payment_provider', 'none' );
     }
 
     /**

@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: CMT Events
+ * Plugin Name: BLT Events
  * Plugin URI:  https://s-fx.com
  * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
  * Version:     2.0.0
  * Author:      S-FX.COM
  * Author URI:  https://s-fx.com
  * License:     GPL2
- * Text Domain: cmt-events
+ * Text Domain: blt-events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,17 +15,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'CMT_EVENTS_VERSION', '2.0.0' );
-define( 'CMT_EVENTS_DB_VERSION', '1.0' );
-define( 'CMT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'CMT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'CMT_EVENTS_PLUGIN_FILE', __FILE__ );
-define( 'CMT_EVENTS_PREFIX', '_cmt_' );
-define( 'CMT_EVENTS_TEXT_DOMAIN', 'cmt-events' );
+define( 'BLT_EVENTS_VERSION', '2.0.0' );
+define( 'BLT_EVENTS_DB_VERSION', '1.0' );
+define( 'BLT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'BLT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'BLT_EVENTS_PLUGIN_FILE', __FILE__ );
+define( 'BLT_EVENTS_PREFIX', '_blt_' );
+define( 'BLT_EVENTS_TEXT_DOMAIN', 'blt-events' );
 
 // ---------- Autoloader ----------
 spl_autoload_register( function ( $class ) {
-	$prefix = 'CMT_Events_';
+	$prefix = 'BLT_Events_';
 	if ( strpos( $class, $prefix ) !== 0 ) {
 		return;
 	}
@@ -70,7 +70,7 @@ spl_autoload_register( function ( $class ) {
 	);
 
 	if ( isset( $map[ $relative ] ) ) {
-		$file = CMT_EVENTS_PLUGIN_DIR . $map[ $relative ];
+		$file = BLT_EVENTS_PLUGIN_DIR . $map[ $relative ];
 		if ( file_exists( $file ) ) {
 			require_once $file;
 		}
@@ -78,92 +78,92 @@ spl_autoload_register( function ( $class ) {
 });
 
 // ---------- Activation / Deactivation ----------
-register_activation_hook( __FILE__, array( 'CMT_Events_Activator', 'activate' ) );
+register_activation_hook( __FILE__, array( 'BLT_Events_Activator', 'activate' ) );
 register_deactivation_hook( __FILE__, function () {
 	flush_rewrite_rules();
 });
 
 // ---------- Boot ----------
-function cmt_events_init() {
+function blt_events_init() {
 	// Data layer is loaded on-demand via autoloader.
 
 	// CPTs
-	CMT_Events_Event_CPT::init();
-	CMT_Events_Coupon_CPT::init();
+	BLT_Events_Event_CPT::init();
+	BLT_Events_Coupon_CPT::init();
 
 	// Business logic
-	CMT_Events_Fieldsets::init();
-	CMT_Events_Registrations::init();
-	CMT_Events_Coupons::init();
+	BLT_Events_Fieldsets::init();
+	BLT_Events_Registrations::init();
+	BLT_Events_Coupons::init();
 
 	// Payment
-	CMT_Events_Stripe_Handler::init();
-	CMT_Events_SureCart_Integration::init();
+	BLT_Events_Stripe_Handler::init();
+	BLT_Events_SureCart_Integration::init();
 
 	// Admin
 	if ( is_admin() ) {
-		CMT_Events_Admin::init();
-		CMT_Events_Admin_Settings::init();
-		CMT_Events_Event_Metabox::init();
-		CMT_Events_Fieldset_Builder::init();
-		CMT_Events_Registrations_List::init();
+		BLT_Events_Admin::init();
+		BLT_Events_Admin_Settings::init();
+		BLT_Events_Event_Metabox::init();
+		BLT_Events_Fieldset_Builder::init();
+		BLT_Events_Registrations_List::init();
 	}
 
 	// Shortcodes
-	CMT_Events_Registration_Shortcode::init();
-	CMT_Events_Calendar_Shortcode::init();
+	BLT_Events_Registration_Shortcode::init();
+	BLT_Events_Calendar_Shortcode::init();
 
 	// REST API
-	CMT_Events_REST_Registrations::init();
-	CMT_Events_REST_Fieldsets::init();
+	BLT_Events_REST_Registrations::init();
+	BLT_Events_REST_Fieldsets::init();
 
 	// FluentCRM add-on (only when FluentCRM is active)
 	if ( defined( 'FLUENTCRM' ) ) {
-		CMT_Events_FluentCRM_Addon::init();
+		BLT_Events_FluentCRM_Addon::init();
 	}
 }
-add_action( 'plugins_loaded', 'cmt_events_init' );
+add_action( 'plugins_loaded', 'blt_events_init' );
 
 // ---------- Assets ----------
-function cmt_events_enqueue_public_assets() {
+function blt_events_enqueue_public_assets() {
 	wp_enqueue_style(
-		'cmt-events',
-		CMT_EVENTS_PLUGIN_URL . 'assets/css/cmt-events.css',
+		'blt-events',
+		BLT_EVENTS_PLUGIN_URL . 'assets/css/blt-events.css',
 		array(),
-		CMT_EVENTS_VERSION
+		BLT_EVENTS_VERSION
 	);
 
 	wp_enqueue_script(
-		'cmt-events',
-		CMT_EVENTS_PLUGIN_URL . 'assets/js/cmt-events.js',
+		'blt-events',
+		BLT_EVENTS_PLUGIN_URL . 'assets/js/blt-events.js',
 		array( 'jquery' ),
-		CMT_EVENTS_VERSION,
+		BLT_EVENTS_VERSION,
 		true
 	);
 
-	wp_localize_script( 'cmt-events', 'cmtEventsData', array(
+	wp_localize_script( 'blt-events', 'bltEventsData', array(
 		'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-		'restUrl'  => rest_url( 'cmt-events/v1/' ),
+		'restUrl'  => rest_url( 'blt-events/v1/' ),
 		'nonce'    => wp_create_nonce( 'wp_rest' ),
-		'currency' => CMT_Events_Helpers::get_currency_config(),
+		'currency' => BLT_Events_Helpers::get_currency_config(),
 	));
 }
-add_action( 'wp_enqueue_scripts', 'cmt_events_enqueue_public_assets' );
+add_action( 'wp_enqueue_scripts', 'blt_events_enqueue_public_assets' );
 
-function cmt_events_enqueue_admin_assets( $hook ) {
+function blt_events_enqueue_admin_assets( $hook ) {
 	wp_enqueue_style(
-		'cmt-events-admin',
-		CMT_EVENTS_PLUGIN_URL . 'assets/css/admin.css',
+		'blt-events-admin',
+		BLT_EVENTS_PLUGIN_URL . 'assets/css/admin.css',
 		array(),
-		CMT_EVENTS_VERSION
+		BLT_EVENTS_VERSION
 	);
 
 	wp_enqueue_script(
-		'cmt-events-admin',
-		CMT_EVENTS_PLUGIN_URL . 'assets/js/admin.js',
+		'blt-events-admin',
+		BLT_EVENTS_PLUGIN_URL . 'assets/js/admin.js',
 		array( 'jquery' ),
-		CMT_EVENTS_VERSION,
+		BLT_EVENTS_VERSION,
 		true
 	);
 }
-add_action( 'admin_enqueue_scripts', 'cmt_events_enqueue_admin_assets' );
+add_action( 'admin_enqueue_scripts', 'blt_events_enqueue_admin_assets' );

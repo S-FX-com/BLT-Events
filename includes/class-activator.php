@@ -7,13 +7,76 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Activator {
+class BLT_Events_Activator {
 
 	public static function activate() {
+		self::migrate_from_cmt();
 		self::create_tables();
 		self::seed_default_fieldset();
 		self::set_default_options();
 		flush_rewrite_rules();
+	}
+
+	/**
+	 * One-time migration from the legacy "CMT Events" v2 namespace.
+	 *
+	 * Renames tables (cmt_* → blt_*), copies options (cmt_events_* → blt_events_*),
+	 * rewrites post_meta keys (_cmt_* → _blt_*), and re-slugs the coupon CPT
+	 * (cmt_coupon → blt_coupon). Guarded by an option flag so it only runs once.
+	 */
+	private static function migrate_from_cmt() {
+		if ( get_option( 'blt_events_migrated_from_cmt' ) ) {
+			return;
+		}
+
+		global $wpdb;
+		$prefix = $wpdb->prefix;
+
+		// 1. Rename tables if the legacy names exist and the new ones do not.
+		$rename_map = array(
+			'cmt_fieldsets'     => 'blt_fieldsets',
+			'cmt_registrations' => 'blt_registrations',
+			'cmt_attendees'     => 'blt_attendees',
+		);
+		foreach ( $rename_map as $old => $new ) {
+			$old_table = $prefix . $old;
+			$new_table = $prefix . $new;
+			$old_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $old_table ) ) === $old_table;
+			$new_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $new_table ) ) === $new_table;
+			if ( $old_exists && ! $new_exists ) {
+				$wpdb->query( "RENAME TABLE `{$old_table}` TO `{$new_table}`" );
+			}
+		}
+
+		// 2. Copy option values from cmt_events_* → blt_events_* (only if not yet set).
+		$option_names = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'cmt_events_%'" );
+		foreach ( $option_names as $old_name ) {
+			$new_name = 'blt_events_' . substr( $old_name, strlen( 'cmt_events_' ) );
+			if ( get_option( $new_name, null ) === null ) {
+				update_option( $new_name, get_option( $old_name ) );
+			}
+		}
+
+		// 3. Rewrite post_meta keys (_cmt_* → _blt_*) in bulk.
+		$wpdb->query(
+			"UPDATE {$wpdb->postmeta} SET meta_key = CONCAT('_blt_', SUBSTRING(meta_key, 6))
+			 WHERE meta_key LIKE '\\_cmt\\_%'"
+		);
+
+		// 4. Re-slug the legacy coupon CPT.
+		$wpdb->update( $wpdb->posts, array( 'post_type' => 'blt_coupon' ), array( 'post_type' => 'cmt_coupon' ) );
+
+		// 5. Update the default fieldset slug if it still uses cmt-standard.
+		$fieldsets_table = $prefix . 'blt_fieldsets';
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $fieldsets_table ) ) === $fieldsets_table ) {
+			$wpdb->update(
+				$fieldsets_table,
+				array( 'slug' => 'blt-standard', 'name' => 'BLT Standard' ),
+				array( 'slug' => 'cmt-standard' )
+			);
+		}
+
+		update_option( 'blt_events_migrated_from_cmt', time() );
 	}
 
 	// ----- Tables -----
@@ -25,7 +88,7 @@ class CMT_Events_Activator {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		// Fieldsets table
-		$table_fieldsets = $wpdb->prefix . 'cmt_fieldsets';
+		$table_fieldsets = $wpdb->prefix . 'blt_fieldsets';
 		$sql_fieldsets = "CREATE TABLE {$table_fieldsets} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			name varchar(255) NOT NULL,
@@ -42,7 +105,7 @@ class CMT_Events_Activator {
 		) {$charset};";
 
 		// Registrations table
-		$table_registrations = $wpdb->prefix . 'cmt_registrations';
+		$table_registrations = $wpdb->prefix . 'blt_registrations';
 		$sql_registrations = "CREATE TABLE {$table_registrations} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			event_id bigint(20) unsigned NOT NULL,
@@ -73,7 +136,7 @@ class CMT_Events_Activator {
 		) {$charset};";
 
 		// Attendees table (multi-attendee support)
-		$table_attendees = $wpdb->prefix . 'cmt_attendees';
+		$table_attendees = $wpdb->prefix . 'blt_attendees';
 		$sql_attendees = "CREATE TABLE {$table_attendees} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			registration_id bigint(20) unsigned NOT NULL,
@@ -97,16 +160,16 @@ class CMT_Events_Activator {
 		dbDelta( $sql_registrations );
 		dbDelta( $sql_attendees );
 
-		update_option( 'cmt_events_db_version', CMT_EVENTS_DB_VERSION );
+		update_option( 'blt_events_db_version', BLT_EVENTS_DB_VERSION );
 	}
 
 	// ----- Default fieldset -----
 
 	private static function seed_default_fieldset() {
 		global $wpdb;
-		$table = $wpdb->prefix . 'cmt_fieldsets';
+		$table = $wpdb->prefix . 'blt_fieldsets';
 
-		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE slug = 'cmt-standard'" );
+		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE slug = 'blt-standard'" );
 		if ( $exists ) {
 			return;
 		}
@@ -250,9 +313,9 @@ class CMT_Events_Activator {
 		);
 
 		$wpdb->insert( $table, array(
-			'name'           => 'CMT Standard',
-			'slug'           => 'cmt-standard',
-			'description'    => 'Default registration fieldset for CMT Association events.',
+			'name'           => 'BLT Standard',
+			'slug'           => 'blt-standard',
+			'description'    => 'Default registration fieldset for BLT Association events.',
 			'fields'         => wp_json_encode( $fields ),
 			'consent_fields' => wp_json_encode( $consent_fields ),
 			'is_default'     => 1,
@@ -266,9 +329,9 @@ class CMT_Events_Activator {
 
 	private static function set_default_options() {
 		$defaults = array(
-			'cmt_events_payment_provider' => 'none',
-			'cmt_events_currency'         => 'USD',
-			'cmt_events_date_format'      => 'F j, Y',
+			'blt_events_payment_provider' => 'none',
+			'blt_events_currency'         => 'USD',
+			'blt_events_date_format'      => 'F j, Y',
 		);
 
 		foreach ( $defaults as $key => $value ) {

@@ -1,79 +1,79 @@
 /* ========================================
-   CMT Events - Admin Styles
+   BLT Events - Admin Styles
    ======================================== */
 
 /* --- Settings Page --- */
-.cmt-events-settings .form-table th {
+.blt-events-settings .form-table th {
 	width: 200px;
 }
 
-.cmt-events-settings h2.title {
+.blt-events-settings h2.title {
 	padding-bottom: 0.5rem;
 	border-bottom: 1px solid #e5e7eb;
 	margin-top: 1.5rem;
 }
 
 /* --- Event Metabox --- */
-.cmt-event-details .form-table {
+.blt-event-details .form-table {
 	margin-top: 0;
 }
 
-.cmt-event-details .form-table th {
+.blt-event-details .form-table th {
 	width: 140px;
 	padding: 10px 10px 10px 0;
 }
 
-.cmt-event-details .form-table td {
+.blt-event-details .form-table td {
 	padding: 8px 10px;
 }
 
 /* --- Ticket Types Table --- */
-.cmt-tickets-table {
+.blt-tickets-table {
 	margin-top: 0.5rem;
 }
 
-.cmt-tickets-table thead th {
+.blt-tickets-table thead th {
 	padding: 8px 10px;
 	font-weight: 600;
 }
 
-.cmt-tickets-table tbody td {
+.blt-tickets-table tbody td {
 	padding: 6px 8px;
 	vertical-align: middle;
 }
 
-.cmt-ticket-row .widefat {
+.blt-ticket-row .widefat {
 	width: 100%;
 }
 
-.cmt-remove-ticket {
+.blt-remove-ticket {
 	color: #dc2626;
 }
 
-#cmt-add-ticket {
+#blt-add-ticket {
 	margin-top: 0.5rem;
 }
 
 /* --- Registration Config --- */
-.cmt-group-discount-settings {
+.blt-group-discount-settings {
 	margin-top: 0.5rem;
 	padding: 1rem;
 	background: #f9fafb;
 	border-radius: 6px;
 }
 
-.cmt-group-discount-settings label {
+.blt-group-discount-settings label {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.375rem;
 }
 
 /* --- Registrations Summary Sidebar --- */
-.cmt-registrations-summary p {
+.blt-registrations-summary p {
 	margin: 0.5rem 0;
 }
 
-.cmt-registrations-summary .button {
+.blt-registrations-summary .button {
 	margin-top: 0.75rem;
 }
 

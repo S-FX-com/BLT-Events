@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Stripe Payment Handler
+ * BLT Events - Stripe Payment Handler
  *
  * Handles Stripe Payment Intents creation, webhook processing,
  * and payment confirmation for event registrations.
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
+class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 
 	private static $secret_key;
 
@@ -19,14 +19,14 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 			return;
 		}
 
-		self::$secret_key = get_option( 'cmt_events_stripe_secret_key', '' );
+		self::$secret_key = get_option( 'blt_events_stripe_secret_key', '' );
 
 		// AJAX endpoints
-		add_action( 'wp_ajax_cmt_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
-		add_action( 'wp_ajax_nopriv_cmt_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
+		add_action( 'wp_ajax_blt_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
+		add_action( 'wp_ajax_nopriv_blt_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
 
-		add_action( 'wp_ajax_cmt_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
-		add_action( 'wp_ajax_nopriv_cmt_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
+		add_action( 'wp_ajax_blt_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
+		add_action( 'wp_ajax_nopriv_blt_confirm_stripe_payment', array( __CLASS__, 'ajax_confirm_payment' ) );
 
 		// Webhook handler
 		add_action( 'rest_api_init', array( __CLASS__, 'register_webhook_endpoint' ) );
@@ -36,8 +36,8 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	}
 
 	public static function is_configured() {
-		return ! empty( get_option( 'cmt_events_stripe_secret_key', '' ) )
-			&& ! empty( get_option( 'cmt_events_stripe_publishable_key', '' ) );
+		return ! empty( get_option( 'blt_events_stripe_secret_key', '' ) )
+			&& ! empty( get_option( 'blt_events_stripe_publishable_key', '' ) );
 	}
 
 	public static function enqueue_scripts() {
@@ -47,17 +47,17 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 
 		wp_register_script( 'stripe-js', 'https://js.stripe.com/v3/', array(), null, true );
 		wp_register_script(
-			'cmt-events-payment',
-			CMT_EVENTS_PLUGIN_URL . 'assets/js/payment.js',
+			'blt-events-payment',
+			BLT_EVENTS_PLUGIN_URL . 'assets/js/payment.js',
 			array( 'jquery', 'stripe-js' ),
-			CMT_EVENTS_VERSION,
+			BLT_EVENTS_VERSION,
 			true
 		);
 
-		wp_localize_script( 'cmt-events-payment', 'cmtStripeData', array(
-			'publishableKey' => get_option( 'cmt_events_stripe_publishable_key', '' ),
+		wp_localize_script( 'blt-events-payment', 'bltStripeData', array(
+			'publishableKey' => get_option( 'blt_events_stripe_publishable_key', '' ),
 			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
-			'nonce'          => wp_create_nonce( 'cmt_stripe_nonce' ),
+			'nonce'          => wp_create_nonce( 'blt_stripe_nonce' ),
 		) );
 	}
 
@@ -65,11 +65,11 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	 * AJAX: Create a Stripe Payment Intent.
 	 */
 	public static function ajax_create_payment_intent() {
-		check_ajax_referer( 'cmt_stripe_nonce', 'nonce' );
+		check_ajax_referer( 'blt_stripe_nonce', 'nonce' );
 
 		$event_id = absint( $_POST['event_id'] ?? 0 );
 		$amount   = floatval( $_POST['amount'] ?? 0 );
-		$currency = strtolower( get_option( 'cmt_events_currency', 'USD' ) );
+		$currency = strtolower( get_option( 'blt_events_currency', 'USD' ) );
 
 		if ( ! $event_id || $amount <= 0 ) {
 			wp_send_json_error( array( 'message' => 'Invalid payment parameters.' ) );
@@ -83,7 +83,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 			'currency' => $currency,
 			'metadata' => array(
 				'event_id' => $event_id,
-				'source'   => 'cmt_events',
+				'source'   => 'blt_events',
 			),
 		) );
 
@@ -101,7 +101,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	 * AJAX: Confirm payment and create registration.
 	 */
 	public static function ajax_confirm_payment() {
-		check_ajax_referer( 'cmt_stripe_nonce', 'nonce' );
+		check_ajax_referer( 'blt_stripe_nonce', 'nonce' );
 
 		$event_id  = absint( $_POST['event_id'] ?? 0 );
 		$intent_id = sanitize_text_field( $_POST['payment_intent_id'] ?? '' );
@@ -128,7 +128,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 			'amount_paid'  => $intent['amount'] / 100,
 		);
 
-		$result = CMT_Events_Registrations::process_registration( $event_id, $_POST, $payment );
+		$result = BLT_Events_Registrations::process_registration( $event_id, $_POST, $payment );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
@@ -144,7 +144,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	 * Register the Stripe webhook REST endpoint.
 	 */
 	public static function register_webhook_endpoint() {
-		register_rest_route( 'cmt-events/v1', '/stripe-webhook', array(
+		register_rest_route( 'blt-events/v1', '/stripe-webhook', array(
 			'methods'             => 'POST',
 			'callback'            => array( __CLASS__, 'handle_webhook' ),
 			'permission_callback' => '__return_true',
@@ -157,7 +157,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	public static function handle_webhook( $request ) {
 		$payload = $request->get_body();
 		$sig     = $request->get_header( 'stripe-signature' );
-		$secret  = get_option( 'cmt_events_stripe_webhook_secret', '' );
+		$secret  = get_option( 'blt_events_stripe_webhook_secret', '' );
 
 		if ( empty( $secret ) ) {
 			return new WP_REST_Response( array( 'error' => 'Webhook secret not configured.' ), 400 );
@@ -197,7 +197,7 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 	private static function handle_refund( $payment_intent_id ) {
 		global $wpdb;
 
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new BLT_Events_Registrations_DB();
 		$table  = $reg_db->get_table_name();
 
 		$registration = $wpdb->get_row(
@@ -209,8 +209,8 @@ class CMT_Events_Stripe_Handler extends CMT_Events_Payment_Provider {
 		);
 
 		if ( $registration ) {
-			CMT_Events_Registrations::update_status( $registration->id, 'refunded' );
-			do_action( 'cmt_registration_refunded', $registration->id );
+			BLT_Events_Registrations::update_status( $registration->id, 'refunded' );
+			do_action( 'blt_registration_refunded', $registration->id );
 		}
 	}
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Admin Menu Manager
+ * BLT Events - Admin Menu Manager
  *
  * Registers admin menu and submenu items under the Events CPT.
  */
@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Admin {
+class BLT_Events_Admin {
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'add_admin_pages' ) );
@@ -22,8 +22,8 @@ class CMT_Events_Admin {
 			'Registrations',
 			'Registrations',
 			'manage_options',
-			'cmt-registrations',
-			array( 'CMT_Events_Registrations_List', 'render_page' )
+			'blt-registrations',
+			array( 'BLT_Events_Registrations_List', 'render_page' )
 		);
 
 		// Fieldset Builder submenu
@@ -32,8 +32,8 @@ class CMT_Events_Admin {
 			'Fieldsets',
 			'Fieldsets',
 			'manage_options',
-			'cmt-fieldsets',
-			array( 'CMT_Events_Fieldset_Builder', 'render_page' )
+			'blt-fieldsets',
+			array( 'BLT_Events_Fieldset_Builder', 'render_page' )
 		);
 
 		// Settings submenu
@@ -42,8 +42,8 @@ class CMT_Events_Admin {
 			'Settings',
 			'Settings',
 			'manage_options',
-			'cmt-events-settings',
-			array( 'CMT_Events_Admin_Settings', 'render_settings_page' )
+			'blt-events-settings',
+			array( 'BLT_Events_Admin_Settings', 'render_settings_page' )
 		);
 	}
 }
