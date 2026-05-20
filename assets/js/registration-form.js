@@ -1,5 +1,5 @@
 /**
- * CMT Events - Registration Form JavaScript
+ * BLT Events - Registration Form JavaScript
  *
  * Handles ticket quantity changes, total calculation, coupon application,
  * form validation, and submission (free events via AJAX).
@@ -11,7 +11,7 @@
 	var appliedCoupon = null;
 
 	// --- Ticket quantity change ---
-	$(document).on("change", ".cmt-registration-form .cmt-ticket-quantity", function () {
+	$(document).on("change", ".blt-registration-form .blt-ticket-quantity", function () {
 		recalculateTotal();
 	});
 
@@ -19,7 +19,7 @@
 		var total = 0;
 		var hasTickets = false;
 
-		$(".cmt-registration-form .cmt-ticket-quantity").each(function () {
+		$(".blt-registration-form .blt-ticket-quantity").each(function () {
 			var qty = parseInt($(this).val(), 10) || 0;
 			var price = parseFloat($(this).data("price")) || 0;
 			if (qty > 0) {
@@ -31,12 +31,12 @@
 		totalPrice = total;
 
 		// Update total display
-		$(".cmt-registration-form .cmt-total-amount").text(
+		$(".blt-registration-form .blt-total-amount").text(
 			formatPrice(totalPrice, true)
 		);
 
 		// Update submit button
-		var btn = $("#cmt-submit-btn");
+		var btn = $("#blt-submit-btn");
 		if (hasTickets) {
 			btn.prop("disabled", false);
 			btn.text(
@@ -49,20 +49,20 @@
 
 		// Show/hide payment section for paid events
 		if (totalPrice > 0) {
-			$("#cmt-payment-section").show();
+			$("#blt-payment-section").show();
 		} else {
-			$("#cmt-payment-section").hide();
+			$("#blt-payment-section").hide();
 		}
 	}
 
 	// --- Coupon application ---
-	$(document).on("click", "#cmt-apply-coupon", function () {
+	$(document).on("click", "#blt-apply-coupon", function () {
 		var code = $("#coupon_code").val().trim();
 		if (!code) return;
 
-		var data = window.cmtRegData || {};
+		var data = window.bltRegData || {};
 		var totalQty = 0;
-		$(".cmt-ticket-quantity").each(function () {
+		$(".blt-ticket-quantity").each(function () {
 			totalQty += parseInt($(this).val(), 10) || 0;
 		});
 
@@ -70,27 +70,27 @@
 			url: data.ajaxUrl,
 			method: "POST",
 			data: {
-				action: "cmt_validate_coupon",
+				action: "blt_validate_coupon",
 				nonce: data.nonce,
 				coupon_code: code,
 				event_id: data.eventId,
 				quantity: totalQty,
 			},
 			success: function (response) {
-				var msgEl = $("#cmt-coupon-message");
+				var msgEl = $("#blt-coupon-message");
 				if (response.success) {
 					appliedCoupon = response.data;
 					msgEl
 						.text("Coupon applied: " + response.data.label)
-						.removeClass("cmt-msg-error")
-						.addClass("cmt-msg-success")
+						.removeClass("blt-msg-error")
+						.addClass("blt-msg-success")
 						.show();
 				} else {
 					appliedCoupon = null;
 					msgEl
 						.text(response.data.message)
-						.removeClass("cmt-msg-success")
-						.addClass("cmt-msg-error")
+						.removeClass("blt-msg-success")
+						.addClass("blt-msg-error")
 						.show();
 				}
 			},
@@ -98,11 +98,11 @@
 	});
 
 	// --- Form submission ---
-	$(document).on("submit", "#cmt-registration-form", function (e) {
+	$(document).on("submit", "#blt-registration-form", function (e) {
 		e.preventDefault();
 
 		var form = $(this);
-		var data = window.cmtRegData || {};
+		var data = window.bltRegData || {};
 
 		// For paid events with Stripe, payment.js handles submission
 		if (totalPrice > 0 && data.provider === "stripe") {
@@ -110,11 +110,11 @@
 		}
 
 		// Free registration via AJAX
-		var btn = $("#cmt-submit-btn");
+		var btn = $("#blt-submit-btn");
 		btn.prop("disabled", true).text("Registering...");
 
 		var formData = form.serializeArray();
-		formData.push({ name: "action", value: "cmt_register" });
+		formData.push({ name: "action", value: "blt_register" });
 		formData.push({ name: "nonce", value: data.nonce });
 
 		$.ajax({
@@ -122,12 +122,12 @@
 			method: "POST",
 			data: $.param(formData),
 			success: function (response) {
-				var msgEl = $("#cmt-form-messages");
+				var msgEl = $("#blt-form-messages");
 				if (response.success) {
 					msgEl
 						.text(response.data.message)
-						.removeClass("cmt-msg-error")
-						.addClass("cmt-msg-success")
+						.removeClass("blt-msg-error")
+						.addClass("blt-msg-success")
 						.show();
 					form.find("fieldset, input, select, textarea, button").prop(
 						"disabled",
@@ -137,16 +137,16 @@
 				} else {
 					msgEl
 						.text(response.data.message)
-						.removeClass("cmt-msg-success")
-						.addClass("cmt-msg-error")
+						.removeClass("blt-msg-success")
+						.addClass("blt-msg-error")
 						.show();
 					btn.prop("disabled", false).text("Register — Free");
 				}
 			},
 			error: function () {
-				$("#cmt-form-messages")
+				$("#blt-form-messages")
 					.text("An error occurred. Please try again.")
-					.addClass("cmt-msg-error")
+					.addClass("blt-msg-error")
 					.show();
 				btn.prop("disabled", false).text("Register — Free");
 			},

@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Coupons Business Logic
+ * BLT Events - Coupons Business Logic
  *
  * Validates coupon codes, calculates discounts, and tracks usage.
  */
@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Coupons {
+class BLT_Events_Coupons {
 
 	public static function init() {
 		// Nothing to hook currently; all methods are called statically.
@@ -30,12 +30,12 @@ class CMT_Events_Coupons {
 
 		// Find the coupon by code
 		$coupons = get_posts( array(
-			'post_type'      => CMT_Events_Coupon_CPT::$slug,
+			'post_type'      => BLT_Events_Coupon_CPT::$slug,
 			'post_status'    => 'publish',
 			'posts_per_page' => 1,
 			'meta_query'     => array(
 				array(
-					'key'   => '_cmt_coupon_code',
+					'key'   => '_blt_coupon_code',
 					'value' => strtoupper( $code ),
 				),
 			),
@@ -46,7 +46,7 @@ class CMT_Events_Coupons {
 		}
 
 		$coupon = $coupons[0];
-		$prefix = '_cmt_';
+		$prefix = '_blt_';
 
 		// Check status
 		$status = get_post_meta( $coupon->ID, $prefix . 'status', true );
@@ -86,8 +86,8 @@ class CMT_Events_Coupons {
 	 * @return float The discount amount.
 	 */
 	public static function calculate_discount( $coupon, $subtotal ) {
-		$type   = get_post_meta( $coupon->ID, '_cmt_discount_type', true );
-		$amount = (float) get_post_meta( $coupon->ID, '_cmt_amount', true );
+		$type   = get_post_meta( $coupon->ID, '_blt_discount_type', true );
+		$amount = (float) get_post_meta( $coupon->ID, '_blt_amount', true );
 
 		if ( $type === 'percentage' ) {
 			$discount = $subtotal * ( $amount / 100 );
@@ -106,7 +106,7 @@ class CMT_Events_Coupons {
 	 * @param float $amount_saved    The discount amount applied.
 	 */
 	public static function record_usage( $coupon_id, $registration_id, $amount_saved ) {
-		$prefix = '_cmt_';
+		$prefix = '_blt_';
 
 		// Increment total uses
 		$total_uses = (int) get_post_meta( $coupon_id, $prefix . 'total_uses', true );

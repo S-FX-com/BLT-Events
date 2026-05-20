@@ -5,14 +5,14 @@
  * Provides common CRUD operations for custom DB tables.
  * All child classes extend this and set their own table name.
  *
- * @package CMT_Events
+ * @package BLT_Events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_DB {
+class BLT_Events_DB {
 
 	/**
 	 * Full table name including wpdb prefix.

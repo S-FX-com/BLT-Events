@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Abstract Payment Provider
+ * BLT Events - Abstract Payment Provider
  *
  * Defines the interface that all payment providers must implement.
  */
@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-abstract class CMT_Events_Payment_Provider {
+abstract class BLT_Events_Payment_Provider {
 
 	abstract public static function init();
 
@@ -22,6 +22,6 @@ abstract class CMT_Events_Payment_Provider {
 	 * Check if this provider is the currently active provider.
 	 */
 	public static function is_active_provider( $slug ) {
-		return CMT_Events_Helpers::get_payment_provider() === $slug;
+		return BLT_Events_Helpers::get_payment_provider() === $slug;
 	}
 }

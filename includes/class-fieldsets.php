@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Fieldsets Business Logic
+ * BLT Events - Fieldsets Business Logic
  *
  * Manages fieldset operations: rendering form fields, validating submitted data,
  * and providing the fieldset for a specific event.
@@ -10,19 +10,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Fieldsets {
+class BLT_Events_Fieldsets {
 
 	private static $db;
 
 	public static function init() {
-		self::$db = new CMT_Events_Fieldsets_DB();
+		self::$db = new BLT_Events_Fieldsets_DB();
 	}
 
 	/**
 	 * Get the fieldset assigned to an event, or the default fieldset.
 	 */
 	public static function get_event_fieldset( $event_id ) {
-		$fieldset_id = get_post_meta( $event_id, '_cmt_fieldset_id', true );
+		$fieldset_id = get_post_meta( $event_id, '_blt_fieldset_id', true );
 
 		if ( $fieldset_id ) {
 			$fieldset = self::$db->get( absint( $fieldset_id ) );
@@ -73,11 +73,11 @@ class CMT_Events_Fieldsets {
 		$options  = $field['options'] ?? array();
 		$allow_other = ! empty( $field['allow_other'] );
 
-		$width_class = 'cmt-field-' . $width; // full, half, third
+		$width_class = 'blt-field-' . $width; // full, half, third
 		$req_attr    = $required ? ' required' : '';
-		$req_star    = $required ? ' <span class="cmt-required">*</span>' : '';
+		$req_star    = $required ? ' <span class="blt-required">*</span>' : '';
 
-		$html = '<div class="cmt-field-wrap ' . esc_attr( $width_class ) . '">';
+		$html = '<div class="blt-field-wrap ' . esc_attr( $width_class ) . '">';
 		$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . $req_star . '</label>';
 
 		switch ( $type ) {
@@ -95,7 +95,7 @@ class CMT_Events_Fieldsets {
 				$html .= '</select>';
 				if ( $allow_other ) {
 					$other_val = ( $value && ! in_array( $value, $options, true ) ) ? $value : '';
-					$html .= '<input type="text" class="cmt-other-input" name="' . esc_attr( $name ) . '__other" value="' . esc_attr( $other_val ) . '" placeholder="Please specify" style="' . ( $other_val ? '' : 'display:none;' ) . '" />';
+					$html .= '<input type="text" class="blt-other-input" name="' . esc_attr( $name ) . '__other" value="' . esc_attr( $other_val ) . '" placeholder="Please specify" style="' . ( $other_val ? '' : 'display:none;' ) . '" />';
 				}
 				break;
 
@@ -159,7 +159,7 @@ class CMT_Events_Fieldsets {
 					}
 					break;
 				case 'tel':
-					$value = CMT_Events_Helpers::sanitize_phone( $value );
+					$value = BLT_Events_Helpers::sanitize_phone( $value );
 					break;
 				case 'number':
 					$value = is_numeric( $value ) ? floatval( $value ) : '';

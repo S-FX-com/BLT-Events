@@ -2,22 +2,22 @@
 /**
  * Registrations database class.
  *
- * Handles CRUD operations for the cmt_registrations table.
+ * Handles CRUD operations for the blt_registrations table.
  *
- * @package CMT_Events
+ * @package BLT_Events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Registrations_DB extends CMT_Events_DB {
+class BLT_Events_Registrations_DB extends BLT_Events_DB {
 
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		parent::__construct( 'cmt_registrations' );
+		parent::__construct( 'blt_registrations' );
 	}
 
 	/**

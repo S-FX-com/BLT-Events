@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Fieldset Builder Admin Page
+ * BLT Events - Fieldset Builder Admin Page
  *
  * Provides a drag-and-drop interface for creating and editing registration fieldsets.
  */
@@ -9,39 +9,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Fieldset_Builder {
+class BLT_Events_Fieldset_Builder {
 
 	public static function init() {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ) );
-		add_action( 'wp_ajax_cmt_save_fieldset', array( __CLASS__, 'ajax_save_fieldset' ) );
-		add_action( 'wp_ajax_cmt_delete_fieldset', array( __CLASS__, 'ajax_delete_fieldset' ) );
+		add_action( 'wp_ajax_blt_save_fieldset', array( __CLASS__, 'ajax_save_fieldset' ) );
+		add_action( 'wp_ajax_blt_delete_fieldset', array( __CLASS__, 'ajax_delete_fieldset' ) );
 	}
 
 	public static function enqueue_scripts( $hook ) {
-		if ( strpos( $hook, 'cmt-fieldsets' ) === false ) {
+		if ( strpos( $hook, 'blt-fieldsets' ) === false ) {
 			return;
 		}
 
 		wp_enqueue_script( 'jquery-ui-sortable' );
 
 		wp_enqueue_style(
-			'cmt-fieldset-builder',
-			CMT_EVENTS_PLUGIN_URL . 'assets/css/fieldset-builder.css',
+			'blt-fieldset-builder',
+			BLT_EVENTS_PLUGIN_URL . 'assets/css/fieldset-builder.css',
 			array(),
-			CMT_EVENTS_VERSION
+			BLT_EVENTS_VERSION
 		);
 
 		wp_enqueue_script(
-			'cmt-fieldset-builder',
-			CMT_EVENTS_PLUGIN_URL . 'assets/js/fieldset-builder.js',
+			'blt-fieldset-builder',
+			BLT_EVENTS_PLUGIN_URL . 'assets/js/fieldset-builder.js',
 			array( 'jquery', 'jquery-ui-sortable' ),
-			CMT_EVENTS_VERSION,
+			BLT_EVENTS_VERSION,
 			true
 		);
 
-		wp_localize_script( 'cmt-fieldset-builder', 'cmtFieldsetData', array(
+		wp_localize_script( 'blt-fieldset-builder', 'bltFieldsetData', array(
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'cmt_fieldset_nonce' ),
+			'nonce'   => wp_create_nonce( 'blt_fieldset_nonce' ),
 		) );
 	}
 
@@ -52,18 +52,18 @@ class CMT_Events_Fieldset_Builder {
 		$consent_fields = array();
 
 		if ( $editing_id ) {
-			$fieldset       = CMT_Events_Fieldsets::get_fieldset( $editing_id );
-			$fields         = CMT_Events_Fieldsets::get_fields( $fieldset );
-			$consent_fields = CMT_Events_Fieldsets::get_consent_fields( $fieldset );
+			$fieldset       = BLT_Events_Fieldsets::get_fieldset( $editing_id );
+			$fields         = BLT_Events_Fieldsets::get_fields( $fieldset );
+			$consent_fields = BLT_Events_Fieldsets::get_consent_fields( $fieldset );
 		}
 
-		$all_fieldsets = CMT_Events_Fieldsets::get_active_fieldsets();
+		$all_fieldsets = BLT_Events_Fieldsets::get_active_fieldsets();
 		?>
-		<div class="wrap cmt-fieldset-builder">
+		<div class="wrap blt-fieldset-builder">
 			<h1>Registration Fieldsets</h1>
 
 			<!-- Fieldset List -->
-			<div class="cmt-fieldset-list" id="cmt-fieldset-list">
+			<div class="blt-fieldset-list" id="blt-fieldset-list">
 				<h2>Existing Fieldsets</h2>
 				<table class="widefat">
 					<thead>
@@ -85,9 +85,9 @@ class CMT_Events_Fieldset_Builder {
 									<td><?php echo is_array( $fs_fields ) ? count( $fs_fields ) : 0; ?></td>
 									<td><?php echo $fs->is_default ? 'Yes' : ''; ?></td>
 									<td>
-										<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=cmt-fieldsets&edit=' . $fs->id ) ); ?>" class="button button-small">Edit</a>
+										<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-fieldsets&edit=' . $fs->id ) ); ?>" class="button button-small">Edit</a>
 										<?php if ( ! $fs->is_default ) : ?>
-											<button type="button" class="button button-small button-link-delete cmt-delete-fieldset" data-id="<?php echo esc_attr( $fs->id ); ?>">Delete</button>
+											<button type="button" class="button button-small button-link-delete blt-delete-fieldset" data-id="<?php echo esc_attr( $fs->id ); ?>">Delete</button>
 										<?php endif; ?>
 									</td>
 								</tr>
@@ -100,9 +100,9 @@ class CMT_Events_Fieldset_Builder {
 			</div>
 
 			<!-- Fieldset Editor -->
-			<div class="cmt-fieldset-editor" id="cmt-fieldset-editor">
+			<div class="blt-fieldset-editor" id="blt-fieldset-editor">
 				<h2><?php echo $editing_id ? 'Edit Fieldset' : 'Create New Fieldset'; ?></h2>
-				<form id="cmt-fieldset-form" method="post">
+				<form id="blt-fieldset-form" method="post">
 					<input type="hidden" name="fieldset_id" value="<?php echo esc_attr( $editing_id ); ?>" />
 
 					<table class="form-table">
@@ -123,17 +123,17 @@ class CMT_Events_Fieldset_Builder {
 					<h3>Registration Fields</h3>
 					<p class="description">Drag and drop to reorder fields. Fields with a red asterisk (*) are required.</p>
 
-					<div id="cmt-fields-sortable" class="cmt-fields-list">
+					<div id="blt-fields-sortable" class="blt-fields-list">
 						<?php foreach ( $fields as $i => $field ) : ?>
-							<div class="cmt-field-item" data-index="<?php echo $i; ?>">
-								<div class="cmt-field-header">
-									<span class="cmt-field-drag dashicons dashicons-move"></span>
-									<span class="cmt-field-label"><?php echo esc_html( $field['label'] ); ?></span>
-									<span class="cmt-field-type"><?php echo esc_html( $field['type'] ); ?></span>
-									<button type="button" class="cmt-field-toggle dashicons dashicons-arrow-down-alt2"></button>
-									<button type="button" class="cmt-field-remove dashicons dashicons-trash"></button>
+							<div class="blt-field-item" data-index="<?php echo $i; ?>">
+								<div class="blt-field-header">
+									<span class="blt-field-drag dashicons dashicons-move"></span>
+									<span class="blt-field-label"><?php echo esc_html( $field['label'] ); ?></span>
+									<span class="blt-field-type"><?php echo esc_html( $field['type'] ); ?></span>
+									<button type="button" class="blt-field-toggle dashicons dashicons-arrow-down-alt2"></button>
+									<button type="button" class="blt-field-remove dashicons dashicons-trash"></button>
 								</div>
-								<div class="cmt-field-settings" style="display:none;">
+								<div class="blt-field-settings" style="display:none;">
 									<input type="hidden" name="fields[<?php echo $i; ?>][key]" value="<?php echo esc_attr( $field['key'] ); ?>" />
 									<label>Label: <input type="text" name="fields[<?php echo $i; ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" /></label>
 									<label>Type:
@@ -159,25 +159,25 @@ class CMT_Events_Fieldset_Builder {
 						<?php endforeach; ?>
 					</div>
 
-					<p><button type="button" class="button" id="cmt-add-field">+ Add Field</button></p>
+					<p><button type="button" class="button" id="blt-add-field">+ Add Field</button></p>
 
 					<h3>Consent Fields</h3>
-					<div id="cmt-consent-fields">
+					<div id="blt-consent-fields">
 						<?php foreach ( $consent_fields as $ci => $cf ) : ?>
-							<div class="cmt-consent-item">
+							<div class="blt-consent-item">
 								<label>Key: <input type="text" name="consent[<?php echo $ci; ?>][key]" value="<?php echo esc_attr( $cf['key'] ); ?>" /></label>
 								<label>Label (HTML): <input type="text" name="consent[<?php echo $ci; ?>][label]" value="<?php echo esc_attr( $cf['label'] ); ?>" class="large-text" /></label>
 								<label><input type="checkbox" name="consent[<?php echo $ci; ?>][required]" value="1" <?php checked( ! empty( $cf['required'] ) ); ?> /> Required</label>
-								<button type="button" class="button button-link-delete cmt-remove-consent">&times;</button>
+								<button type="button" class="button button-link-delete blt-remove-consent">&times;</button>
 							</div>
 						<?php endforeach; ?>
 					</div>
-					<p><button type="button" class="button" id="cmt-add-consent">+ Add Consent Field</button></p>
+					<p><button type="button" class="button" id="blt-add-consent">+ Add Consent Field</button></p>
 
 					<p class="submit">
-						<button type="submit" class="button button-primary" id="cmt-save-fieldset">Save Fieldset</button>
+						<button type="submit" class="button button-primary" id="blt-save-fieldset">Save Fieldset</button>
 						<?php if ( ! $editing_id ) : ?>
-							<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=cmt-fieldsets' ) ); ?>" class="button">Cancel</a>
+							<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-fieldsets' ) ); ?>" class="button">Cancel</a>
 						<?php endif; ?>
 					</p>
 				</form>
@@ -187,7 +187,7 @@ class CMT_Events_Fieldset_Builder {
 	}
 
 	public static function ajax_save_fieldset() {
-		check_ajax_referer( 'cmt_fieldset_nonce', 'nonce' );
+		check_ajax_referer( 'blt_fieldset_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
@@ -259,7 +259,7 @@ class CMT_Events_Fieldset_Builder {
 			$data['id'] = $id;
 		}
 
-		$result = CMT_Events_Fieldsets::save_fieldset( $data );
+		$result = BLT_Events_Fieldsets::save_fieldset( $data );
 
 		if ( $result === false ) {
 			wp_send_json_error( array( 'message' => 'Failed to save fieldset.' ) );
@@ -272,7 +272,7 @@ class CMT_Events_Fieldset_Builder {
 	}
 
 	public static function ajax_delete_fieldset() {
-		check_ajax_referer( 'cmt_fieldset_nonce', 'nonce' );
+		check_ajax_referer( 'blt_fieldset_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
@@ -283,7 +283,7 @@ class CMT_Events_Fieldset_Builder {
 			wp_send_json_error( array( 'message' => 'Invalid fieldset.' ) );
 		}
 
-		$result = CMT_Events_Fieldsets::delete_fieldset( $id );
+		$result = BLT_Events_Fieldsets::delete_fieldset( $id );
 		if ( $result === false ) {
 			wp_send_json_error( array( 'message' => 'Failed to delete fieldset.' ) );
 		}

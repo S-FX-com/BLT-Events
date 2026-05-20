@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - SureCart Payment Integration
+ * BLT Events - SureCart Payment Integration
  *
  * Syncs event ticket types as SureCart products/prices,
  * builds checkout URLs, and handles purchase confirmation webhooks.
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
+class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 
 	private static $api_base = 'https://api.surecart.com/v1/';
 
@@ -44,17 +44,17 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 		}
 
 		wp_register_script(
-			'cmt-events-surecart-checkout',
-			CMT_EVENTS_PLUGIN_URL . 'assets/js/surecart-checkout.js',
+			'blt-events-surecart-checkout',
+			BLT_EVENTS_PLUGIN_URL . 'assets/js/surecart-checkout.js',
 			array( 'jquery' ),
-			CMT_EVENTS_VERSION,
+			BLT_EVENTS_VERSION,
 			true
 		);
 
-		wp_localize_script( 'cmt-events-surecart-checkout', 'cmtSurecartData', array(
+		wp_localize_script( 'blt-events-surecart-checkout', 'bltSurecartData', array(
 			'checkoutUrl' => self::get_checkout_url(),
 			'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-			'nonce'       => wp_create_nonce( 'cmt_registration_nonce' ),
+			'nonce'       => wp_create_nonce( 'blt_registration_nonce' ),
 		) );
 	}
 
@@ -74,7 +74,7 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 			return;
 		}
 
-		$ticket_types_raw = get_post_meta( $post_id, '_cmt_ticket_types', true );
+		$ticket_types_raw = get_post_meta( $post_id, '_blt_ticket_types', true );
 		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 
 		if ( empty( $ticket_types ) || ! is_array( $ticket_types ) ) {
@@ -82,8 +82,8 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 		}
 
 		$event_title   = get_the_title( $post_id );
-		$product_ids   = get_post_meta( $post_id, '_cmt_sc_product_ids', true ) ?: array();
-		$price_ids     = get_post_meta( $post_id, '_cmt_sc_price_ids', true ) ?: array();
+		$product_ids   = get_post_meta( $post_id, '_blt_sc_product_ids', true ) ?: array();
+		$price_ids     = get_post_meta( $post_id, '_blt_sc_price_ids', true ) ?: array();
 
 		foreach ( $ticket_types as $i => $ticket ) {
 			$ticket_name  = $ticket['name'] ?? 'Ticket';
@@ -97,8 +97,8 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 					'description' => 'Event ticket: ' . $event_title,
 					'recurring'   => false,
 					'metadata'    => array(
-						'cmt_event_id'    => $post_id,
-						'cmt_ticket_index' => $i,
+						'blt_event_id'    => $post_id,
+						'blt_ticket_index' => $i,
 					),
 				) );
 
@@ -130,7 +130,7 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 			$price_data = array(
 				'product'  => $product_ids[ $i ],
 				'amount'   => $price_amount_cents,
-				'currency' => strtolower( get_option( 'cmt_events_currency', 'usd' ) ),
+				'currency' => strtolower( get_option( 'blt_events_currency', 'usd' ) ),
 			);
 
 			$price = self::api_request( 'prices', $price_data );
@@ -140,8 +140,8 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 			}
 		}
 
-		update_post_meta( $post_id, '_cmt_sc_product_ids', $product_ids );
-		update_post_meta( $post_id, '_cmt_sc_price_ids', $price_ids );
+		update_post_meta( $post_id, '_blt_sc_product_ids', $product_ids );
+		update_post_meta( $post_id, '_blt_sc_price_ids', $price_ids );
 	}
 
 	/**
@@ -198,7 +198,7 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 				'amount_paid'  => $amount * $quantity,
 			);
 
-			CMT_Events_Registrations::process_registration( $event_id, $data, $payment );
+			BLT_Events_Registrations::process_registration( $event_id, $data, $payment );
 		}
 	}
 
@@ -211,7 +211,7 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 		}
 
 		global $wpdb;
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new BLT_Events_Registrations_DB();
 		$table  = $reg_db->get_table_name();
 
 		$registrations = $wpdb->get_results(
@@ -223,8 +223,8 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 		);
 
 		foreach ( $registrations as $reg ) {
-			CMT_Events_Registrations::update_status( $reg->id, 'refunded' );
-			do_action( 'cmt_registration_refunded', $reg->id );
+			BLT_Events_Registrations::update_status( $reg->id, 'refunded' );
+			do_action( 'blt_registration_refunded', $reg->id );
 		}
 	}
 
@@ -238,7 +238,7 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 			'post_status'    => 'publish',
 			'meta_query'     => array(
 				array(
-					'key'     => '_cmt_sc_price_ids',
+					'key'     => '_blt_sc_price_ids',
 					'value'   => $price_id,
 					'compare' => 'LIKE',
 				),
@@ -268,7 +268,7 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 	 * Get the SureCart API token.
 	 */
 	private static function get_api_token() {
-		$token = get_option( 'cmt_events_surecart_api_token', '' );
+		$token = get_option( 'blt_events_surecart_api_token', '' );
 
 		// Fallback: try getting token from SureCart plugin if installed
 		if ( empty( $token ) && self::is_surecart_plugin_active() ) {
@@ -282,7 +282,7 @@ class CMT_Events_SureCart_Integration extends CMT_Events_Payment_Provider {
 	 * Get the SureCart checkout page URL.
 	 */
 	private static function get_checkout_url() {
-		$url = get_option( 'cmt_events_surecart_checkout_url', '' );
+		$url = get_option( 'blt_events_surecart_checkout_url', '' );
 
 		if ( empty( $url ) ) {
 			$url = home_url( '/checkout' );

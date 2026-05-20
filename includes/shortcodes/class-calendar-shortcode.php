@@ -1,19 +1,19 @@
 <?php
 /**
- * CMT Events - Calendar Shortcode
+ * BLT Events - Calendar Shortcode
  *
- * [cmt_events_calendar] - Renders events in list or grid view.
- * Usage: [cmt_events_calendar view="list" category="" limit="12"]
+ * [blt_events_calendar] - Renders events in list or grid view.
+ * Usage: [blt_events_calendar view="list" category="" limit="12"]
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Calendar_Shortcode {
+class BLT_Events_Calendar_Shortcode {
 
 	public static function init() {
-		add_shortcode( 'cmt_events_calendar', array( __CLASS__, 'render' ) );
+		add_shortcode( 'blt_events_calendar', array( __CLASS__, 'render' ) );
 	}
 
 	public static function render( $atts ) {
@@ -28,7 +28,7 @@ class CMT_Events_Calendar_Shortcode {
 			'post_type'      => 'event',
 			'post_status'    => 'publish',
 			'posts_per_page' => intval( $atts['limit'] ),
-			'meta_key'       => '_cmt_event_date',
+			'meta_key'       => '_blt_event_date',
 			'orderby'        => 'meta_value',
 			'order'          => 'ASC',
 		);
@@ -37,7 +37,7 @@ class CMT_Events_Calendar_Shortcode {
 		if ( $atts['past'] !== 'yes' ) {
 			$args['meta_query'] = array(
 				array(
-					'key'     => '_cmt_event_date',
+					'key'     => '_blt_event_date',
 					'value'   => current_time( 'Y-m-d' ),
 					'compare' => '>=',
 					'type'    => 'DATE',
@@ -58,32 +58,32 @@ class CMT_Events_Calendar_Shortcode {
 
 		$query = new WP_Query( $args );
 
-		wp_enqueue_style( 'cmt-events-calendar', CMT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), CMT_EVENTS_VERSION );
+		wp_enqueue_style( 'blt-events-calendar', BLT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), BLT_EVENTS_VERSION );
 
 		ob_start();
 
 		if ( ! $query->have_posts() ) {
-			echo '<div class="cmt-events-empty"><p>No upcoming events found.</p></div>';
+			echo '<div class="blt-events-empty"><p>No upcoming events found.</p></div>';
 			wp_reset_postdata();
 			return ob_get_clean();
 		}
 
-		$view_class = $atts['view'] === 'grid' ? 'cmt-events-grid' : 'cmt-events-list';
+		$view_class = $atts['view'] === 'grid' ? 'blt-events-grid' : 'blt-events-list';
 		?>
-		<div class="cmt-events-calendar <?php echo esc_attr( $view_class ); ?>">
+		<div class="blt-events-calendar <?php echo esc_attr( $view_class ); ?>">
 			<?php while ( $query->have_posts() ) : $query->the_post(); ?>
 				<?php
 				$event_id    = get_the_ID();
-				$event_date  = get_post_meta( $event_id, '_cmt_event_date', true );
-				$start_time  = get_post_meta( $event_id, '_cmt_event_start_time', true );
-				$end_time    = get_post_meta( $event_id, '_cmt_event_end_time', true );
-				$all_day     = get_post_meta( $event_id, '_cmt_event_all_day', true );
-				$venue       = get_post_meta( $event_id, '_cmt_event_venue', true );
-				$event_type  = get_post_meta( $event_id, '_cmt_event_type', true );
-				$ticket_raw  = get_post_meta( $event_id, '_cmt_ticket_types', true );
+				$event_date  = get_post_meta( $event_id, '_blt_event_date', true );
+				$start_time  = get_post_meta( $event_id, '_blt_event_start_time', true );
+				$end_time    = get_post_meta( $event_id, '_blt_event_end_time', true );
+				$all_day     = get_post_meta( $event_id, '_blt_event_all_day', true );
+				$venue       = get_post_meta( $event_id, '_blt_event_venue', true );
+				$event_type  = get_post_meta( $event_id, '_blt_event_type', true );
+				$ticket_raw  = get_post_meta( $event_id, '_blt_ticket_types', true );
 				$tickets     = is_string( $ticket_raw ) ? json_decode( $ticket_raw, true ) : $ticket_raw;
 
-				$date_format = get_option( 'cmt_events_date_format', 'F j, Y' );
+				$date_format = get_option( 'blt_events_date_format', 'F j, Y' );
 				$formatted_date = ! empty( $event_date ) ? date_i18n( $date_format, strtotime( $event_date ) ) : '';
 
 				$time_display = '';
@@ -110,61 +110,61 @@ class CMT_Events_Calendar_Shortcode {
 					$min_price = 0;
 				}
 				?>
-				<div class="cmt-event-card">
+				<div class="blt-event-card">
 					<?php if ( has_post_thumbnail() ) : ?>
-						<div class="cmt-event-image">
+						<div class="blt-event-image">
 							<a href="<?php the_permalink(); ?>">
 								<?php the_post_thumbnail( 'medium' ); ?>
 							</a>
 						</div>
 					<?php endif; ?>
 
-					<div class="cmt-event-content">
-						<div class="cmt-event-date-badge">
-							<span class="cmt-date-month"><?php echo esc_html( date_i18n( 'M', strtotime( $event_date ) ) ); ?></span>
-							<span class="cmt-date-day"><?php echo esc_html( date_i18n( 'j', strtotime( $event_date ) ) ); ?></span>
+					<div class="blt-event-content">
+						<div class="blt-event-date-badge">
+							<span class="blt-date-month"><?php echo esc_html( date_i18n( 'M', strtotime( $event_date ) ) ); ?></span>
+							<span class="blt-date-day"><?php echo esc_html( date_i18n( 'j', strtotime( $event_date ) ) ); ?></span>
 						</div>
 
-						<div class="cmt-event-details">
-							<h3 class="cmt-event-title">
+						<div class="blt-event-details">
+							<h3 class="blt-event-title">
 								<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
 							</h3>
 
-							<div class="cmt-event-meta">
+							<div class="blt-event-meta">
 								<?php if ( $formatted_date ) : ?>
-									<span class="cmt-meta-date"><?php echo esc_html( $formatted_date ); ?></span>
+									<span class="blt-meta-date"><?php echo esc_html( $formatted_date ); ?></span>
 								<?php endif; ?>
 								<?php if ( $time_display ) : ?>
-									<span class="cmt-meta-time"><?php echo esc_html( $time_display ); ?></span>
+									<span class="blt-meta-time"><?php echo esc_html( $time_display ); ?></span>
 								<?php endif; ?>
 								<?php if ( $venue ) : ?>
-									<span class="cmt-meta-venue"><?php echo esc_html( $venue ); ?></span>
+									<span class="blt-meta-venue"><?php echo esc_html( $venue ); ?></span>
 								<?php endif; ?>
 								<?php if ( $event_type ) : ?>
-									<span class="cmt-meta-type"><?php echo esc_html( ucfirst( $event_type ) ); ?></span>
+									<span class="blt-meta-type"><?php echo esc_html( ucfirst( $event_type ) ); ?></span>
 								<?php endif; ?>
 							</div>
 
 							<?php if ( has_excerpt() ) : ?>
-								<p class="cmt-event-excerpt"><?php echo esc_html( get_the_excerpt() ); ?></p>
+								<p class="blt-event-excerpt"><?php echo esc_html( get_the_excerpt() ); ?></p>
 							<?php endif; ?>
 
-							<div class="cmt-event-footer">
+							<div class="blt-event-footer">
 								<?php if ( $max_price > 0 ) : ?>
-									<span class="cmt-event-price">
+									<span class="blt-event-price">
 										<?php if ( $min_price == $max_price ) : ?>
-											<?php echo esc_html( CMT_Events_Helpers::format_price( $min_price ) ); ?>
+											<?php echo esc_html( BLT_Events_Helpers::format_price( $min_price ) ); ?>
 										<?php elseif ( $min_price == 0 ) : ?>
-											Free - <?php echo esc_html( CMT_Events_Helpers::format_price( $max_price ) ); ?>
+											Free - <?php echo esc_html( BLT_Events_Helpers::format_price( $max_price ) ); ?>
 										<?php else : ?>
-											<?php echo esc_html( CMT_Events_Helpers::format_price( $min_price ) ); ?> - <?php echo esc_html( CMT_Events_Helpers::format_price( $max_price ) ); ?>
+											<?php echo esc_html( BLT_Events_Helpers::format_price( $min_price ) ); ?> - <?php echo esc_html( BLT_Events_Helpers::format_price( $max_price ) ); ?>
 										<?php endif; ?>
 									</span>
 								<?php else : ?>
-									<span class="cmt-event-price cmt-free">Free</span>
+									<span class="blt-event-price blt-free">Free</span>
 								<?php endif; ?>
 
-								<a href="<?php the_permalink(); ?>" class="cmt-btn-register">Register</a>
+								<a href="<?php the_permalink(); ?>" class="blt-btn-register">Register</a>
 							</div>
 						</div>
 					</div>

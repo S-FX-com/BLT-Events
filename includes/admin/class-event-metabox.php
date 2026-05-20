@@ -1,6 +1,6 @@
 <?php
 /**
- * CMT Events - Event Meta Boxes
+ * BLT Events - Event Meta Boxes
  *
  * Adds meta boxes to the event editor: date/time, tickets, capacity,
  * fieldset selection, group discounts, and registration overview.
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Event_Metabox {
+class BLT_Events_Event_Metabox {
 
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
@@ -19,7 +19,7 @@ class CMT_Events_Event_Metabox {
 
 	public static function add_meta_boxes() {
 		add_meta_box(
-			'cmt_event_details',
+			'blt_event_details',
 			'Event Details',
 			array( __CLASS__, 'render_details_box' ),
 			'event',
@@ -28,7 +28,7 @@ class CMT_Events_Event_Metabox {
 		);
 
 		add_meta_box(
-			'cmt_event_tickets',
+			'blt_event_tickets',
 			'Ticket Types',
 			array( __CLASS__, 'render_tickets_box' ),
 			'event',
@@ -37,7 +37,7 @@ class CMT_Events_Event_Metabox {
 		);
 
 		add_meta_box(
-			'cmt_event_registration_config',
+			'blt_event_registration_config',
 			'Registration Configuration',
 			array( __CLASS__, 'render_registration_config_box' ),
 			'event',
@@ -46,7 +46,7 @@ class CMT_Events_Event_Metabox {
 		);
 
 		add_meta_box(
-			'cmt_event_registrations_summary',
+			'blt_event_registrations_summary',
 			'Registrations Summary',
 			array( __CLASS__, 'render_registrations_summary_box' ),
 			'event',
@@ -56,8 +56,8 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_details_box( $post ) {
-		wp_nonce_field( 'cmt_event_details', 'cmt_event_details_nonce' );
-		$prefix = CMT_EVENTS_PREFIX;
+		wp_nonce_field( 'blt_event_details', 'blt_event_details_nonce' );
+		$prefix = BLT_EVENTS_PREFIX;
 
 		$event_date       = get_post_meta( $post->ID, $prefix . 'event_date', true );
 		$event_end_date   = get_post_meta( $post->ID, $prefix . 'event_end_date', true );
@@ -69,7 +69,7 @@ class CMT_Events_Event_Metabox {
 		$event_online_url = get_post_meta( $post->ID, $prefix . 'event_online_url', true );
 		$event_type       = get_post_meta( $post->ID, $prefix . 'event_type', true ) ?: 'in-person';
 		?>
-		<table class="form-table cmt-event-details">
+		<table class="form-table blt-event-details">
 			<tr>
 				<th><label for="event_date">Start Date</label></th>
 				<td><input type="date" id="event_date" name="event_date" value="<?php echo esc_attr( $event_date ); ?>" required /></td>
@@ -85,11 +85,11 @@ class CMT_Events_Event_Metabox {
 				<th><label>All Day?</label></th>
 				<td><label><input type="checkbox" name="event_all_day" value="1" <?php checked( $event_all_day, '1' ); ?> /> This is an all-day event</label></td>
 			</tr>
-			<tr class="cmt-time-row" <?php echo $event_all_day === '1' ? 'style="display:none;"' : ''; ?>>
+			<tr class="blt-time-row" <?php echo $event_all_day === '1' ? 'style="display:none;"' : ''; ?>>
 				<th><label for="event_start_time">Start Time</label></th>
 				<td><input type="time" id="event_start_time" name="event_start_time" value="<?php echo esc_attr( $event_start_time ); ?>" /></td>
 			</tr>
-			<tr class="cmt-time-row" <?php echo $event_all_day === '1' ? 'style="display:none;"' : ''; ?>>
+			<tr class="blt-time-row" <?php echo $event_all_day === '1' ? 'style="display:none;"' : ''; ?>>
 				<th><label for="event_end_time">End Time</label></th>
 				<td><input type="time" id="event_end_time" name="event_end_time" value="<?php echo esc_attr( $event_end_time ); ?>" /></td>
 			</tr>
@@ -120,7 +120,7 @@ class CMT_Events_Event_Metabox {
 		<script>
 		jQuery(document).ready(function($){
 			$('input[name="event_all_day"]').on('change', function() {
-				$('.cmt-time-row').toggle(!this.checked);
+				$('.blt-time-row').toggle(!this.checked);
 			});
 		});
 		</script>
@@ -128,16 +128,16 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_tickets_box( $post ) {
-		$prefix = CMT_EVENTS_PREFIX;
+		$prefix = BLT_EVENTS_PREFIX;
 		$ticket_types_raw = get_post_meta( $post->ID, $prefix . 'ticket_types', true );
 		$ticket_types = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 		if ( ! is_array( $ticket_types ) ) {
 			$ticket_types = array( array( 'name' => 'General Admission', 'price' => '0', 'description' => '' ) );
 		}
 		?>
-		<div id="cmt-ticket-types">
+		<div id="blt-ticket-types">
 			<p class="description">Define the ticket types available for this event. Set price to 0 for free tickets.</p>
-			<table class="widefat cmt-tickets-table" id="cmt-tickets-table">
+			<table class="widefat blt-tickets-table" id="blt-tickets-table">
 				<thead>
 					<tr>
 						<th style="width:30%">Name</th>
@@ -148,35 +148,35 @@ class CMT_Events_Event_Metabox {
 				</thead>
 				<tbody>
 					<?php foreach ( $ticket_types as $i => $ticket ) : ?>
-					<tr class="cmt-ticket-row">
+					<tr class="blt-ticket-row">
 						<td><input type="text" name="ticket_types[<?php echo $i; ?>][name]" value="<?php echo esc_attr( $ticket['name'] ?? '' ); ?>" class="widefat" required /></td>
 						<td><input type="number" name="ticket_types[<?php echo $i; ?>][price]" value="<?php echo esc_attr( $ticket['price'] ?? '0' ); ?>" step="0.01" min="0" class="widefat" /></td>
 						<td><input type="text" name="ticket_types[<?php echo $i; ?>][description]" value="<?php echo esc_attr( $ticket['description'] ?? '' ); ?>" class="widefat" /></td>
-						<td><button type="button" class="button cmt-remove-ticket">&times; Remove</button></td>
+						<td><button type="button" class="button blt-remove-ticket">&times; Remove</button></td>
 					</tr>
 					<?php endforeach; ?>
 				</tbody>
 			</table>
-			<p><button type="button" class="button button-secondary" id="cmt-add-ticket">+ Add Ticket Type</button></p>
+			<p><button type="button" class="button button-secondary" id="blt-add-ticket">+ Add Ticket Type</button></p>
 		</div>
 
 		<script>
 		jQuery(document).ready(function($) {
 			var ticketIndex = <?php echo count( $ticket_types ); ?>;
 
-			$('#cmt-add-ticket').on('click', function() {
-				var row = '<tr class="cmt-ticket-row">' +
+			$('#blt-add-ticket').on('click', function() {
+				var row = '<tr class="blt-ticket-row">' +
 					'<td><input type="text" name="ticket_types[' + ticketIndex + '][name]" class="widefat" required /></td>' +
 					'<td><input type="number" name="ticket_types[' + ticketIndex + '][price]" value="0" step="0.01" min="0" class="widefat" /></td>' +
 					'<td><input type="text" name="ticket_types[' + ticketIndex + '][description]" class="widefat" /></td>' +
-					'<td><button type="button" class="button cmt-remove-ticket">&times; Remove</button></td>' +
+					'<td><button type="button" class="button blt-remove-ticket">&times; Remove</button></td>' +
 					'</tr>';
-				$('#cmt-tickets-table tbody').append(row);
+				$('#blt-tickets-table tbody').append(row);
 				ticketIndex++;
 			});
 
-			$(document).on('click', '.cmt-remove-ticket', function() {
-				if ($('.cmt-ticket-row').length > 1) {
+			$(document).on('click', '.blt-remove-ticket', function() {
+				if ($('.blt-ticket-row').length > 1) {
 					$(this).closest('tr').remove();
 				}
 			});
@@ -186,7 +186,7 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_registration_config_box( $post ) {
-		$prefix = CMT_EVENTS_PREFIX;
+		$prefix = BLT_EVENTS_PREFIX;
 		$capacity        = get_post_meta( $post->ID, $prefix . 'capacity', true );
 		$fieldset_id     = get_post_meta( $post->ID, $prefix . 'fieldset_id', true );
 		$registration_open = get_post_meta( $post->ID, $prefix . 'registration_open', true );
@@ -198,8 +198,8 @@ class CMT_Events_Event_Metabox {
 		}
 
 		$fieldsets = array();
-		if ( class_exists( 'CMT_Events_Fieldsets' ) ) {
-			$fieldsets = CMT_Events_Fieldsets::get_active_fieldsets();
+		if ( class_exists( 'BLT_Events_Fieldsets' ) ) {
+			$fieldsets = BLT_Events_Fieldsets::get_active_fieldsets();
 		}
 		?>
 		<table class="form-table">
@@ -235,7 +235,7 @@ class CMT_Events_Event_Metabox {
 				<th><label>Group Discount</label></th>
 				<td>
 					<label><input type="checkbox" name="group_discount_enabled" value="1" <?php checked( ! empty( $gd['enabled'] ) ); ?> /> Enable group discount</label>
-					<div class="cmt-group-discount-settings" <?php echo empty( $gd['enabled'] ) ? 'style="display:none;"' : ''; ?>>
+					<div class="blt-group-discount-settings" <?php echo empty( $gd['enabled'] ) ? 'style="display:none;"' : ''; ?>>
 						<br>
 						<label>Min. Attendees: <input type="number" name="group_discount_min" value="<?php echo esc_attr( $gd['min_attendees'] ?? 5 ); ?>" min="2" class="small-text" /></label><br><br>
 						<label>Type:
@@ -253,7 +253,7 @@ class CMT_Events_Event_Metabox {
 		<script>
 		jQuery(document).ready(function($) {
 			$('input[name="group_discount_enabled"]').on('change', function() {
-				$('.cmt-group-discount-settings').toggle(this.checked);
+				$('.blt-group-discount-settings').toggle(this.checked);
 			});
 		});
 		</script>
@@ -261,7 +261,7 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function render_registrations_summary_box( $post ) {
-		$reg_db = new CMT_Events_Registrations_DB();
+		$reg_db = new BLT_Events_Registrations_DB();
 		$total  = $reg_db->count( array( array( 'column' => 'event_id', 'value' => $post->ID ) ) );
 		$confirmed = $reg_db->count( array(
 			array( 'column' => 'event_id', 'value' => $post->ID ),
@@ -271,9 +271,9 @@ class CMT_Events_Event_Metabox {
 			array( 'column' => 'event_id', 'value' => $post->ID ),
 			array( 'column' => 'status', 'value' => 'pending' ),
 		) );
-		$capacity = (int) get_post_meta( $post->ID, CMT_EVENTS_PREFIX . 'capacity', true );
+		$capacity = (int) get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'capacity', true );
 		?>
-		<div class="cmt-registrations-summary">
+		<div class="blt-registrations-summary">
 			<p><strong>Total Registrations:</strong> <?php echo intval( $total ); ?></p>
 			<p><strong>Confirmed:</strong> <?php echo intval( $confirmed ); ?></p>
 			<p><strong>Pending:</strong> <?php echo intval( $pending ); ?></p>
@@ -281,7 +281,7 @@ class CMT_Events_Event_Metabox {
 				<p><strong>Capacity:</strong> <?php echo intval( $confirmed ) . ' / ' . intval( $capacity ); ?></p>
 			<?php endif; ?>
 			<p>
-				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=cmt-registrations&event_id=' . $post->ID ) ); ?>" class="button">
+				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-registrations&event_id=' . $post->ID ) ); ?>" class="button">
 					View All Registrations
 				</a>
 			</p>
@@ -290,7 +290,7 @@ class CMT_Events_Event_Metabox {
 	}
 
 	public static function save_meta( $post_id, $post ) {
-		if ( ! isset( $_POST['cmt_event_details_nonce'] ) || ! wp_verify_nonce( $_POST['cmt_event_details_nonce'], 'cmt_event_details' ) ) {
+		if ( ! isset( $_POST['blt_event_details_nonce'] ) || ! wp_verify_nonce( $_POST['blt_event_details_nonce'], 'blt_event_details' ) ) {
 			return;
 		}
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
@@ -300,7 +300,7 @@ class CMT_Events_Event_Metabox {
 			return;
 		}
 
-		$prefix = CMT_EVENTS_PREFIX;
+		$prefix = BLT_EVENTS_PREFIX;
 
 		// Event details
 		update_post_meta( $post_id, $prefix . 'event_date', sanitize_text_field( $_POST['event_date'] ?? '' ) );

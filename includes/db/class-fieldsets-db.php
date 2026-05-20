@@ -2,22 +2,22 @@
 /**
  * Fieldsets database class.
  *
- * Handles CRUD operations for the cmt_fieldsets table.
+ * Handles CRUD operations for the blt_fieldsets table.
  *
- * @package CMT_Events
+ * @package BLT_Events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class CMT_Events_Fieldsets_DB extends CMT_Events_DB {
+class BLT_Events_Fieldsets_DB extends BLT_Events_DB {
 
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		parent::__construct( 'cmt_fieldsets' );
+		parent::__construct( 'blt_fieldsets' );
 	}
 
 	/**
