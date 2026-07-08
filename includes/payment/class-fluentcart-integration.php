@@ -100,7 +100,7 @@ class BLT_Events_FluentCart_Integration extends BLT_Events_Payment_Provider {
 			if ( ! $product_id || get_post_type( $product_id ) !== 'fluent-products' ) {
 				$product = \FluentCart\App\Models\Product::create( array(
 					'post_title'   => $event_title,
-					'post_content' => 'Event tickets: ' . $event_title,
+					'post_content' => sprintf( __( 'Event tickets: %s', 'blt-events' ), $event_title ),
 					'post_status'  => 'publish',
 					'post_type'    => 'fluent-products',
 				) );

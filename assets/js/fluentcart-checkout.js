@@ -72,7 +72,7 @@
 	 */
 	function formatPrice(amount, includeTotal) {
 		var cfg = (window.bltEventsData && bltEventsData.currency) || {};
-		var out = includeTotal ? "Total: " : "";
+		var out = includeTotal ? (cfg.totalLabel || "Total:") + " " : "";
 
 		if (cfg.showSymbol === "1" && cfg.currencySymbol) {
 			out += cfg.currencySymbol;

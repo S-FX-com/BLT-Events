@@ -139,103 +139,103 @@ class BLT_Events_Admin_Settings {
 		$payment_provider = get_option( 'blt_events_payment_provider', 'none' );
 		?>
 		<div class="wrap blt-events-settings">
-			<h1>BLT Events Settings</h1>
+			<h1><?php esc_html_e( 'BLT Events Settings', 'blt-events' ); ?></h1>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'blt_events_settings' ); ?>
 
 				<!-- Payment Provider -->
 				<table class="form-table">
-					<tr><th colspan="2"><h2 class="title">Payment Provider</h2></th></tr>
+					<tr><th colspan="2"><h2 class="title"><?php esc_html_e( 'Payment Provider', 'blt-events' ); ?></h2></th></tr>
 					<tr>
-						<th scope="row">Active Provider</th>
+						<th scope="row"><?php esc_html_e( 'Active Provider', 'blt-events' ); ?></th>
 						<td>
 							<fieldset>
-								<label><input type="radio" name="blt_events_payment_provider" value="none" <?php checked( $payment_provider, 'none' ); ?> /> None (Free events only)</label><br>
-								<label><input type="radio" name="blt_events_payment_provider" value="stripe" <?php checked( $payment_provider, 'stripe' ); ?> /> Stripe</label><br>
-								<label><input type="radio" name="blt_events_payment_provider" value="surecart" <?php checked( $payment_provider, 'surecart' ); ?> /> SureCart</label><br>
-								<label><input type="radio" name="blt_events_payment_provider" value="fluentcart" <?php checked( $payment_provider, 'fluentcart' ); ?> /> FluentCart</label>
-								<p class="description">Choose which payment provider to use for paid event registrations.</p>
+								<label><input type="radio" name="blt_events_payment_provider" value="none" <?php checked( $payment_provider, 'none' ); ?> /> <?php esc_html_e( 'None (Free events only)', 'blt-events' ); ?></label><br>
+								<label><input type="radio" name="blt_events_payment_provider" value="stripe" <?php checked( $payment_provider, 'stripe' ); ?> /> <?php esc_html_e( 'Stripe', 'blt-events' ); ?></label><br>
+								<label><input type="radio" name="blt_events_payment_provider" value="surecart" <?php checked( $payment_provider, 'surecart' ); ?> /> <?php esc_html_e( 'SureCart', 'blt-events' ); ?></label><br>
+								<label><input type="radio" name="blt_events_payment_provider" value="fluentcart" <?php checked( $payment_provider, 'fluentcart' ); ?> /> <?php esc_html_e( 'FluentCart', 'blt-events' ); ?></label>
+								<p class="description"><?php esc_html_e( 'Choose which payment provider to use for paid event registrations.', 'blt-events' ); ?></p>
 							</fieldset>
 						</td>
 					</tr>
 
 					<!-- Stripe Settings -->
 					<tr class="blt-provider-stripe" <?php echo $payment_provider !== 'stripe' ? 'style="display:none;"' : ''; ?>>
-						<th colspan="2"><h2 class="title">Stripe Settings</h2></th>
+						<th colspan="2"><h2 class="title"><?php esc_html_e( 'Stripe Settings', 'blt-events' ); ?></h2></th>
 					</tr>
 					<tr class="blt-provider-stripe" <?php echo $payment_provider !== 'stripe' ? 'style="display:none;"' : ''; ?>>
-						<th scope="row">Secret Key</th>
+						<th scope="row"><?php esc_html_e( 'Secret Key', 'blt-events' ); ?></th>
 						<td><?php self::render_secret_field( 'blt_events_stripe_secret_key' ); ?></td>
 					</tr>
 					<tr class="blt-provider-stripe" <?php echo $payment_provider !== 'stripe' ? 'style="display:none;"' : ''; ?>>
-						<th scope="row">Publishable Key</th>
+						<th scope="row"><?php esc_html_e( 'Publishable Key', 'blt-events' ); ?></th>
 						<td><input type="text" name="blt_events_stripe_publishable_key" value="<?php echo esc_attr( get_option( 'blt_events_stripe_publishable_key' ) ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr class="blt-provider-stripe" <?php echo $payment_provider !== 'stripe' ? 'style="display:none;"' : ''; ?>>
-						<th scope="row">Webhook Secret</th>
+						<th scope="row"><?php esc_html_e( 'Webhook Secret', 'blt-events' ); ?></th>
 						<td><?php self::render_secret_field( 'blt_events_stripe_webhook_secret' ); ?></td>
 					</tr>
 
 					<!-- SureCart Settings -->
 					<tr class="blt-provider-surecart" <?php echo $payment_provider !== 'surecart' ? 'style="display:none;"' : ''; ?>>
-						<th colspan="2"><h2 class="title">SureCart Settings</h2></th>
+						<th colspan="2"><h2 class="title"><?php esc_html_e( 'SureCart Settings', 'blt-events' ); ?></h2></th>
 					</tr>
 					<tr class="blt-provider-surecart" <?php echo $payment_provider !== 'surecart' ? 'style="display:none;"' : ''; ?>>
-						<th scope="row">API Token</th>
+						<th scope="row"><?php esc_html_e( 'API Token', 'blt-events' ); ?></th>
 						<td>
 							<?php self::render_secret_field( 'blt_events_surecart_api_token' ); ?>
-							<p class="description">Your SureCart secret API token. If the SureCart plugin is installed and connected, this can be left blank.</p>
+							<p class="description"><?php esc_html_e( 'Your SureCart secret API token. If the SureCart plugin is installed and connected, this can be left blank.', 'blt-events' ); ?></p>
 						</td>
 					</tr>
 					<tr class="blt-provider-surecart" <?php echo $payment_provider !== 'surecart' ? 'style="display:none;"' : ''; ?>>
-						<th scope="row">Checkout Page URL</th>
+						<th scope="row"><?php esc_html_e( 'Checkout Page URL', 'blt-events' ); ?></th>
 						<td>
 							<input type="url" name="blt_events_surecart_checkout_url" value="<?php echo esc_attr( get_option( 'blt_events_surecart_checkout_url' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( home_url( '/checkout' ) ); ?>" />
-							<p class="description">The URL of your SureCart checkout page. Leave blank to use default.</p>
+							<p class="description"><?php esc_html_e( 'The URL of your SureCart checkout page. Leave blank to use default.', 'blt-events' ); ?></p>
 						</td>
 					</tr>
 					<tr class="blt-provider-surecart" <?php echo $payment_provider !== 'surecart' ? 'style="display:none;"' : ''; ?>>
-						<th scope="row">Integration Status</th>
+						<th scope="row"><?php esc_html_e( 'Integration Status', 'blt-events' ); ?></th>
 						<td>
 							<?php
 							$sc_active     = class_exists( 'BLT_Events_SureCart_Integration' ) && BLT_Events_SureCart_Integration::is_surecart_plugin_active();
 							$sc_configured = class_exists( 'BLT_Events_SureCart_Integration' ) && BLT_Events_SureCart_Integration::is_configured();
 							?>
-							<p>SureCart Plugin: <?php echo $sc_active ? '<span style="color:#059669;font-weight:600;">Active</span>' : '<span style="color:#dc2626;font-weight:600;">Not Detected</span>'; ?></p>
-							<p>API Connection: <?php echo $sc_configured ? '<span style="color:#059669;font-weight:600;">Connected</span>' : '<span style="color:#dc2626;font-weight:600;">Not Connected</span>'; ?></p>
+							<p><?php esc_html_e( 'SureCart Plugin:', 'blt-events' ); ?> <?php echo $sc_active ? '<span style="color:#059669;font-weight:600;">' . esc_html__( 'Active', 'blt-events' ) . '</span>' : '<span style="color:#dc2626;font-weight:600;">' . esc_html__( 'Not Detected', 'blt-events' ) . '</span>'; ?></p>
+							<p><?php esc_html_e( 'API Connection:', 'blt-events' ); ?> <?php echo $sc_configured ? '<span style="color:#059669;font-weight:600;">' . esc_html__( 'Connected', 'blt-events' ) . '</span>' : '<span style="color:#dc2626;font-weight:600;">' . esc_html__( 'Not Connected', 'blt-events' ) . '</span>'; ?></p>
 						</td>
 					</tr>
 
 					<!-- FluentCart Settings -->
 					<tr class="blt-provider-fluentcart" <?php echo $payment_provider !== 'fluentcart' ? 'style="display:none;"' : ''; ?>>
-						<th colspan="2"><h2 class="title">FluentCart Settings</h2></th>
+						<th colspan="2"><h2 class="title"><?php esc_html_e( 'FluentCart Settings', 'blt-events' ); ?></h2></th>
 					</tr>
 					<tr class="blt-provider-fluentcart" <?php echo $payment_provider !== 'fluentcart' ? 'style="display:none;"' : ''; ?>>
-						<th scope="row">Integration Status</th>
+						<th scope="row"><?php esc_html_e( 'Integration Status', 'blt-events' ); ?></th>
 						<td>
 							<?php
 							$fc_active = class_exists( 'BLT_Events_FluentCart_Integration' ) && BLT_Events_FluentCart_Integration::is_fluentcart_plugin_active();
 							?>
-							<p>FluentCart Plugin: <?php echo $fc_active ? '<span style="color:#059669;font-weight:600;">Active</span>' : '<span style="color:#dc2626;font-weight:600;">Not Detected</span>'; ?></p>
-							<p class="description">FluentCart runs on this site, so no API keys are needed. Event ticket types are synced to FluentCart products automatically when an event is saved, and checkout uses FluentCart's instant checkout. Install FluentCart from <a href="https://fluentcart.com" target="_blank" rel="noopener noreferrer">fluentcart.com</a> if it is not detected.</p>
+							<p><?php esc_html_e( 'FluentCart Plugin:', 'blt-events' ); ?> <?php echo $fc_active ? '<span style="color:#059669;font-weight:600;">' . esc_html__( 'Active', 'blt-events' ) . '</span>' : '<span style="color:#dc2626;font-weight:600;">' . esc_html__( 'Not Detected', 'blt-events' ) . '</span>'; ?></p>
+							<p class="description"><?php echo wp_kses_post( sprintf( __( 'FluentCart runs on this site, so no API keys are needed. Event ticket types are synced to FluentCart products automatically when an event is saved, and checkout uses FluentCart\'s instant checkout. Install FluentCart from %s if it is not detected.', 'blt-events' ), '<a href="https://fluentcart.com" target="_blank" rel="noopener noreferrer">fluentcart.com</a>' ) ); ?></p>
 						</td>
 					</tr>
 
 					<!-- Display Settings -->
-					<tr><th colspan="2"><h2 class="title">Display Settings</h2></th></tr>
+					<tr><th colspan="2"><h2 class="title"><?php esc_html_e( 'Display Settings', 'blt-events' ); ?></h2></th></tr>
 					<tr>
-						<th scope="row">Date Format</th>
+						<th scope="row"><?php esc_html_e( 'Date Format', 'blt-events' ); ?></th>
 						<td>
 							<input type="text" name="blt_events_date_format" value="<?php echo esc_attr( get_option( 'blt_events_date_format', 'F j, Y' ) ); ?>" class="regular-text" />
-							<p class="description">PHP date format string (e.g., F j, Y).</p>
+							<p class="description"><?php esc_html_e( 'PHP date format string (e.g., F j, Y).', 'blt-events' ); ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Currency</th>
+						<th scope="row"><?php esc_html_e( 'Currency', 'blt-events' ); ?></th>
 						<td>
 							<select name="blt_events_currency">
 								<?php
-								$currencies = array( 'USD' => 'US Dollar (USD)', 'EUR' => 'Euro (EUR)', 'GBP' => 'British Pound (GBP)', 'SAR' => 'Saudi Riyal (SAR)', 'AED' => 'UAE Dirham (AED)' );
+								$currencies = array( 'USD' => __( 'US Dollar (USD)', 'blt-events' ), 'EUR' => __( 'Euro (EUR)', 'blt-events' ), 'GBP' => __( 'British Pound (GBP)', 'blt-events' ), 'SAR' => __( 'Saudi Riyal (SAR)', 'blt-events' ), 'AED' => __( 'UAE Dirham (AED)', 'blt-events' ) );
 								$selected   = get_option( 'blt_events_currency', 'USD' );
 								foreach ( $currencies as $code => $name ) {
 									printf( '<option value="%s" %s>%s</option>', esc_attr( $code ), selected( $selected, $code, false ), esc_html( $name ) );
@@ -245,22 +245,22 @@ class BLT_Events_Admin_Settings {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Currency Display</th>
+						<th scope="row"><?php esc_html_e( 'Currency Display', 'blt-events' ); ?></th>
 						<td>
-							<label><input type="checkbox" name="blt_events_display_currency" value="1" <?php checked( get_option( 'blt_events_display_currency' ), '1' ); ?> /> Show currency code (e.g., USD)</label><br><br>
-							<label><input type="checkbox" name="blt_events_display_currency_sign" value="1" <?php checked( get_option( 'blt_events_display_currency_sign' ), '1' ); ?> /> Show currency symbol (e.g., $)</label>
+							<label><input type="checkbox" name="blt_events_display_currency" value="1" <?php checked( get_option( 'blt_events_display_currency' ), '1' ); ?> /> <?php esc_html_e( 'Show currency code (e.g., USD)', 'blt-events' ); ?></label><br><br>
+							<label><input type="checkbox" name="blt_events_display_currency_sign" value="1" <?php checked( get_option( 'blt_events_display_currency_sign' ), '1' ); ?> /> <?php esc_html_e( 'Show currency symbol (e.g., $)', 'blt-events' ); ?></label>
 						</td>
 					</tr>
 
 					<!-- FluentCRM Integration -->
 					<?php if ( defined( 'FLUENTCRM' ) ) : ?>
-					<tr><th colspan="2"><h2 class="title">FluentCRM Integration</h2></th></tr>
+					<tr><th colspan="2"><h2 class="title"><?php esc_html_e( 'FluentCRM Integration', 'blt-events' ); ?></h2></th></tr>
 					<?php
 					$fluentcrm_fields = array(
-						'blt_events_fluentcrm_list_id'          => 'Default List ID',
-						'blt_events_fluentcrm_registration_tag' => 'Registration Tag ID',
-						'blt_events_fluentcrm_confirmed_tag'    => 'Confirmed Tag ID',
-						'blt_events_fluentcrm_refunded_tag'     => 'Refunded Tag ID',
+						'blt_events_fluentcrm_list_id'          => __( 'Default List ID', 'blt-events' ),
+						'blt_events_fluentcrm_registration_tag' => __( 'Registration Tag ID', 'blt-events' ),
+						'blt_events_fluentcrm_confirmed_tag'    => __( 'Confirmed Tag ID', 'blt-events' ),
+						'blt_events_fluentcrm_refunded_tag'     => __( 'Refunded Tag ID', 'blt-events' ),
 					);
 					foreach ( $fluentcrm_fields as $option_name => $label ) :
 						$value = get_option( $option_name, '' );
@@ -273,37 +273,37 @@ class BLT_Events_Admin_Settings {
 					<?php endif; ?>
 
 					<!-- Email Templates -->
-					<tr><th colspan="2"><h2 class="title">Email Templates</h2></th></tr>
+					<tr><th colspan="2"><h2 class="title"><?php esc_html_e( 'Email Templates', 'blt-events' ); ?></h2></th></tr>
 					<tr>
-						<th scope="row">Registration Subject</th>
+						<th scope="row"><?php esc_html_e( 'Registration Subject', 'blt-events' ); ?></th>
 						<td>
-							<input type="text" name="blt_events_email_subject_registration" value="<?php echo esc_attr( get_option( 'blt_events_email_subject_registration', 'Registration confirmation for {event_name}' ) ); ?>" class="regular-text" />
-							<p class="description">Variables: {customer_name}, {event_name}, {event_date}, {event_time}, {event_url}</p>
+							<input type="text" name="blt_events_email_subject_registration" value="<?php echo esc_attr( get_option( 'blt_events_email_subject_registration', __( 'Registration confirmation for {event_name}', 'blt-events' ) ) ); ?>" class="regular-text" />
+							<p class="description"><?php esc_html_e( 'Variables: {customer_name}, {event_name}, {event_date}, {event_time}, {event_url}', 'blt-events' ); ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">Registration Body</th>
+						<th scope="row"><?php esc_html_e( 'Registration Body', 'blt-events' ); ?></th>
 						<td>
 							<?php
 							wp_editor(
-								get_option( 'blt_events_email_template_registration', 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.' ),
+								get_option( 'blt_events_email_template_registration', __( 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.', 'blt-events' ) ),
 								'blt_events_email_template_registration',
 								array( 'textarea_name' => 'blt_events_email_template_registration', 'textarea_rows' => 6 )
 							);
 							?>
-							<p class="description">Variables: {customer_name}, {event_name}, {event_date}, {event_time}, {event_url}</p>
+							<p class="description"><?php esc_html_e( 'Variables: {customer_name}, {event_name}, {event_date}, {event_time}, {event_url}', 'blt-events' ); ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">24h Reminder Subject</th>
-						<td><input type="text" name="blt_events_email_subject_reminder_24h" value="<?php echo esc_attr( get_option( 'blt_events_email_subject_reminder_24h', 'Reminder: {event_name} is tomorrow' ) ); ?>" class="regular-text" /></td>
+						<th scope="row"><?php esc_html_e( '24h Reminder Subject', 'blt-events' ); ?></th>
+						<td><input type="text" name="blt_events_email_subject_reminder_24h" value="<?php echo esc_attr( get_option( 'blt_events_email_subject_reminder_24h', __( 'Reminder: {event_name} is tomorrow', 'blt-events' ) ) ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr>
-						<th scope="row">24h Reminder Body</th>
+						<th scope="row"><?php esc_html_e( '24h Reminder Body', 'blt-events' ); ?></th>
 						<td>
 							<?php
 							wp_editor(
-								get_option( 'blt_events_email_template_reminder_24h', 'Hello {customer_name}, your event {event_name} is tomorrow ({event_date}) at {event_time}.' ),
+								get_option( 'blt_events_email_template_reminder_24h', __( 'Hello {customer_name}, your event {event_name} is tomorrow ({event_date}) at {event_time}.', 'blt-events' ) ),
 								'blt_events_email_template_reminder_24h',
 								array( 'textarea_name' => 'blt_events_email_template_reminder_24h', 'textarea_rows' => 6 )
 							);
@@ -311,15 +311,15 @@ class BLT_Events_Admin_Settings {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row">1h Reminder Subject</th>
-						<td><input type="text" name="blt_events_email_subject_reminder_1h" value="<?php echo esc_attr( get_option( 'blt_events_email_subject_reminder_1h', 'Reminder: {event_name} starts in 1 hour' ) ); ?>" class="regular-text" /></td>
+						<th scope="row"><?php esc_html_e( '1h Reminder Subject', 'blt-events' ); ?></th>
+						<td><input type="text" name="blt_events_email_subject_reminder_1h" value="<?php echo esc_attr( get_option( 'blt_events_email_subject_reminder_1h', __( 'Reminder: {event_name} starts in 1 hour', 'blt-events' ) ) ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr>
-						<th scope="row">1h Reminder Body</th>
+						<th scope="row"><?php esc_html_e( '1h Reminder Body', 'blt-events' ); ?></th>
 						<td>
 							<?php
 							wp_editor(
-								get_option( 'blt_events_email_template_reminder_1h', 'Hello {customer_name}, your event {event_name} starts in 1 hour at {event_time}.' ),
+								get_option( 'blt_events_email_template_reminder_1h', __( 'Hello {customer_name}, your event {event_name} starts in 1 hour at {event_time}.', 'blt-events' ) ),
 								'blt_events_email_template_reminder_1h',
 								array( 'textarea_name' => 'blt_events_email_template_reminder_1h', 'textarea_rows' => 6 )
 							);

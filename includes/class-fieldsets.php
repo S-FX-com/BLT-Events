@@ -83,19 +83,19 @@ class BLT_Events_Fieldsets {
 		switch ( $type ) {
 			case 'select':
 				$html .= '<select id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '"' . $req_attr . '>';
-				$html .= '<option value="">— Select —</option>';
+				$html .= '<option value="">' . __( '— Select —', 'blt-events' ) . '</option>';
 				foreach ( $options as $opt ) {
 					$selected = ( $value === $opt ) ? ' selected' : '';
 					$html .= '<option value="' . esc_attr( $opt ) . '"' . $selected . '>' . esc_html( $opt ) . '</option>';
 				}
 				if ( $allow_other ) {
 					$is_other = ( $value && ! in_array( $value, $options, true ) );
-					$html .= '<option value="__other__"' . ( $is_other ? ' selected' : '' ) . '>Other...</option>';
+					$html .= '<option value="__other__"' . ( $is_other ? ' selected' : '' ) . '>' . __( 'Other...', 'blt-events' ) . '</option>';
 				}
 				$html .= '</select>';
 				if ( $allow_other ) {
 					$other_val = ( $value && ! in_array( $value, $options, true ) ) ? $value : '';
-					$html .= '<input type="text" class="blt-other-input" name="' . esc_attr( $name ) . '__other" value="' . esc_attr( $other_val ) . '" placeholder="Please specify" style="' . ( $other_val ? '' : 'display:none;' ) . '" />';
+					$html .= '<input type="text" class="blt-other-input" name="' . esc_attr( $name ) . '__other" value="' . esc_attr( $other_val ) . '" placeholder="' . __( 'Please specify', 'blt-events' ) . '" style="' . ( $other_val ? '' : 'display:none;' ) . '" />';
 				}
 				break;
 
@@ -141,7 +141,7 @@ class BLT_Events_Fieldsets {
 
 			// Required check
 			if ( ! empty( $field['required'] ) && $value === '' ) {
-				$errors[] = sprintf( '%s is required.', $field['label'] );
+				$errors[] = sprintf( __( '%s is required.', 'blt-events' ), $field['label'] );
 				continue;
 			}
 
@@ -149,7 +149,7 @@ class BLT_Events_Fieldsets {
 			switch ( $field['type'] ) {
 				case 'email':
 					if ( $value && ! is_email( $value ) ) {
-						$errors[] = sprintf( '%s must be a valid email address.', $field['label'] );
+						$errors[] = sprintf( __( '%s must be a valid email address.', 'blt-events' ), $field['label'] );
 					} else {
 						$value = sanitize_email( $value );
 					}
@@ -180,7 +180,7 @@ class BLT_Events_Fieldsets {
 			$cv = ! empty( $posted_data[ $ck ] );
 
 			if ( ! empty( $cf['required'] ) && ! $cv ) {
-				$errors[] = sprintf( 'You must accept: %s', wp_strip_all_tags( $cf['label'] ) );
+				$errors[] = sprintf( __( 'You must accept: %s', 'blt-events' ), wp_strip_all_tags( $cf['label'] ) );
 			}
 
 			$clean['_consents'][ $cf['key'] ] = $cv;

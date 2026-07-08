@@ -31,14 +31,14 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 	public function get_columns() {
 		return array(
 			'cb'              => '<input type="checkbox" />',
-			'customer_name'   => 'Customer',
-			'customer_email'  => 'Email',
-			'event'           => 'Event',
-			'attendee_count'  => 'Attendees',
-			'amount_paid'     => 'Amount',
-			'payment_provider' => 'Provider',
-			'status'          => 'Status',
-			'created_at'      => 'Date',
+			'customer_name'   => __( 'Customer', 'blt-events' ),
+			'customer_email'  => __( 'Email', 'blt-events' ),
+			'event'           => __( 'Event', 'blt-events' ),
+			'attendee_count'  => __( 'Attendees', 'blt-events' ),
+			'amount_paid'     => __( 'Amount', 'blt-events' ),
+			'payment_provider' => __( 'Provider', 'blt-events' ),
+			'status'          => __( 'Status', 'blt-events' ),
+			'created_at'      => __( 'Date', 'blt-events' ),
 		);
 	}
 
@@ -164,7 +164,7 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 		?>
 		<div class="alignleft actions">
 			<select name="event_id">
-				<option value="">All Events</option>
+				<option value=""><?php esc_html_e( 'All Events', 'blt-events' ); ?></option>
 				<?php foreach ( $events as $ev_id ) : ?>
 					<option value="<?php echo esc_attr( $ev_id ); ?>" <?php selected( $current_event, $ev_id ); ?>>
 						<?php echo esc_html( get_the_title( $ev_id ) ); ?>
@@ -172,20 +172,20 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 				<?php endforeach; ?>
 			</select>
 			<select name="status">
-				<option value="">All Statuses</option>
+				<option value=""><?php esc_html_e( 'All Statuses', 'blt-events' ); ?></option>
 				<?php foreach ( array( 'confirmed', 'pending', 'cancelled', 'refunded' ) as $s ) : ?>
 					<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $current_status, $s ); ?>><?php echo esc_html( ucfirst( $s ) ); ?></option>
 				<?php endforeach; ?>
 			</select>
-			<?php submit_button( 'Filter', '', 'filter_action', false ); ?>
+			<?php submit_button( __( 'Filter', 'blt-events' ), '', 'filter_action', false ); ?>
 		</div>
 		<?php
 	}
 
 	public function get_bulk_actions() {
 		return array(
-			'confirm' => 'Confirm',
-			'cancel'  => 'Cancel',
+			'confirm' => __( 'Confirm', 'blt-events' ),
+			'cancel'  => __( 'Cancel', 'blt-events' ),
 		);
 	}
 
@@ -195,7 +195,7 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			return;
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! BLT_Events_Helpers::user_can_manage() ) {
 			return;
 		}
 
@@ -221,18 +221,18 @@ class BLT_Events_Registrations_List {
 		$table->prepare_items();
 		?>
 		<div class="wrap">
-			<h1>Event Registrations</h1>
+			<h1><?php esc_html_e( 'Event Registrations', 'blt-events' ); ?></h1>
 
 			<form method="get">
 				<input type="hidden" name="post_type" value="event" />
 				<input type="hidden" name="page" value="blt-registrations" />
-				<?php $table->search_box( 'Search', 'search_registration' ); ?>
+				<?php $table->search_box( __( 'Search', 'blt-events' ), 'search_registration' ); ?>
 				<?php $table->display(); ?>
 			</form>
 
 			<p>
 				<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=blt_export_registrations&event_id=' . absint( $_GET['event_id'] ?? 0 ) . '&_wpnonce=' . wp_create_nonce( 'blt_export' ) ) ); ?>" class="button">
-					Export CSV
+					<?php esc_html_e( 'Export CSV', 'blt-events' ); ?>
 				</a>
 			</p>
 		</div>
@@ -240,8 +240,8 @@ class BLT_Events_Registrations_List {
 	}
 
 	public static function ajax_export_csv() {
-		if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'blt_export' ) ) {
-			wp_die( 'Unauthorized' );
+		if ( ! BLT_Events_Helpers::user_can_manage() || ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'blt_export' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'blt-events' ) );
 		}
 
 		$reg_db   = new BLT_Events_Registrations_DB();
@@ -264,7 +264,7 @@ class BLT_Events_Registrations_List {
 
 		$output = fopen( 'php://output', 'w' );
 
-		fputcsv( $output, array( 'ID', 'Event', 'Name', 'Email', 'Phone', 'Attendees', 'Total', 'Paid', 'Provider', 'Status', 'Date' ) );
+		fputcsv( $output, array( __( 'ID', 'blt-events' ), __( 'Event', 'blt-events' ), __( 'Name', 'blt-events' ), __( 'Email', 'blt-events' ), __( 'Phone', 'blt-events' ), __( 'Attendees', 'blt-events' ), __( 'Total', 'blt-events' ), __( 'Paid', 'blt-events' ), __( 'Provider', 'blt-events' ), __( 'Status', 'blt-events' ), __( 'Date', 'blt-events' ) ) );
 
 		// Prime post caches once so event titles don't trigger a query per row.
 		$event_ids = array_unique( wp_list_pluck( $registrations, 'event_id' ) );

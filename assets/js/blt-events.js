@@ -17,7 +17,7 @@
 		var result = "";
 
 		if (includeTotal) {
-			result += "Total: ";
+			result += (config.totalLabel || "Total:") + " ";
 		}
 
 		if (config.showSymbol === "1" && config.currencySymbol) {

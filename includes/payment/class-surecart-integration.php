@@ -94,7 +94,7 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 			if ( empty( $product_ids[ $i ] ) ) {
 				$product = self::api_request( 'products', array(
 					'name'        => $product_name,
-					'description' => 'Event ticket: ' . $event_title,
+					'description' => sprintf( __( 'Event ticket: %s', 'blt-events' ), $event_title ),
 					'recurring'   => false,
 					'metadata'    => array(
 						'blt_event_id'    => $post_id,
@@ -310,7 +310,7 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		$token = self::get_api_token();
 
 		if ( empty( $token ) ) {
-			return new WP_Error( 'no_token', 'SureCart API token not configured.' );
+			return new WP_Error( 'no_token', __( 'SureCart API token not configured.', 'blt-events' ) );
 		}
 
 		$url = self::$api_base . ltrim( $endpoint, '/' );
@@ -339,7 +339,7 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		$code = wp_remote_retrieve_response_code( $response );
 
 		if ( $code >= 400 ) {
-			$message = isset( $body['message'] ) ? $body['message'] : 'SureCart API error.';
+			$message = isset( $body['message'] ) ? $body['message'] : __( 'SureCart API error.', 'blt-events' );
 			return new WP_Error( 'surecart_error', $message );
 		}
 

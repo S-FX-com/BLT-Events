@@ -27,19 +27,24 @@ class BLT_Events_Registration_Shortcode {
 			$event_id = get_the_ID();
 		}
 
+		// Backstop for shortcodes rendered outside post content (widgets,
+		// page builders) where the has_shortcode() detection can't see them.
+		wp_enqueue_style( 'blt-events' );
+		wp_enqueue_script( 'blt-events' );
+
 		if ( ! $event_id || get_post_type( $event_id ) !== 'event' ) {
-			return '<p class="blt-error">No valid event specified.</p>';
+			return '<p class="blt-error">' . esc_html__( 'No valid event specified.', 'blt-events' ) . '</p>';
 		}
 
 		$event = get_post( $event_id );
 		if ( ! $event || $event->post_status !== 'publish' ) {
-			return '<p class="blt-error">Event not found.</p>';
+			return '<p class="blt-error">' . esc_html__( 'Event not found.', 'blt-events' ) . '</p>';
 		}
 
 		// Check if registration is open
 		$registration_open = get_post_meta( $event_id, '_blt_registration_open', true );
 		if ( $registration_open !== '1' ) {
-			return '<div class="blt-registration-closed"><p>Registration is currently closed for this event.</p></div>';
+			return '<div class="blt-registration-closed"><p>' . esc_html__( 'Registration is currently closed for this event.', 'blt-events' ) . '</p></div>';
 		}
 
 		// Check capacity
@@ -48,7 +53,7 @@ class BLT_Events_Registration_Shortcode {
 			$reg_db = new BLT_Events_Registrations_DB();
 			$current_count = $reg_db->get_event_registration_count( $event_id );
 			if ( $current_count >= $capacity ) {
-				return '<div class="blt-registration-closed"><p>This event is sold out.</p></div>';
+				return '<div class="blt-registration-closed"><p>' . esc_html__( 'This event is sold out.', 'blt-events' ) . '</p></div>';
 			}
 		}
 
@@ -111,14 +116,14 @@ class BLT_Events_Registration_Shortcode {
 				<!-- Ticket Selection -->
 				<?php if ( ! empty( $ticket_types ) ) : ?>
 				<div class="blt-ticket-selection">
-					<h3>Select Tickets</h3>
+					<h3><?php esc_html_e( 'Select Tickets', 'blt-events' ); ?></h3>
 					<?php foreach ( $ticket_types as $i => $ticket ) : ?>
 					<div class="blt-ticket-type">
 						<span class="blt-ticket-name"><?php echo esc_html( $ticket['name'] ); ?></span>
 						<?php if ( ! empty( $ticket['description'] ) ) : ?>
 							<span class="blt-ticket-desc"><?php echo esc_html( $ticket['description'] ); ?></span>
 						<?php endif; ?>
-						<span class="blt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( BLT_Events_Helpers::format_price( $ticket['price'] ) ) : 'Free'; ?></span>
+						<span class="blt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( BLT_Events_Helpers::format_price( $ticket['price'] ) ) : esc_html__( 'Free', 'blt-events' ); ?></span>
 						<div class="blt-quantity-controls">
 							<button type="button" class="blt-qty-btn minus-btn">&minus;</button>
 							<input type="number" name="ticket_quantity_<?php echo (int) $i; ?>" class="blt-ticket-quantity" value="0" min="0" data-price="<?php echo esc_attr( $ticket['price'] ); ?>" data-index="<?php echo (int) $i; ?>" />
@@ -126,13 +131,13 @@ class BLT_Events_Registration_Shortcode {
 						</div>
 					</div>
 					<?php endforeach; ?>
-					<div class="blt-total-amount">Total: <?php echo esc_html( BLT_Events_Helpers::format_price( 0 ) ); ?></div>
+					<div class="blt-total-amount"><?php esc_html_e( 'Total:', 'blt-events' ); ?> <?php echo esc_html( BLT_Events_Helpers::format_price( 0 ) ); ?></div>
 				</div>
 				<?php endif; ?>
 
 				<!-- Registration Fields -->
 				<div class="blt-fields-section">
-					<h3>Your Details</h3>
+					<h3><?php esc_html_e( 'Your Details', 'blt-events' ); ?></h3>
 					<div class="blt-fields-grid">
 						<?php foreach ( $fields as $field ) : ?>
 							<?php echo BLT_Events_Fieldsets::render_field( $field ); ?>
@@ -143,10 +148,10 @@ class BLT_Events_Registration_Shortcode {
 				<!-- Coupon Code -->
 				<?php if ( $has_paid_tickets ) : ?>
 				<div class="blt-coupon-section">
-					<label for="coupon_code">Coupon Code</label>
+					<label for="coupon_code"><?php esc_html_e( 'Coupon Code', 'blt-events' ); ?></label>
 					<div class="blt-coupon-input">
-						<input type="text" id="coupon_code" name="coupon_code" placeholder="Enter coupon code" />
-						<button type="button" id="blt-apply-coupon" class="blt-btn-secondary">Apply</button>
+						<input type="text" id="coupon_code" name="coupon_code" placeholder="<?php echo esc_attr__( 'Enter coupon code', 'blt-events' ); ?>" />
+						<button type="button" id="blt-apply-coupon" class="blt-btn-secondary"><?php esc_html_e( 'Apply', 'blt-events' ); ?></button>
 					</div>
 					<div id="blt-coupon-message" style="display:none;"></div>
 				</div>
@@ -170,7 +175,7 @@ class BLT_Events_Registration_Shortcode {
 				<!-- Stripe Card Element (for paid events with Stripe) -->
 				<?php if ( $provider === 'stripe' && $has_paid_tickets ) : ?>
 				<div class="blt-payment-section" id="blt-payment-section" style="display:none;">
-					<h3>Payment</h3>
+					<h3><?php esc_html_e( 'Payment', 'blt-events' ); ?></h3>
 					<div id="blt-card-element"></div>
 					<div id="blt-card-errors" role="alert"></div>
 				</div>
@@ -182,7 +187,7 @@ class BLT_Events_Registration_Shortcode {
 				<!-- Submit -->
 				<div class="blt-form-actions">
 					<button type="submit" class="blt-submit-btn" id="blt-submit-btn" disabled>
-						Select tickets to continue
+						<?php esc_html_e( 'Select tickets to continue', 'blt-events' ); ?>
 					</button>
 				</div>
 			</form>
@@ -217,16 +222,16 @@ class BLT_Events_Registration_Shortcode {
 		<div class="blt-surecart-form" data-event-id="<?php echo esc_attr( $event_id ); ?>">
 			<?php if ( ! $all_synced ) : ?>
 				<div class="blt-sync-notice">
-					<p>Tickets for this event are being set up. Please check back shortly.</p>
+					<p><?php esc_html_e( 'Tickets for this event are being set up. Please check back shortly.', 'blt-events' ); ?></p>
 				</div>
 			<?php else : ?>
 				<div class="blt-ticket-selection">
-					<h3>Select Tickets</h3>
+					<h3><?php esc_html_e( 'Select Tickets', 'blt-events' ); ?></h3>
 					<?php foreach ( $ticket_types as $i => $ticket ) : ?>
 						<?php if ( empty( $price_ids[ $i ] ) ) continue; ?>
 						<div class="blt-ticket-type">
 							<span class="blt-ticket-name"><?php echo esc_html( $ticket['name'] ); ?></span>
-							<span class="blt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( BLT_Events_Helpers::format_price( $ticket['price'] ) ) : 'Free'; ?></span>
+							<span class="blt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( BLT_Events_Helpers::format_price( $ticket['price'] ) ) : esc_html__( 'Free', 'blt-events' ); ?></span>
 							<div class="blt-quantity-controls">
 								<button type="button" class="blt-qty-btn minus-btn">&minus;</button>
 								<input type="number" class="sc-ticket-quantity" value="0" min="0"
@@ -236,14 +241,14 @@ class BLT_Events_Registration_Shortcode {
 							</div>
 						</div>
 					<?php endforeach; ?>
-					<div class="blt-total-amount">Total: <?php echo esc_html( BLT_Events_Helpers::format_price( 0 ) ); ?></div>
+					<div class="blt-total-amount"><?php esc_html_e( 'Total:', 'blt-events' ); ?> <?php echo esc_html( BLT_Events_Helpers::format_price( 0 ) ); ?></div>
 				</div>
 
 				<div class="blt-checkout-actions">
 					<button type="button" id="blt-sc-checkout-btn" class="blt-submit-btn" disabled>
-						Proceed to Checkout
+						<?php esc_html_e( 'Proceed to Checkout', 'blt-events' ); ?>
 					</button>
-					<p class="blt-checkout-note">You will be redirected to the secure checkout page.</p>
+					<p class="blt-checkout-note"><?php esc_html_e( 'You will be redirected to the secure checkout page.', 'blt-events' ); ?></p>
 				</div>
 
 				<div id="blt-sc-message" class="blt-checkout-message" style="display:none;"></div>

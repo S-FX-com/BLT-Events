@@ -66,12 +66,13 @@ class BLT_Events_Calendar_Shortcode {
 
 		$query = new WP_Query( $args );
 
+		wp_enqueue_style( 'blt-events' );
 		wp_enqueue_style( 'blt-events-calendar', BLT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), BLT_EVENTS_VERSION );
 
 		ob_start();
 
 		if ( ! $query->have_posts() ) {
-			echo '<div class="blt-events-empty"><p>No upcoming events found.</p></div>';
+			echo '<div class="blt-events-empty"><p>' . esc_html__( 'No upcoming events found.', 'blt-events' ) . '</p></div>';
 			wp_reset_postdata();
 			return ob_get_clean();
 		}
@@ -96,7 +97,7 @@ class BLT_Events_Calendar_Shortcode {
 
 				$time_display = '';
 				if ( $all_day === '1' ) {
-					$time_display = 'All Day';
+					$time_display = __( 'All Day', 'blt-events' );
 				} elseif ( $start_time && $event_date ) {
 					$time_display = date_i18n( get_option( 'time_format', 'g:i A' ), strtotime( $event_date . ' ' . $start_time ) );
 					if ( $end_time ) {
@@ -163,16 +164,16 @@ class BLT_Events_Calendar_Shortcode {
 										<?php if ( $min_price == $max_price ) : ?>
 											<?php echo esc_html( BLT_Events_Helpers::format_price( $min_price ) ); ?>
 										<?php elseif ( $min_price == 0 ) : ?>
-											Free - <?php echo esc_html( BLT_Events_Helpers::format_price( $max_price ) ); ?>
+											<?php echo esc_html( sprintf( __( 'Free - %s', 'blt-events' ), BLT_Events_Helpers::format_price( $max_price ) ) ); ?>
 										<?php else : ?>
 											<?php echo esc_html( BLT_Events_Helpers::format_price( $min_price ) ); ?> - <?php echo esc_html( BLT_Events_Helpers::format_price( $max_price ) ); ?>
 										<?php endif; ?>
 									</span>
 								<?php else : ?>
-									<span class="blt-event-price blt-free">Free</span>
+									<span class="blt-event-price blt-free"><?php esc_html_e( 'Free', 'blt-events' ); ?></span>
 								<?php endif; ?>
 
-								<a href="<?php the_permalink(); ?>" class="blt-btn-register">Register</a>
+								<a href="<?php the_permalink(); ?>" class="blt-btn-register"><?php esc_html_e( 'Register', 'blt-events' ); ?></a>
 							</div>
 						</div>
 					</div>

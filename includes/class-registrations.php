@@ -38,16 +38,16 @@ class BLT_Events_Registrations {
 		check_ajax_referer( 'blt_registration_nonce', 'nonce' );
 
 		if ( ! self::check_rate_limit() ) {
-			wp_send_json_error( array( 'message' => 'Too many registration attempts. Please try again in a few minutes.' ) );
+			wp_send_json_error( array( 'message' => __( 'Too many registration attempts. Please try again in a few minutes.', 'blt-events' ) ) );
 		}
 
 		$event_id = absint( $_POST['event_id'] ?? 0 );
 		if ( ! $event_id || get_post_type( $event_id ) !== 'event' || get_post_status( $event_id ) !== 'publish' ) {
-			wp_send_json_error( array( 'message' => 'Invalid event.' ) );
+			wp_send_json_error( array( 'message' => __( 'Invalid event.', 'blt-events' ) ) );
 		}
 
 		if ( get_post_meta( $event_id, '_blt_registration_open', true ) !== '1' ) {
-			wp_send_json_error( array( 'message' => 'Registration is closed for this event.' ) );
+			wp_send_json_error( array( 'message' => __( 'Registration is closed for this event.', 'blt-events' ) ) );
 		}
 
 		$result = self::process_registration( $event_id, wp_unslash( $_POST ) );
@@ -57,7 +57,7 @@ class BLT_Events_Registrations {
 		}
 
 		wp_send_json_success( array(
-			'message'         => 'Registration successful!',
+			'message'         => __( 'Registration successful!', 'blt-events' ),
 			'registration_id' => $result['registration_id'],
 			'group_id'        => $result['group_id'],
 		) );
@@ -108,7 +108,7 @@ class BLT_Events_Registrations {
 		// Get event fieldset and validate
 		$fieldset = BLT_Events_Fieldsets::get_event_fieldset( $event_id );
 		if ( ! $fieldset ) {
-			return new WP_Error( 'no_fieldset', 'No fieldset configured for this event.' );
+			return new WP_Error( 'no_fieldset', __( 'No fieldset configured for this event.', 'blt-events' ) );
 		}
 
 		// Validate primary registrant data
@@ -135,7 +135,7 @@ class BLT_Events_Registrations {
 				if ( $locked ) {
 					$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
 				}
-				return new WP_Error( 'capacity_exceeded', 'Sorry, there are not enough spots available.' );
+				return new WP_Error( 'capacity_exceeded', __( 'Sorry, there are not enough spots available.', 'blt-events' ) );
 			}
 		}
 
@@ -145,7 +145,7 @@ class BLT_Events_Registrations {
 			if ( $locked ) {
 				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
 			}
-			return new WP_Error( 'duplicate_registration', 'This email is already registered for this event.' );
+			return new WP_Error( 'duplicate_registration', __( 'This email is already registered for this event.', 'blt-events' ) );
 		}
 
 		// Calculate pricing
@@ -193,7 +193,7 @@ class BLT_Events_Registrations {
 		}
 
 		if ( ! $registration_id ) {
-			return new WP_Error( 'db_error', 'Failed to create registration.' );
+			return new WP_Error( 'db_error', __( 'Failed to create registration.', 'blt-events' ) );
 		}
 
 		// Insert attendees
@@ -393,7 +393,7 @@ class BLT_Events_Registrations {
 			'code'   => $code,
 			'type'   => $type,
 			'amount' => $amount,
-			'label'  => $type === 'percentage' ? $amount . '% off' : '$' . number_format( (float) $amount, 2 ) . ' off',
+			'label'  => $type === 'percentage' ? sprintf( __( '%s%% off', 'blt-events' ), $amount ) : sprintf( __( '$%s off', 'blt-events' ), number_format( (float) $amount, 2 ) ),
 		) );
 	}
 
@@ -411,8 +411,8 @@ class BLT_Events_Registrations {
 			return;
 		}
 
-		$subject_template = get_option( 'blt_events_email_subject_registration', 'Registration confirmation for {event_name}' );
-		$body_template    = get_option( 'blt_events_email_template_registration', 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.' );
+		$subject_template = get_option( 'blt_events_email_subject_registration', __( 'Registration confirmation for {event_name}', 'blt-events' ) );
+		$body_template    = get_option( 'blt_events_email_template_registration', __( 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.', 'blt-events' ) );
 
 		$event_date = get_post_meta( $event->ID, '_blt_event_date', true );
 		$event_time = get_post_meta( $event->ID, '_blt_event_start_time', true );

@@ -60,19 +60,19 @@ class BLT_Events_Fieldset_Builder {
 		$all_fieldsets = BLT_Events_Fieldsets::get_active_fieldsets();
 		?>
 		<div class="wrap blt-fieldset-builder">
-			<h1>Registration Fieldsets</h1>
+			<h1><?php esc_html_e( 'Registration Fieldsets', 'blt-events' ); ?></h1>
 
 			<!-- Fieldset List -->
 			<div class="blt-fieldset-list" id="blt-fieldset-list">
-				<h2>Existing Fieldsets</h2>
+				<h2><?php esc_html_e( 'Existing Fieldsets', 'blt-events' ); ?></h2>
 				<table class="widefat">
 					<thead>
 						<tr>
-							<th>Name</th>
-							<th>Slug</th>
-							<th>Fields</th>
-							<th>Default</th>
-							<th>Actions</th>
+							<th><?php esc_html_e( 'Name', 'blt-events' ); ?></th>
+							<th><?php esc_html_e( 'Slug', 'blt-events' ); ?></th>
+							<th><?php esc_html_e( 'Fields', 'blt-events' ); ?></th>
+							<th><?php esc_html_e( 'Default', 'blt-events' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'blt-events' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -83,17 +83,17 @@ class BLT_Events_Fieldset_Builder {
 									<td><strong><?php echo esc_html( $fs->name ); ?></strong></td>
 									<td><code><?php echo esc_html( $fs->slug ); ?></code></td>
 									<td><?php echo is_array( $fs_fields ) ? count( $fs_fields ) : 0; ?></td>
-									<td><?php echo $fs->is_default ? 'Yes' : ''; ?></td>
+									<td><?php echo $fs->is_default ? esc_html__( 'Yes', 'blt-events' ) : ''; ?></td>
 									<td>
-										<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-fieldsets&edit=' . $fs->id ) ); ?>" class="button button-small">Edit</a>
+										<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-fieldsets&edit=' . $fs->id ) ); ?>" class="button button-small"><?php esc_html_e( 'Edit', 'blt-events' ); ?></a>
 										<?php if ( ! $fs->is_default ) : ?>
-											<button type="button" class="button button-small button-link-delete blt-delete-fieldset" data-id="<?php echo esc_attr( $fs->id ); ?>">Delete</button>
+											<button type="button" class="button button-small button-link-delete blt-delete-fieldset" data-id="<?php echo esc_attr( $fs->id ); ?>"><?php esc_html_e( 'Delete', 'blt-events' ); ?></button>
 										<?php endif; ?>
 									</td>
 								</tr>
 							<?php endforeach; ?>
 						<?php else : ?>
-							<tr><td colspan="5">No fieldsets found.</td></tr>
+							<tr><td colspan="5"><?php esc_html_e( 'No fieldsets found.', 'blt-events' ); ?></td></tr>
 						<?php endif; ?>
 					</tbody>
 				</table>
@@ -101,27 +101,27 @@ class BLT_Events_Fieldset_Builder {
 
 			<!-- Fieldset Editor -->
 			<div class="blt-fieldset-editor" id="blt-fieldset-editor">
-				<h2><?php echo $editing_id ? 'Edit Fieldset' : 'Create New Fieldset'; ?></h2>
+				<h2><?php echo $editing_id ? esc_html__( 'Edit Fieldset', 'blt-events' ) : esc_html__( 'Create New Fieldset', 'blt-events' ); ?></h2>
 				<form id="blt-fieldset-form" method="post">
 					<input type="hidden" name="fieldset_id" value="<?php echo esc_attr( $editing_id ); ?>" />
 
 					<table class="form-table">
 						<tr>
-							<th><label for="fieldset_name">Name</label></th>
+							<th><label for="fieldset_name"><?php esc_html_e( 'Name', 'blt-events' ); ?></label></th>
 							<td><input type="text" id="fieldset_name" name="fieldset_name" value="<?php echo esc_attr( $fieldset ? $fieldset->name : '' ); ?>" class="regular-text" required /></td>
 						</tr>
 						<tr>
-							<th><label for="fieldset_slug">Slug</label></th>
+							<th><label for="fieldset_slug"><?php esc_html_e( 'Slug', 'blt-events' ); ?></label></th>
 							<td><input type="text" id="fieldset_slug" name="fieldset_slug" value="<?php echo esc_attr( $fieldset ? $fieldset->slug : '' ); ?>" class="regular-text" /></td>
 						</tr>
 						<tr>
-							<th><label for="fieldset_description">Description</label></th>
+							<th><label for="fieldset_description"><?php esc_html_e( 'Description', 'blt-events' ); ?></label></th>
 							<td><textarea id="fieldset_description" name="fieldset_description" class="large-text" rows="2"><?php echo esc_textarea( $fieldset ? $fieldset->description : '' ); ?></textarea></td>
 						</tr>
 					</table>
 
-					<h3>Registration Fields</h3>
-					<p class="description">Drag and drop to reorder fields. Fields with a red asterisk (*) are required.</p>
+					<h3><?php esc_html_e( 'Registration Fields', 'blt-events' ); ?></h3>
+					<p class="description"><?php esc_html_e( 'Drag and drop to reorder fields. Fields with a red asterisk (*) are required.', 'blt-events' ); ?></p>
 
 					<div id="blt-fields-sortable" class="blt-fields-list">
 						<?php foreach ( $fields as $i => $field ) : ?>
@@ -135,49 +135,49 @@ class BLT_Events_Fieldset_Builder {
 								</div>
 								<div class="blt-field-settings" style="display:none;">
 									<input type="hidden" name="fields[<?php echo (int) $i; ?>][key]" value="<?php echo esc_attr( $field['key'] ); ?>" />
-									<label>Label: <input type="text" name="fields[<?php echo (int) $i; ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" /></label>
-									<label>Type:
+									<label><?php esc_html_e( 'Label:', 'blt-events' ); ?> <input type="text" name="fields[<?php echo (int) $i; ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" /></label>
+									<label><?php esc_html_e( 'Type:', 'blt-events' ); ?>
 										<select name="fields[<?php echo (int) $i; ?>][type]">
 											<?php foreach ( array( 'text', 'email', 'tel', 'url', 'number', 'date', 'select', 'textarea', 'checkbox' ) as $t ) : ?>
 												<option value="<?php echo esc_attr( $t ); ?>" <?php selected( $field['type'], $t ); ?>><?php echo esc_html( ucfirst( $t ) ); ?></option>
 											<?php endforeach; ?>
 										</select>
 									</label>
-									<label>Width:
+									<label><?php esc_html_e( 'Width:', 'blt-events' ); ?>
 										<select name="fields[<?php echo (int) $i; ?>][width]">
-											<option value="full" <?php selected( $field['width'] ?? 'full', 'full' ); ?>>Full</option>
-											<option value="half" <?php selected( $field['width'] ?? '', 'half' ); ?>>Half</option>
-											<option value="third" <?php selected( $field['width'] ?? '', 'third' ); ?>>Third</option>
+											<option value="full" <?php selected( $field['width'] ?? 'full', 'full' ); ?>><?php esc_html_e( 'Full', 'blt-events' ); ?></option>
+											<option value="half" <?php selected( $field['width'] ?? '', 'half' ); ?>><?php esc_html_e( 'Half', 'blt-events' ); ?></option>
+											<option value="third" <?php selected( $field['width'] ?? '', 'third' ); ?>><?php esc_html_e( 'Third', 'blt-events' ); ?></option>
 										</select>
 									</label>
-									<label><input type="checkbox" name="fields[<?php echo (int) $i; ?>][required]" value="1" <?php checked( ! empty( $field['required'] ) ); ?> /> Required</label>
-									<label>Placeholder: <input type="text" name="fields[<?php echo (int) $i; ?>][placeholder]" value="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>" /></label>
-									<label>Options (comma-separated): <input type="text" name="fields[<?php echo (int) $i; ?>][options_str]" value="<?php echo esc_attr( implode( ', ', $field['options'] ?? array() ) ); ?>" /></label>
-									<label><input type="checkbox" name="fields[<?php echo (int) $i; ?>][allow_other]" value="1" <?php checked( ! empty( $field['allow_other'] ) ); ?> /> Allow "Other" option</label>
+									<label><input type="checkbox" name="fields[<?php echo (int) $i; ?>][required]" value="1" <?php checked( ! empty( $field['required'] ) ); ?> /> <?php esc_html_e( 'Required', 'blt-events' ); ?></label>
+									<label><?php esc_html_e( 'Placeholder:', 'blt-events' ); ?> <input type="text" name="fields[<?php echo (int) $i; ?>][placeholder]" value="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>" /></label>
+									<label><?php esc_html_e( 'Options (comma-separated):', 'blt-events' ); ?> <input type="text" name="fields[<?php echo (int) $i; ?>][options_str]" value="<?php echo esc_attr( implode( ', ', $field['options'] ?? array() ) ); ?>" /></label>
+									<label><input type="checkbox" name="fields[<?php echo (int) $i; ?>][allow_other]" value="1" <?php checked( ! empty( $field['allow_other'] ) ); ?> /> <?php esc_html_e( 'Allow "Other" option', 'blt-events' ); ?></label>
 								</div>
 							</div>
 						<?php endforeach; ?>
 					</div>
 
-					<p><button type="button" class="button" id="blt-add-field">+ Add Field</button></p>
+					<p><button type="button" class="button" id="blt-add-field">+ <?php esc_html_e( 'Add Field', 'blt-events' ); ?></button></p>
 
-					<h3>Consent Fields</h3>
+					<h3><?php esc_html_e( 'Consent Fields', 'blt-events' ); ?></h3>
 					<div id="blt-consent-fields">
 						<?php foreach ( $consent_fields as $ci => $cf ) : ?>
 							<div class="blt-consent-item">
-								<label>Key: <input type="text" name="consent[<?php echo $ci; ?>][key]" value="<?php echo esc_attr( $cf['key'] ); ?>" /></label>
-								<label>Label (HTML): <input type="text" name="consent[<?php echo $ci; ?>][label]" value="<?php echo esc_attr( $cf['label'] ); ?>" class="large-text" /></label>
-								<label><input type="checkbox" name="consent[<?php echo $ci; ?>][required]" value="1" <?php checked( ! empty( $cf['required'] ) ); ?> /> Required</label>
+								<label><?php esc_html_e( 'Key:', 'blt-events' ); ?> <input type="text" name="consent[<?php echo $ci; ?>][key]" value="<?php echo esc_attr( $cf['key'] ); ?>" /></label>
+								<label><?php esc_html_e( 'Label (HTML):', 'blt-events' ); ?> <input type="text" name="consent[<?php echo $ci; ?>][label]" value="<?php echo esc_attr( $cf['label'] ); ?>" class="large-text" /></label>
+								<label><input type="checkbox" name="consent[<?php echo $ci; ?>][required]" value="1" <?php checked( ! empty( $cf['required'] ) ); ?> /> <?php esc_html_e( 'Required', 'blt-events' ); ?></label>
 								<button type="button" class="button button-link-delete blt-remove-consent">&times;</button>
 							</div>
 						<?php endforeach; ?>
 					</div>
-					<p><button type="button" class="button" id="blt-add-consent">+ Add Consent Field</button></p>
+					<p><button type="button" class="button" id="blt-add-consent">+ <?php esc_html_e( 'Add Consent Field', 'blt-events' ); ?></button></p>
 
 					<p class="submit">
-						<button type="submit" class="button button-primary" id="blt-save-fieldset">Save Fieldset</button>
+						<button type="submit" class="button button-primary" id="blt-save-fieldset"><?php esc_html_e( 'Save Fieldset', 'blt-events' ); ?></button>
 						<?php if ( ! $editing_id ) : ?>
-							<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-fieldsets' ) ); ?>" class="button">Cancel</a>
+							<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-fieldsets' ) ); ?>" class="button"><?php esc_html_e( 'Cancel', 'blt-events' ); ?></a>
 						<?php endif; ?>
 					</p>
 				</form>
@@ -189,8 +189,8 @@ class BLT_Events_Fieldset_Builder {
 	public static function ajax_save_fieldset() {
 		check_ajax_referer( 'blt_fieldset_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
+		if ( ! BLT_Events_Helpers::user_can_manage() ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'blt-events' ) ) );
 		}
 
 		$id   = absint( $_POST['fieldset_id'] ?? 0 );
@@ -199,7 +199,7 @@ class BLT_Events_Fieldset_Builder {
 		$desc = sanitize_textarea_field( $_POST['fieldset_description'] ?? '' );
 
 		if ( empty( $name ) ) {
-			wp_send_json_error( array( 'message' => 'Fieldset name is required.' ) );
+			wp_send_json_error( array( 'message' => __( 'Fieldset name is required.', 'blt-events' ) ) );
 		}
 
 		if ( empty( $slug ) ) {
@@ -262,11 +262,11 @@ class BLT_Events_Fieldset_Builder {
 		$result = BLT_Events_Fieldsets::save_fieldset( $data );
 
 		if ( $result === false ) {
-			wp_send_json_error( array( 'message' => 'Failed to save fieldset.' ) );
+			wp_send_json_error( array( 'message' => __( 'Failed to save fieldset.', 'blt-events' ) ) );
 		}
 
 		wp_send_json_success( array(
-			'message' => 'Fieldset saved successfully.',
+			'message' => __( 'Fieldset saved successfully.', 'blt-events' ),
 			'id'      => $id ? $id : $result,
 		) );
 	}
@@ -274,20 +274,20 @@ class BLT_Events_Fieldset_Builder {
 	public static function ajax_delete_fieldset() {
 		check_ajax_referer( 'blt_fieldset_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
+		if ( ! BLT_Events_Helpers::user_can_manage() ) {
+			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'blt-events' ) ) );
 		}
 
 		$id = absint( $_POST['fieldset_id'] ?? 0 );
 		if ( ! $id ) {
-			wp_send_json_error( array( 'message' => 'Invalid fieldset.' ) );
+			wp_send_json_error( array( 'message' => __( 'Invalid fieldset.', 'blt-events' ) ) );
 		}
 
 		$result = BLT_Events_Fieldsets::delete_fieldset( $id );
 		if ( $result === false ) {
-			wp_send_json_error( array( 'message' => 'Failed to delete fieldset.' ) );
+			wp_send_json_error( array( 'message' => __( 'Failed to delete fieldset.', 'blt-events' ) ) );
 		}
 
-		wp_send_json_success( array( 'message' => 'Fieldset deleted.' ) );
+		wp_send_json_success( array( 'message' => __( 'Fieldset deleted.', 'blt-events' ) ) );
 	}
 }
