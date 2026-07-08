@@ -278,9 +278,18 @@ class BLT_Events_DB {
 				$clauses[]    = "{$column} {$compare} ({$placeholders})";
 				$values       = array_merge( $values, $in_values );
 			} else {
-				$placeholder = is_numeric( $condition['value'] ) ? '%d' : '%s';
-				$clauses[]   = "{$column} {$compare} {$placeholder}";
-				$values[]    = $condition['value'];
+				// Only genuine PHP numbers get numeric placeholders;
+				// numeric-looking strings ("1e3", "1.5") must not be
+				// truncated by %d when comparing string columns.
+				if ( is_int( $condition['value'] ) ) {
+					$placeholder = '%d';
+				} elseif ( is_float( $condition['value'] ) ) {
+					$placeholder = '%f';
+				} else {
+					$placeholder = '%s';
+				}
+				$clauses[] = "{$column} {$compare} {$placeholder}";
+				$values[]  = $condition['value'];
 			}
 		}
 
@@ -299,6 +308,10 @@ class BLT_Events_DB {
 	protected function sanitize_data( $data ) {
 		$sanitized = array();
 
+		// Only these columns store JSON; other string values must never
+		// skip sanitization just because they happen to parse as JSON.
+		$json_columns = array( 'fields', 'consent_fields', 'custom_fields', 'coupon_data' );
+
 		foreach ( $data as $key => $value ) {
 			$key = sanitize_key( $key );
 
@@ -306,8 +319,8 @@ class BLT_Events_DB {
 				$sanitized[ $key ] = null;
 			} elseif ( is_int( $value ) || is_float( $value ) ) {
 				$sanitized[ $key ] = $value;
-			} elseif ( is_string( $value ) && $this->is_json( $value ) ) {
-				// Preserve JSON-encoded strings (fields, custom_fields, etc.).
+			} elseif ( is_string( $value ) && in_array( $key, $json_columns, true ) && $this->is_json( $value ) ) {
+				// Preserve JSON-encoded strings for known JSON columns.
 				$sanitized[ $key ] = $value;
 			} elseif ( is_string( $value ) ) {
 				$sanitized[ $key ] = sanitize_text_field( $value );

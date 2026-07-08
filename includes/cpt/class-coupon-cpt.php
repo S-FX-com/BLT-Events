@@ -37,17 +37,17 @@ class BLT_Events_Coupon_CPT {
      */
     public static function register_post_type() {
         $labels = array(
-            'name'               => 'Coupons',
-            'singular_name'      => 'Coupon',
-            'menu_name'          => 'Coupons',
-            'add_new'            => 'Add New',
-            'add_new_item'       => 'Add New Coupon',
-            'edit_item'          => 'Edit Coupon',
-            'new_item'           => 'New Coupon',
-            'view_item'          => 'View Coupon',
-            'search_items'       => 'Search Coupons',
-            'not_found'          => 'No coupons found',
-            'not_found_in_trash' => 'No coupons found in Trash',
+            'name'               => __( 'Coupons', 'blt-events' ),
+            'singular_name'      => __( 'Coupon', 'blt-events' ),
+            'menu_name'          => __( 'Coupons', 'blt-events' ),
+            'add_new'            => __( 'Add New', 'blt-events' ),
+            'add_new_item'       => __( 'Add New Coupon', 'blt-events' ),
+            'edit_item'          => __( 'Edit Coupon', 'blt-events' ),
+            'new_item'           => __( 'New Coupon', 'blt-events' ),
+            'view_item'          => __( 'View Coupon', 'blt-events' ),
+            'search_items'       => __( 'Search Coupons', 'blt-events' ),
+            'not_found'          => __( 'No coupons found', 'blt-events' ),
+            'not_found_in_trash' => __( 'No coupons found in Trash', 'blt-events' ),
         );
 
         $args = array(
@@ -74,7 +74,7 @@ class BLT_Events_Coupon_CPT {
     public static function add_meta_boxes() {
         add_meta_box(
             'blt_coupon_details',
-            'Coupon Details',
+            __( 'Coupon Details', 'blt-events' ),
             array( __CLASS__, 'render_details_meta_box' ),
             self::$slug,
             'normal',
@@ -83,7 +83,7 @@ class BLT_Events_Coupon_CPT {
 
         add_meta_box(
             'blt_coupon_usage',
-            'Usage Statistics',
+            __( 'Usage Statistics', 'blt-events' ),
             array( __CLASS__, 'render_usage_meta_box' ),
             self::$slug,
             'normal',
@@ -110,82 +110,74 @@ class BLT_Events_Coupon_CPT {
         ?>
         <table class="form-table">
             <tr>
-                <th><label for="coupon_code">Coupon Code</label></th>
+                <th><label for="coupon_code"><?php esc_html_e( 'Coupon Code', 'blt-events' ); ?></label></th>
                 <td>
                     <input type="text" id="coupon_code" name="coupon_code" value="<?php echo esc_attr( $code ); ?>" class="regular-text" required>
-                    <button type="button" class="button button-secondary" id="generate_coupon_code">Generate Code</button>
+                    <button type="button" class="button button-secondary" id="generate_coupon_code"><?php esc_html_e( 'Generate Code', 'blt-events' ); ?></button>
                 </td>
             </tr>
             <tr>
-                <th><label for="discount_type">Discount Type</label></th>
+                <th><label for="discount_type"><?php esc_html_e( 'Discount Type', 'blt-events' ); ?></label></th>
                 <td>
                     <select id="discount_type" name="discount_type">
-                        <option value="fixed" <?php selected( $discount_type, 'fixed' ); ?>>Fixed Amount ($)</option>
-                        <option value="percentage" <?php selected( $discount_type, 'percentage' ); ?>>Percentage (%)</option>
+                        <option value="fixed" <?php selected( $discount_type, 'fixed' ); ?>><?php esc_html_e( 'Fixed Amount ($)', 'blt-events' ); ?></option>
+                        <option value="percentage" <?php selected( $discount_type, 'percentage' ); ?>><?php esc_html_e( 'Percentage (%)', 'blt-events' ); ?></option>
                     </select>
                 </td>
             </tr>
             <tr>
-                <th><label for="amount">Amount</label></th>
+                <th><label for="amount"><?php esc_html_e( 'Amount', 'blt-events' ); ?></label></th>
                 <td>
                     <input type="number" id="amount" name="amount" value="<?php echo esc_attr( $amount ); ?>" step="0.01" min="0" class="regular-text" required>
                     <span id="amount_symbol"><?php echo $discount_type === 'percentage' ? '%' : '$'; ?></span>
                 </td>
             </tr>
             <tr>
-                <th><label for="expiration_date">Expiration Date</label></th>
+                <th><label for="expiration_date"><?php esc_html_e( 'Expiration Date', 'blt-events' ); ?></label></th>
                 <td>
                     <input type="date" id="expiration_date" name="expiration_date" value="<?php echo esc_attr( $expiration_date ); ?>" class="regular-text">
-                    <p class="description">Leave blank for no expiration</p>
+                    <p class="description"><?php esc_html_e( 'Leave blank for no expiration', 'blt-events' ); ?></p>
                 </td>
             </tr>
             <tr>
-                <th><label for="usage_limit">Usage Limit</label></th>
+                <th><label for="usage_limit"><?php esc_html_e( 'Usage Limit', 'blt-events' ); ?></label></th>
                 <td>
                     <input type="number" id="usage_limit" name="usage_limit" value="<?php echo esc_attr( $usage_limit ); ?>" min="0" class="regular-text">
-                    <p class="description">Maximum number of times this coupon can be used. Leave blank for unlimited.</p>
+                    <p class="description"><?php esc_html_e( 'Maximum number of times this coupon can be used. Leave blank for unlimited.', 'blt-events' ); ?></p>
                 </td>
             </tr>
             <tr>
-                <th><label for="status">Status</label></th>
+                <th><label for="status"><?php esc_html_e( 'Status', 'blt-events' ); ?></label></th>
                 <td>
                     <select id="status" name="status">
-                        <option value="active" <?php selected( $status, 'active' ); ?>>Active</option>
-                        <option value="inactive" <?php selected( $status, 'inactive' ); ?>>Inactive</option>
+                        <option value="active" <?php selected( $status, 'active' ); ?>><?php esc_html_e( 'Active', 'blt-events' ); ?></option>
+                        <option value="inactive" <?php selected( $status, 'inactive' ); ?>><?php esc_html_e( 'Inactive', 'blt-events' ); ?></option>
                     </select>
                 </td>
             </tr>
             <?php
-            $events = array();
-
-            $query = new WP_Query( array(
+            $event_ids = get_posts( array(
                 'post_type'      => BLT_Events_Event_CPT::$slug,
-                'posts_per_page' => -1,
+                'posts_per_page' => 500,
                 'post_status'    => 'publish',
+                'fields'         => 'ids',
+                'orderby'        => 'title',
+                'order'          => 'ASC',
+                'no_found_rows'  => true,
             ) );
-            if ( $query->have_posts() ) {
-                while ( $query->have_posts() ) {
-                    $query->the_post();
-                    $event              = new stdClass();
-                    $event->ID          = get_the_ID();
-                    $event->post_title  = get_the_title();
-                    $events[]           = $event;
-                }
-                wp_reset_postdata();
-            }
             ?>
             <tr>
-                <th><label for="applicable_events">Applicable Events</label></th>
+                <th><label for="applicable_events"><?php esc_html_e( 'Applicable Events', 'blt-events' ); ?></label></th>
                 <td>
                     <select id="applicable_events" name="applicable_events[]" multiple style="width: 100%; min-height: 120px;">
-                        <option value="all" <?php selected( in_array( 'all', $applicable_events ) || empty( $applicable_events ) ); ?>>All Events</option>
-                        <?php foreach ( $events as $event ) : ?>
-                            <option value="<?php echo esc_attr( $event->ID ); ?>" <?php selected( in_array( $event->ID, $applicable_events ) ); ?>>
-                                <?php echo esc_html( $event->post_title ); ?>
+                        <option value="all" <?php selected( in_array( 'all', $applicable_events ) || empty( $applicable_events ) ); ?>><?php esc_html_e( 'All Events', 'blt-events' ); ?></option>
+                        <?php foreach ( $event_ids as $ev_id ) : ?>
+                            <option value="<?php echo esc_attr( $ev_id ); ?>" <?php selected( in_array( $ev_id, array_map( 'intval', $applicable_events ), true ) ); ?>>
+                                <?php echo esc_html( get_the_title( $ev_id ) ); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="description">Select which events this coupon can be applied to. Select "All Events" for no restrictions.</p>
+                    <p class="description"><?php esc_html_e( 'Select which events this coupon can be applied to. Select "All Events" for no restrictions.', 'blt-events' ); ?></p>
                 </td>
             </tr>
         </table>
@@ -206,38 +198,38 @@ class BLT_Events_Coupon_CPT {
         ?>
         <table class="form-table">
             <tr>
-                <th><label>Total Uses</label></th>
+                <th><label><?php esc_html_e( 'Total Uses', 'blt-events' ); ?></label></th>
                 <td><?php echo intval( $total_uses ); ?></td>
             </tr>
             <tr>
-                <th><label>Total Customer Savings</label></th>
+                <th><label><?php esc_html_e( 'Total Customer Savings', 'blt-events' ); ?></label></th>
                 <td>$<?php echo number_format( (float) $total_savings, 2 ); ?></td>
             </tr>
             <tr>
-                <th><label>Last Used</label></th>
-                <td><?php echo $last_used ? date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last_used ) : 'Never'; ?></td>
+                <th><label><?php esc_html_e( 'Last Used', 'blt-events' ); ?></label></th>
+                <td><?php echo $last_used ? esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $last_used ) ) : esc_html__( 'Never', 'blt-events' ); ?></td>
             </tr>
         </table>
 
         <?php if ( ! empty( $usage_history ) ) : ?>
-            <h3>Usage History</h3>
+            <h3><?php esc_html_e( 'Usage History', 'blt-events' ); ?></h3>
             <table class="widefat fixed" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Registration</th>
-                        <th>Customer</th>
-                        <th>Amount Saved</th>
+                        <th><?php esc_html_e( 'Date', 'blt-events' ); ?></th>
+                        <th><?php esc_html_e( 'Registration', 'blt-events' ); ?></th>
+                        <th><?php esc_html_e( 'Customer', 'blt-events' ); ?></th>
+                        <th><?php esc_html_e( 'Amount Saved', 'blt-events' ); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ( $usage_history as $usage ) : ?>
                         <tr>
-                            <td><?php echo date( get_option( 'date_format' ), $usage['date'] ); ?></td>
+                            <td><?php echo esc_html( wp_date( get_option( 'date_format' ), (int) ( $usage['date'] ?? 0 ) ) ); ?></td>
                             <td>
                                 <?php if ( ! empty( $usage['registration_id'] ) ) : ?>
-                                    <a href="<?php echo get_edit_post_link( $usage['registration_id'] ); ?>">
-                                        #<?php echo $usage['registration_id']; ?>
+                                    <a href="<?php echo esc_url( (string) get_edit_post_link( (int) $usage['registration_id'] ) ); ?>">
+                                        #<?php echo (int) $usage['registration_id']; ?>
                                     </a>
                                 <?php else : ?>
                                     -
@@ -252,13 +244,13 @@ class BLT_Events_Coupon_CPT {
                                 <br />
                                 <?php echo esc_html( $customer_email ); ?>
                             </td>
-                            <td>$<?php echo number_format( $usage['amount_saved'], 2 ); ?></td>
+                            <td>$<?php echo number_format( (float) ( $usage['amount_saved'] ?? 0 ), 2 ); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         <?php else : ?>
-            <p>This coupon has not been used yet.</p>
+            <p><?php esc_html_e( 'This coupon has not been used yet.', 'blt-events' ); ?></p>
         <?php endif;
     }
 
@@ -271,12 +263,12 @@ class BLT_Events_Coupon_CPT {
     public static function set_custom_columns( $columns ) {
         $new_columns               = array();
         $new_columns['cb']         = $columns['cb'];
-        $new_columns['title']      = __( 'Coupon Title' );
-        $new_columns['code']       = __( 'Code' );
-        $new_columns['discount']   = __( 'Discount' );
-        $new_columns['usage']      = __( 'Usage' );
-        $new_columns['expiration'] = __( 'Expiration' );
-        $new_columns['status']     = __( 'Status' );
+        $new_columns['title']      = __( 'Coupon Title', 'blt-events' );
+        $new_columns['code']       = __( 'Code', 'blt-events' );
+        $new_columns['discount']   = __( 'Discount', 'blt-events' );
+        $new_columns['usage']      = __( 'Usage', 'blt-events' );
+        $new_columns['expiration'] = __( 'Expiration', 'blt-events' );
+        $new_columns['status']     = __( 'Status', 'blt-events' );
         $new_columns['date']       = $columns['date'];
         return $new_columns;
     }
@@ -321,10 +313,10 @@ class BLT_Events_Coupon_CPT {
                 if ( ! empty( $expiration_date ) ) {
                     echo esc_html( $expiration_date );
 
-                    // Check if expired.
-                    $today = date( 'Y-m-d' );
+                    // Check if expired (site timezone, matching validate_coupon).
+                    $today = current_time( 'Y-m-d' );
                     if ( $expiration_date < $today ) {
-                        echo ' <span class="expired">(Expired)</span>';
+                        echo ' <span class="expired">' . esc_html__( '(Expired)', 'blt-events' ) . '</span>';
                     }
                 } else {
                     echo '&mdash;';
@@ -386,11 +378,16 @@ class BLT_Events_Coupon_CPT {
         }
 
         if ( isset( $_POST['discount_type'] ) ) {
-            update_post_meta( $post_id, '_blt_discount_type', sanitize_text_field( $_POST['discount_type'] ) );
+            $discount_type = in_array( $_POST['discount_type'], array( 'fixed', 'percentage' ), true ) ? $_POST['discount_type'] : 'fixed';
+            update_post_meta( $post_id, '_blt_discount_type', $discount_type );
         }
 
         if ( isset( $_POST['amount'] ) ) {
-            update_post_meta( $post_id, '_blt_amount', (float) $_POST['amount'] );
+            $amount = max( 0, (float) $_POST['amount'] );
+            if ( ( $_POST['discount_type'] ?? '' ) === 'percentage' ) {
+                $amount = min( 100, $amount );
+            }
+            update_post_meta( $post_id, '_blt_amount', $amount );
         }
 
         if ( isset( $_POST['expiration_date'] ) ) {
@@ -402,11 +399,20 @@ class BLT_Events_Coupon_CPT {
         }
 
         if ( isset( $_POST['status'] ) ) {
-            update_post_meta( $post_id, '_blt_status', sanitize_text_field( $_POST['status'] ) );
+            $status = in_array( $_POST['status'], array( 'active', 'inactive' ), true ) ? $_POST['status'] : 'active';
+            update_post_meta( $post_id, '_blt_status', $status );
         }
 
         if ( isset( $_POST['applicable_events'] ) ) {
-            $applicable_events = array_map( 'sanitize_text_field', $_POST['applicable_events'] );
+            // Only the literal 'all' sentinel or event post IDs are allowed.
+            $applicable_events = array();
+            foreach ( (array) $_POST['applicable_events'] as $value ) {
+                if ( $value === 'all' ) {
+                    $applicable_events[] = 'all';
+                } elseif ( absint( $value ) > 0 ) {
+                    $applicable_events[] = absint( $value );
+                }
+            }
             update_post_meta( $post_id, '_blt_applicable_events', $applicable_events );
         }
     }

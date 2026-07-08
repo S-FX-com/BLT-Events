@@ -25,7 +25,7 @@ class BLT_Events_Coupons {
 	 */
 	public static function validate_coupon( $code, $event_id = 0, $quantity = 1 ) {
 		if ( empty( $code ) ) {
-			return new WP_Error( 'empty_code', 'Please enter a coupon code.' );
+			return new WP_Error( 'empty_code', __( 'Please enter a coupon code.', 'blt-events' ) );
 		}
 
 		// Find the coupon by code
@@ -42,7 +42,7 @@ class BLT_Events_Coupons {
 		) );
 
 		if ( empty( $coupons ) ) {
-			return new WP_Error( 'invalid_code', 'Invalid coupon code.' );
+			return new WP_Error( 'invalid_code', __( 'Invalid coupon code.', 'blt-events' ) );
 		}
 
 		$coupon = $coupons[0];
@@ -51,27 +51,27 @@ class BLT_Events_Coupons {
 		// Check status
 		$status = get_post_meta( $coupon->ID, $prefix . 'status', true );
 		if ( $status === 'inactive' ) {
-			return new WP_Error( 'inactive', 'This coupon is no longer active.' );
+			return new WP_Error( 'inactive', __( 'This coupon is no longer active.', 'blt-events' ) );
 		}
 
 		// Check expiration
 		$expiry = get_post_meta( $coupon->ID, $prefix . 'expiration_date', true );
 		if ( ! empty( $expiry ) && $expiry < current_time( 'Y-m-d' ) ) {
-			return new WP_Error( 'expired', 'This coupon has expired.' );
+			return new WP_Error( 'expired', __( 'This coupon has expired.', 'blt-events' ) );
 		}
 
 		// Check usage limit
 		$usage_limit = (int) get_post_meta( $coupon->ID, $prefix . 'usage_limit', true );
 		$total_uses  = (int) get_post_meta( $coupon->ID, $prefix . 'total_uses', true );
 		if ( $usage_limit > 0 && $total_uses >= $usage_limit ) {
-			return new WP_Error( 'limit_reached', 'This coupon has reached its usage limit.' );
+			return new WP_Error( 'limit_reached', __( 'This coupon has reached its usage limit.', 'blt-events' ) );
 		}
 
 		// Check event applicability
 		$applicable_events = get_post_meta( $coupon->ID, $prefix . 'applicable_events', true );
 		if ( is_array( $applicable_events ) && ! in_array( 'all', $applicable_events ) && $event_id > 0 ) {
 			if ( ! in_array( (string) $event_id, $applicable_events ) && ! in_array( $event_id, $applicable_events ) ) {
-				return new WP_Error( 'not_applicable', 'This coupon is not valid for this event.' );
+				return new WP_Error( 'not_applicable', __( 'This coupon is not valid for this event.', 'blt-events' ) );
 			}
 		}
 
@@ -106,11 +106,23 @@ class BLT_Events_Coupons {
 	 * @param float $amount_saved    The discount amount applied.
 	 */
 	public static function record_usage( $coupon_id, $registration_id, $amount_saved ) {
+		global $wpdb;
 		$prefix = '_blt_';
 
-		// Increment total uses
-		$total_uses = (int) get_post_meta( $coupon_id, $prefix . 'total_uses', true );
-		update_post_meta( $coupon_id, $prefix . 'total_uses', $total_uses + 1 );
+		// Increment total uses atomically so concurrent registrations
+		// cannot lose updates.
+		$updated = $wpdb->query( $wpdb->prepare(
+			"UPDATE {$wpdb->postmeta} SET meta_value = meta_value + 1 WHERE post_id = %d AND meta_key = %s",
+			$coupon_id,
+			$prefix . 'total_uses'
+		) );
+
+		if ( ! $updated ) {
+			// Meta row doesn't exist yet.
+			add_post_meta( $coupon_id, $prefix . 'total_uses', 1, true );
+		}
+
+		wp_cache_delete( $coupon_id, 'post_meta' );
 
 		// Update total savings
 		$total_savings = (float) get_post_meta( $coupon_id, $prefix . 'total_savings', true );

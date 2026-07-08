@@ -44,7 +44,7 @@ class BLT_Events_Helpers {
 
         // Add "Total:" prefix if requested.
         if ( $include_total ) {
-            $price_string .= 'Total: ';
+            $price_string .= __( 'Total:', 'blt-events' ) . ' ';
         }
 
         // Add currency symbol before price if enabled.
@@ -73,6 +73,7 @@ class BLT_Events_Helpers {
 
         return array(
             'currency'       => $currency,
+            'totalLabel'     => __( 'Total:', 'blt-events' ),
             'showCurrency'   => get_option( 'blt_events_display_currency', '0' ),
             'showSymbol'     => get_option( 'blt_events_display_currency_sign', '0' ),
             'currencySymbol' => isset( self::$currency_symbols[ $currency ] )
@@ -265,6 +266,35 @@ class BLT_Events_Helpers {
         }
 
         return $base_url . '?' . http_build_query( $params );
+    }
+
+    /**
+     * The custom capability for managing BLT Events admin screens/data.
+     * Granted to administrators on activation; grant it to other roles
+     * (e.g. shop managers) to give them access without manage_options.
+     */
+    const MANAGE_CAP = 'manage_blt_events';
+
+    /**
+     * Whether the current user can manage BLT Events.
+     *
+     * Falls back to manage_options so administrators are never locked out
+     * on sites where the plugin was updated without re-activation.
+     *
+     * @return bool
+     */
+    public static function user_can_manage() {
+        return current_user_can( self::MANAGE_CAP ) || current_user_can( 'manage_options' );
+    }
+
+    /**
+     * Capability string to use when registering admin menu pages for the
+     * current request.
+     *
+     * @return string
+     */
+    public static function menu_capability() {
+        return current_user_can( self::MANAGE_CAP ) ? self::MANAGE_CAP : 'manage_options';
     }
 
     /**

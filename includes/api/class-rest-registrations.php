@@ -76,8 +76,8 @@ class BLT_Events_REST_Registrations {
 
 	public static function get_event_registrations( $request ) {
 		$event_id = $request->get_param( 'event_id' );
-		$page     = $request->get_param( 'page' );
-		$per_page = min( $request->get_param( 'per_page' ), 100 );
+		$page     = max( 1, (int) $request->get_param( 'page' ) );
+		$per_page = max( 1, min( (int) $request->get_param( 'per_page' ), 100 ) );
 		$status   = $request->get_param( 'status' );
 
 		$reg_db = new BLT_Events_Registrations_DB();
@@ -108,7 +108,7 @@ class BLT_Events_REST_Registrations {
 
 		$reg = BLT_Events_Registrations::get_registration( $id );
 		if ( ! $reg ) {
-			return new WP_Error( 'not_found', 'Registration not found.', array( 'status' => 404 ) );
+			return new WP_Error( 'not_found', __( 'Registration not found.', 'blt-events' ), array( 'status' => 404 ) );
 		}
 
 		$attendees = BLT_Events_Registrations::get_attendees( $id );
@@ -131,11 +131,11 @@ class BLT_Events_REST_Registrations {
 		$result = BLT_Events_Registrations::update_status( $id, $status );
 
 		if ( $result === false ) {
-			return new WP_Error( 'update_failed', 'Failed to update registration status.', array( 'status' => 500 ) );
+			return new WP_Error( 'update_failed', __( 'Failed to update registration status.', 'blt-events' ), array( 'status' => 500 ) );
 		}
 
 		return new WP_REST_Response( array(
-			'message' => 'Status updated to ' . $status,
+			'message' => sprintf( __( 'Status updated to %s', 'blt-events' ), $status ),
 			'id'      => $id,
 			'status'  => $status,
 		), 200 );
@@ -149,11 +149,11 @@ class BLT_Events_REST_Registrations {
 		$result = $att_db->update_check_in( $id, $status );
 
 		if ( $result === false ) {
-			return new WP_Error( 'update_failed', 'Failed to update check-in status.', array( 'status' => 500 ) );
+			return new WP_Error( 'update_failed', __( 'Failed to update check-in status.', 'blt-events' ), array( 'status' => 500 ) );
 		}
 
 		return new WP_REST_Response( array(
-			'message' => 'Check-in status updated.',
+			'message' => __( 'Check-in status updated.', 'blt-events' ),
 			'id'      => $id,
 			'status'  => $status,
 		), 200 );
@@ -163,8 +163,8 @@ class BLT_Events_REST_Registrations {
 		$event_id = $request->get_param( 'event_id' );
 		$event    = get_post( $event_id );
 
-		if ( ! $event || $event->post_type !== 'event' ) {
-			return new WP_Error( 'not_found', 'Event not found.', array( 'status' => 404 ) );
+		if ( ! $event || $event->post_type !== 'event' || ! is_post_publicly_viewable( $event ) ) {
+			return new WP_Error( 'not_found', __( 'Event not found.', 'blt-events' ), array( 'status' => 404 ) );
 		}
 
 		$ics_content = BLT_Events_Helpers::generate_ics_content( $event );
@@ -177,6 +177,6 @@ class BLT_Events_REST_Registrations {
 	}
 
 	public static function admin_permission_check( $request ) {
-		return current_user_can( 'manage_options' );
+		return BLT_Events_Helpers::user_can_manage();
 	}
 }

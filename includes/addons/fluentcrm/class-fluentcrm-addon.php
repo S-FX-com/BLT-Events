@@ -43,12 +43,24 @@ class BLT_Events_FluentCRM_Addon {
 
 		$custom_fields = json_decode( $reg->custom_fields, true );
 
+		/**
+		 * Filter the FluentCRM subscription status for new registrants.
+		 *
+		 * Defaults to 'pending' (double opt-in) so registrants are not
+		 * subscribed to marketing lists without confirmation. Return
+		 * 'subscribed' to skip double opt-in.
+		 *
+		 * @param string $status          The contact status.
+		 * @param object $reg             The registration record.
+		 */
+		$status = apply_filters( 'blt_events_fluentcrm_contact_status', 'pending', $reg );
+
 		$contact_data = array(
 			'email'      => $reg->customer_email,
 			'first_name' => $custom_fields['first_name'] ?? '',
 			'last_name'  => $custom_fields['last_name'] ?? '',
 			'phone'      => $reg->customer_phone ?? '',
-			'status'     => 'subscribed',
+			'status'     => $status,
 		);
 
 		$api = FluentCrmApi( 'contacts' );
@@ -148,7 +160,7 @@ class BLT_Events_FluentCRM_Addon {
 		}
 
 		$api     = FluentCrmApi( 'contacts' );
-		$contact = $api->getContactByUserRef( $reg->customer_email );
+		$contact = $api->getContact( $reg->customer_email );
 
 		if ( $contact ) {
 			$contact->attachTags( array( $tag_id ) );
@@ -171,7 +183,7 @@ class BLT_Events_FluentCRM_Addon {
 		}
 
 		$api     = FluentCrmApi( 'contacts' );
-		$contact = $api->getContactByUserRef( $reg->customer_email );
+		$contact = $api->getContact( $reg->customer_email );
 
 		if ( $contact ) {
 			$contact->detachTags( array( $tag_id ) );

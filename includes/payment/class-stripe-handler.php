@@ -68,15 +68,20 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 		check_ajax_referer( 'blt_stripe_nonce', 'nonce' );
 
 		$event_id = absint( $_POST['event_id'] ?? 0 );
-		$amount   = floatval( $_POST['amount'] ?? 0 );
 		$currency = strtolower( get_option( 'blt_events_currency', 'USD' ) );
 
-		if ( ! $event_id || $amount <= 0 ) {
-			wp_send_json_error( array( 'message' => 'Invalid payment parameters.' ) );
+		if ( ! $event_id || get_post_type( $event_id ) !== 'event' || get_post_status( $event_id ) !== 'publish' ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid payment parameters.', 'blt-events' ) ) );
 		}
 
-		// Amount in cents
-		$amount_cents = intval( round( $amount * 100 ) );
+		// The amount is always recomputed server-side from the event's
+		// ticket prices, quantities, and coupon — never from the client.
+		$pricing      = BLT_Events_Registrations::calculate_order_total( $event_id, wp_unslash( $_POST ) );
+		$amount_cents = intval( round( $pricing['total'] * 100 ) );
+
+		if ( $amount_cents <= 0 ) {
+			wp_send_json_error( array( 'message' => __( 'There is nothing to pay for this selection.', 'blt-events' ) ) );
+		}
 
 		$response = self::api_request( 'payment_intents', array(
 			'amount'   => $amount_cents,
@@ -94,6 +99,7 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 		wp_send_json_success( array(
 			'clientSecret' => $response['client_secret'],
 			'intentId'     => $response['id'],
+			'amount'       => $amount_cents / 100,
 		) );
 	}
 
@@ -107,18 +113,34 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 		$intent_id = sanitize_text_field( $_POST['payment_intent_id'] ?? '' );
 
 		if ( ! $event_id || ! $intent_id ) {
-			wp_send_json_error( array( 'message' => 'Missing payment data.' ) );
+			wp_send_json_error( array( 'message' => __( 'Missing payment data.', 'blt-events' ) ) );
 		}
 
 		// Verify payment with Stripe
 		$intent = self::api_request( 'payment_intents/' . $intent_id, array(), 'GET' );
 
 		if ( is_wp_error( $intent ) ) {
-			wp_send_json_error( array( 'message' => 'Could not verify payment.' ) );
+			wp_send_json_error( array( 'message' => __( 'Could not verify payment.', 'blt-events' ) ) );
 		}
 
 		if ( $intent['status'] !== 'succeeded' ) {
-			wp_send_json_error( array( 'message' => 'Payment has not been completed.' ) );
+			wp_send_json_error( array( 'message' => __( 'Payment has not been completed.', 'blt-events' ) ) );
+		}
+
+		// The intent must be one of ours, for this event.
+		$meta = isset( $intent['metadata'] ) && is_array( $intent['metadata'] ) ? $intent['metadata'] : array();
+		if ( ( $meta['source'] ?? '' ) !== 'blt_events' || absint( $meta['event_id'] ?? 0 ) !== $event_id ) {
+			wp_send_json_error( array( 'message' => __( 'Payment does not match this event.', 'blt-events' ) ) );
+		}
+
+		// Recompute the expected total server-side and require the charge
+		// to cover it, so a cheaper intent cannot confirm a pricier order.
+		$form_data      = wp_unslash( $_POST );
+		$pricing        = BLT_Events_Registrations::calculate_order_total( $event_id, $form_data );
+		$expected_cents = intval( round( $pricing['total'] * 100 ) );
+
+		if ( (int) $intent['amount'] < $expected_cents ) {
+			wp_send_json_error( array( 'message' => __( 'Payment amount does not match the order total. Please contact support.', 'blt-events' ) ) );
 		}
 
 		$payment = array(
@@ -128,14 +150,14 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 			'amount_paid'  => $intent['amount'] / 100,
 		);
 
-		$result = BLT_Events_Registrations::process_registration( $event_id, $_POST, $payment );
+		$result = BLT_Events_Registrations::process_registration( $event_id, $form_data, $payment );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
 		wp_send_json_success( array(
-			'message'         => 'Payment confirmed! Registration complete.',
+			'message'         => __( 'Payment confirmed! Registration complete.', 'blt-events' ),
 			'registration_id' => $result['registration_id'],
 		) );
 	}
@@ -160,18 +182,18 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 		$secret  = get_option( 'blt_events_stripe_webhook_secret', '' );
 
 		if ( empty( $secret ) ) {
-			return new WP_REST_Response( array( 'error' => 'Webhook secret not configured.' ), 400 );
+			return new WP_REST_Response( array( 'error' => __( 'Webhook secret not configured.', 'blt-events' ) ), 400 );
 		}
 
 		// Verify webhook signature
 		if ( ! self::verify_webhook_signature( $payload, $sig, $secret ) ) {
-			return new WP_REST_Response( array( 'error' => 'Invalid signature.' ), 400 );
+			return new WP_REST_Response( array( 'error' => __( 'Invalid signature.', 'blt-events' ) ), 400 );
 		}
 
 		$event = json_decode( $payload, true );
 
 		if ( ! $event || empty( $event['type'] ) ) {
-			return new WP_REST_Response( array( 'error' => 'Invalid payload.' ), 400 );
+			return new WP_REST_Response( array( 'error' => __( 'Invalid payload.', 'blt-events' ) ), 400 );
 		}
 
 		switch ( $event['type'] ) {
@@ -243,7 +265,7 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 		$code = wp_remote_retrieve_response_code( $response );
 
 		if ( $code >= 400 ) {
-			$message = isset( $body['error']['message'] ) ? $body['error']['message'] : 'Stripe API error.';
+			$message = isset( $body['error']['message'] ) ? $body['error']['message'] : __( 'Stripe API error.', 'blt-events' );
 			return new WP_Error( 'stripe_error', $message );
 		}
 

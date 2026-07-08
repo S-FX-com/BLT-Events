@@ -3,7 +3,7 @@
  * Plugin Name: BLT Events
  * Plugin URI:  https://s-fx.com
  * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
- * Version:     2.0.0
+ * Version:     2.1.0
  * Author:      S-FX.COM
  * Author URI:  https://s-fx.com
  * License:     GPL2
@@ -15,13 +15,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.0.0' );
+define( 'BLT_EVENTS_VERSION', '2.1.0' );
 define( 'BLT_EVENTS_DB_VERSION', '1.0' );
 define( 'BLT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_FILE', __FILE__ );
 define( 'BLT_EVENTS_PREFIX', '_blt_' );
 define( 'BLT_EVENTS_TEXT_DOMAIN', 'blt-events' );
+
+// ---------- Update checker ----------
+// Serves updates from GitHub releases (zip asset built by .github/workflows/release.yml).
+require_once BLT_EVENTS_PLUGIN_DIR . 'includes/lib/plugin-update-checker/plugin-update-checker.php';
+
+$blt_events_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+	'https://github.com/S-FX-com/BLT-Events/',
+	__FILE__,
+	'blt-events'
+);
+$blt_events_update_checker->getVcsApi()->enableReleaseAssets();
 
 // ---------- Autoloader ----------
 spl_autoload_register( function ( $class ) {
@@ -53,6 +64,7 @@ spl_autoload_register( function ( $class ) {
 		'payment-provider'       => 'includes/payment/class-payment-provider.php',
 		'stripe-handler'         => 'includes/payment/class-stripe-handler.php',
 		'surecart-integration'   => 'includes/payment/class-surecart-integration.php',
+		'fluentcart-integration' => 'includes/payment/class-fluentcart-integration.php',
 		// Admin
 		'admin'                  => 'includes/admin/class-admin.php',
 		'admin-settings'         => 'includes/admin/class-admin-settings.php',
@@ -83,6 +95,12 @@ register_deactivation_hook( __FILE__, function () {
 	flush_rewrite_rules();
 });
 
+// ---------- i18n ----------
+function blt_events_load_textdomain() {
+	load_plugin_textdomain( 'blt-events', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'blt_events_load_textdomain' );
+
 // ---------- Boot ----------
 function blt_events_init() {
 	// Data layer is loaded on-demand via autoloader.
@@ -99,6 +117,7 @@ function blt_events_init() {
 	// Payment
 	BLT_Events_Stripe_Handler::init();
 	BLT_Events_SureCart_Integration::init();
+	BLT_Events_FluentCart_Integration::init();
 
 	// Admin
 	if ( is_admin() ) {
@@ -125,15 +144,42 @@ function blt_events_init() {
 add_action( 'plugins_loaded', 'blt_events_init' );
 
 // ---------- Assets ----------
+/**
+ * Whether the current front-end request needs the plugin's assets:
+ * event singles/archives, or content containing one of the shortcodes.
+ * Use the blt_events_enqueue_assets filter to force-load them on pages
+ * where the shortcode is rendered outside post content (widgets,
+ * page-builder templates).
+ */
+function blt_events_should_enqueue_assets() {
+	if ( is_singular( 'event' ) || is_post_type_archive( 'event' ) || is_tax( 'event_category' ) ) {
+		return true;
+	}
+
+	if ( is_singular() ) {
+		$post = get_post();
+		if ( $post && (
+			has_shortcode( $post->post_content, 'blt_event_registration' )
+			|| has_shortcode( $post->post_content, 'blt_events_calendar' )
+		) ) {
+			return true;
+		}
+	}
+
+	return (bool) apply_filters( 'blt_events_enqueue_assets', false );
+}
+
 function blt_events_enqueue_public_assets() {
-	wp_enqueue_style(
+	// Always register so shortcodes rendered outside post content
+	// (widgets, page-builder templates) can late-enqueue by handle.
+	wp_register_style(
 		'blt-events',
 		BLT_EVENTS_PLUGIN_URL . 'assets/css/blt-events.css',
 		array(),
 		BLT_EVENTS_VERSION
 	);
 
-	wp_enqueue_script(
+	wp_register_script(
 		'blt-events',
 		BLT_EVENTS_PLUGIN_URL . 'assets/js/blt-events.js',
 		array( 'jquery' ),
@@ -147,10 +193,24 @@ function blt_events_enqueue_public_assets() {
 		'nonce'    => wp_create_nonce( 'wp_rest' ),
 		'currency' => BLT_Events_Helpers::get_currency_config(),
 	));
+
+	if ( blt_events_should_enqueue_assets() ) {
+		wp_enqueue_style( 'blt-events' );
+		wp_enqueue_script( 'blt-events' );
+	}
 }
 add_action( 'wp_enqueue_scripts', 'blt_events_enqueue_public_assets' );
 
 function blt_events_enqueue_admin_assets( $hook ) {
+	// Only load on the plugin's own screens: event/coupon editors and
+	// list tables, plus the blt-* submenu pages.
+	$screen    = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	$post_type = $screen->post_type ?? '';
+
+	if ( ! in_array( $post_type, array( 'event', 'blt_coupon' ), true ) && strpos( $hook, 'blt-' ) === false ) {
+		return;
+	}
+
 	wp_enqueue_style(
 		'blt-events-admin',
 		BLT_EVENTS_PLUGIN_URL . 'assets/css/admin.css',

@@ -56,16 +56,18 @@
 		var btn = $("#blt-submit-btn");
 		btn.prop("disabled", true).text("Processing payment...");
 
-		// Step 1: Create Payment Intent
+		// Step 1: Create Payment Intent. The full form (ticket quantities,
+		// coupon code) is sent so the server computes the charge amount;
+		// the displayed total is never trusted.
+		var intentData = $("#blt-registration-form").serializeArray();
+		intentData.push({ name: "action", value: "blt_create_payment_intent" });
+		intentData.push({ name: "nonce", value: bltStripeData.nonce });
+		intentData.push({ name: "event_id", value: data.eventId });
+
 		$.ajax({
 			url: bltStripeData.ajaxUrl,
 			method: "POST",
-			data: {
-				action: "blt_create_payment_intent",
-				nonce: bltStripeData.nonce,
-				event_id: data.eventId,
-				amount: amount,
-			},
+			data: $.param(intentData),
 			success: function (response) {
 				if (!response.success) {
 					showError(response.data.message);

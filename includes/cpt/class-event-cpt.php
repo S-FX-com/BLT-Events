@@ -33,17 +33,17 @@ class BLT_Events_Event_CPT {
      */
     public static function register_post_type() {
         $labels = array(
-            'name'               => 'Events',
-            'singular_name'      => 'Event',
-            'menu_name'          => 'Events',
-            'add_new'            => 'Add New',
-            'add_new_item'       => 'Add New Event',
-            'edit_item'          => 'Edit Event',
-            'new_item'           => 'New Event',
-            'view_item'          => 'View Event',
-            'search_items'       => 'Search Events',
-            'not_found'          => 'No events found',
-            'not_found_in_trash' => 'No events found in Trash',
+            'name'               => __( 'Events', 'blt-events' ),
+            'singular_name'      => __( 'Event', 'blt-events' ),
+            'menu_name'          => __( 'Events', 'blt-events' ),
+            'add_new'            => __( 'Add New', 'blt-events' ),
+            'add_new_item'       => __( 'Add New Event', 'blt-events' ),
+            'edit_item'          => __( 'Edit Event', 'blt-events' ),
+            'new_item'           => __( 'New Event', 'blt-events' ),
+            'view_item'          => __( 'View Event', 'blt-events' ),
+            'search_items'       => __( 'Search Events', 'blt-events' ),
+            'not_found'          => __( 'No events found', 'blt-events' ),
+            'not_found_in_trash' => __( 'No events found in Trash', 'blt-events' ),
         );
 
         $args = array(
@@ -60,6 +60,8 @@ class BLT_Events_Event_CPT {
             'menu_position'      => null,
             'menu_icon'          => 'dashicons-calendar-alt',
             'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+            // Expose to the block editor, core REST API, and Query Loop blocks.
+            'show_in_rest'       => true,
         );
 
         register_post_type( self::$slug, $args );
@@ -70,17 +72,17 @@ class BLT_Events_Event_CPT {
      */
     public static function register_taxonomies() {
         $labels = array(
-            'name'              => 'Event Categories',
-            'singular_name'     => 'Event Category',
-            'search_items'      => 'Search Event Categories',
-            'all_items'         => 'All Event Categories',
-            'parent_item'       => 'Parent Event Category',
-            'parent_item_colon' => 'Parent Event Category:',
-            'edit_item'         => 'Edit Event Category',
-            'update_item'       => 'Update Event Category',
-            'add_new_item'      => 'Add New Event Category',
-            'new_item_name'     => 'New Event Category Name',
-            'menu_name'         => 'Categories',
+            'name'              => __( 'Event Categories', 'blt-events' ),
+            'singular_name'     => __( 'Event Category', 'blt-events' ),
+            'search_items'      => __( 'Search Event Categories', 'blt-events' ),
+            'all_items'         => __( 'All Event Categories', 'blt-events' ),
+            'parent_item'       => __( 'Parent Event Category', 'blt-events' ),
+            'parent_item_colon' => __( 'Parent Event Category:', 'blt-events' ),
+            'edit_item'         => __( 'Edit Event Category', 'blt-events' ),
+            'update_item'       => __( 'Update Event Category', 'blt-events' ),
+            'add_new_item'      => __( 'Add New Event Category', 'blt-events' ),
+            'new_item_name'     => __( 'New Event Category Name', 'blt-events' ),
+            'menu_name'         => __( 'Categories', 'blt-events' ),
         );
 
         $args = array(
@@ -90,6 +92,7 @@ class BLT_Events_Event_CPT {
             'show_admin_column' => true,
             'query_var'         => true,
             'rewrite'           => array( 'slug' => 'event-category' ),
+            'show_in_rest'      => true,
         );
 
         register_taxonomy( 'event_category', array( self::$slug ), $args );

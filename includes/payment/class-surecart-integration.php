@@ -94,7 +94,7 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 			if ( empty( $product_ids[ $i ] ) ) {
 				$product = self::api_request( 'products', array(
 					'name'        => $product_name,
-					'description' => 'Event ticket: ' . $event_title,
+					'description' => sprintf( __( 'Event ticket: %s', 'blt-events' ), $event_title ),
 					'recurring'   => false,
 					'metadata'    => array(
 						'blt_event_id'    => $post_id,
@@ -216,9 +216,9 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 
 		$registrations = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE payment_provider = %s AND payment_id LIKE %s",
+				"SELECT id FROM {$table} WHERE payment_provider = %s AND payment_id = %s",
 				'surecart',
-				'%' . $wpdb->esc_like( $purchase->id ) . '%'
+				(string) ( $purchase->checkout_id ?? $purchase->id )
 			)
 		);
 
@@ -232,10 +232,15 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 	 * Find an event by its SureCart price ID.
 	 */
 	public static function find_event_by_price_id( $price_id ) {
-		$events = get_posts( array(
+		// Candidate lookup via LIKE, then exact in-PHP verification so a
+		// price ID that is a substring of another can never match the
+		// wrong event.
+		$event_ids = get_posts( array(
 			'post_type'      => 'event',
-			'posts_per_page' => -1,
+			'posts_per_page' => 100,
 			'post_status'    => 'publish',
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
 			'meta_query'     => array(
 				array(
 					'key'     => '_blt_sc_price_ids',
@@ -245,7 +250,14 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 			),
 		) );
 
-		return ! empty( $events ) ? $events[0]->ID : 0;
+		foreach ( $event_ids as $event_id ) {
+			$price_ids = get_post_meta( $event_id, '_blt_sc_price_ids', true );
+			if ( is_array( $price_ids ) && in_array( (string) $price_id, array_map( 'strval', $price_ids ), true ) ) {
+				return (int) $event_id;
+			}
+		}
+
+		return 0;
 	}
 
 	/**
@@ -298,7 +310,7 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		$token = self::get_api_token();
 
 		if ( empty( $token ) ) {
-			return new WP_Error( 'no_token', 'SureCart API token not configured.' );
+			return new WP_Error( 'no_token', __( 'SureCart API token not configured.', 'blt-events' ) );
 		}
 
 		$url = self::$api_base . ltrim( $endpoint, '/' );
@@ -327,7 +339,7 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		$code = wp_remote_retrieve_response_code( $response );
 
 		if ( $code >= 400 ) {
-			$message = isset( $body['message'] ) ? $body['message'] : 'SureCart API error.';
+			$message = isset( $body['message'] ) ? $body['message'] : __( 'SureCart API error.', 'blt-events' );
 			return new WP_Error( 'surecart_error', $message );
 		}
 

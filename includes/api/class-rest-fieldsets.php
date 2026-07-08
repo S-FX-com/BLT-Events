@@ -89,7 +89,7 @@ class BLT_Events_REST_Fieldsets {
 		$fieldset = BLT_Events_Fieldsets::get_fieldset( $id );
 
 		if ( ! $fieldset ) {
-			return new WP_Error( 'not_found', 'Fieldset not found.', array( 'status' => 404 ) );
+			return new WP_Error( 'not_found', __( 'Fieldset not found.', 'blt-events' ), array( 'status' => 404 ) );
 		}
 
 		return new WP_REST_Response( self::prepare_fieldset( $fieldset ), 200 );
@@ -108,13 +108,13 @@ class BLT_Events_REST_Fieldsets {
 		);
 
 		if ( empty( $data['name'] ) ) {
-			return new WP_Error( 'missing_name', 'Fieldset name is required.', array( 'status' => 400 ) );
+			return new WP_Error( 'missing_name', __( 'Fieldset name is required.', 'blt-events' ), array( 'status' => 400 ) );
 		}
 
 		$id = BLT_Events_Fieldsets::save_fieldset( $data );
 
 		if ( ! $id ) {
-			return new WP_Error( 'create_failed', 'Failed to create fieldset.', array( 'status' => 500 ) );
+			return new WP_Error( 'create_failed', __( 'Failed to create fieldset.', 'blt-events' ), array( 'status' => 500 ) );
 		}
 
 		$fieldset = BLT_Events_Fieldsets::get_fieldset( $id );
@@ -127,7 +127,7 @@ class BLT_Events_REST_Fieldsets {
 
 		$existing = BLT_Events_Fieldsets::get_fieldset( $id );
 		if ( ! $existing ) {
-			return new WP_Error( 'not_found', 'Fieldset not found.', array( 'status' => 404 ) );
+			return new WP_Error( 'not_found', __( 'Fieldset not found.', 'blt-events' ), array( 'status' => 404 ) );
 		}
 
 		$data = array( 'id' => $id );
@@ -148,13 +148,17 @@ class BLT_Events_REST_Fieldsets {
 			$data['consent_fields'] = wp_json_encode( $body['consent_fields'] );
 		}
 		if ( isset( $body['status'] ) ) {
-			$data['status'] = sanitize_text_field( $body['status'] );
+			$status = sanitize_text_field( $body['status'] );
+			if ( ! in_array( $status, array( 'active', 'inactive' ), true ) ) {
+				return new WP_Error( 'invalid_status', __( 'Status must be "active" or "inactive".', 'blt-events' ), array( 'status' => 400 ) );
+			}
+			$data['status'] = $status;
 		}
 
 		$result = BLT_Events_Fieldsets::save_fieldset( $data );
 
 		if ( $result === false ) {
-			return new WP_Error( 'update_failed', 'Failed to update fieldset.', array( 'status' => 500 ) );
+			return new WP_Error( 'update_failed', __( 'Failed to update fieldset.', 'blt-events' ), array( 'status' => 500 ) );
 		}
 
 		$fieldset = BLT_Events_Fieldsets::get_fieldset( $id );
@@ -166,34 +170,34 @@ class BLT_Events_REST_Fieldsets {
 
 		$existing = BLT_Events_Fieldsets::get_fieldset( $id );
 		if ( ! $existing ) {
-			return new WP_Error( 'not_found', 'Fieldset not found.', array( 'status' => 404 ) );
+			return new WP_Error( 'not_found', __( 'Fieldset not found.', 'blt-events' ), array( 'status' => 404 ) );
 		}
 
 		if ( $existing->is_default ) {
-			return new WP_Error( 'cannot_delete', 'Cannot delete the default fieldset.', array( 'status' => 403 ) );
+			return new WP_Error( 'cannot_delete', __( 'Cannot delete the default fieldset.', 'blt-events' ), array( 'status' => 403 ) );
 		}
 
 		$result = BLT_Events_Fieldsets::delete_fieldset( $id );
 
 		if ( $result === false ) {
-			return new WP_Error( 'delete_failed', 'Failed to delete fieldset.', array( 'status' => 500 ) );
+			return new WP_Error( 'delete_failed', __( 'Failed to delete fieldset.', 'blt-events' ), array( 'status' => 500 ) );
 		}
 
-		return new WP_REST_Response( array( 'message' => 'Fieldset deleted.', 'id' => $id ), 200 );
+		return new WP_REST_Response( array( 'message' => __( 'Fieldset deleted.', 'blt-events' ), 'id' => $id ), 200 );
 	}
 
 	public static function get_event_fieldset( $request ) {
 		$event_id = $request->get_param( 'event_id' );
 
 		$event = get_post( $event_id );
-		if ( ! $event || $event->post_type !== 'event' ) {
-			return new WP_Error( 'not_found', 'Event not found.', array( 'status' => 404 ) );
+		if ( ! $event || $event->post_type !== 'event' || ! is_post_publicly_viewable( $event ) ) {
+			return new WP_Error( 'not_found', __( 'Event not found.', 'blt-events' ), array( 'status' => 404 ) );
 		}
 
 		$fieldset = BLT_Events_Fieldsets::get_event_fieldset( $event_id );
 
 		if ( ! $fieldset ) {
-			return new WP_Error( 'no_fieldset', 'No fieldset configured.', array( 'status' => 404 ) );
+			return new WP_Error( 'no_fieldset', __( 'No fieldset configured.', 'blt-events' ), array( 'status' => 404 ) );
 		}
 
 		return new WP_REST_Response( self::prepare_fieldset( $fieldset ), 200 );
@@ -215,6 +219,6 @@ class BLT_Events_REST_Fieldsets {
 	}
 
 	public static function admin_permission_check( $request ) {
-		return current_user_can( 'manage_options' );
+		return BLT_Events_Helpers::user_can_manage();
 	}
 }

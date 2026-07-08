@@ -14,7 +14,19 @@ class BLT_Events_Activator {
 		self::create_tables();
 		self::seed_default_fieldset();
 		self::set_default_options();
+		self::grant_capabilities();
 		flush_rewrite_rules();
+	}
+
+	/**
+	 * Grant the plugin's management capability to administrators.
+	 * Other roles can be granted 'manage_blt_events' via a role editor.
+	 */
+	private static function grant_capabilities() {
+		$role = get_role( 'administrator' );
+		if ( $role && ! $role->has_cap( BLT_Events_Helpers::MANAGE_CAP ) ) {
+			$role->add_cap( BLT_Events_Helpers::MANAGE_CAP );
+		}
 	}
 
 	/**

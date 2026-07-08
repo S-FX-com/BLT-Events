@@ -20,7 +20,7 @@ class BLT_Events_Event_Metabox {
 	public static function add_meta_boxes() {
 		add_meta_box(
 			'blt_event_details',
-			'Event Details',
+			__( 'Event Details', 'blt-events' ),
 			array( __CLASS__, 'render_details_box' ),
 			'event',
 			'normal',
@@ -29,7 +29,7 @@ class BLT_Events_Event_Metabox {
 
 		add_meta_box(
 			'blt_event_tickets',
-			'Ticket Types',
+			__( 'Ticket Types', 'blt-events' ),
 			array( __CLASS__, 'render_tickets_box' ),
 			'event',
 			'normal',
@@ -38,7 +38,7 @@ class BLT_Events_Event_Metabox {
 
 		add_meta_box(
 			'blt_event_registration_config',
-			'Registration Configuration',
+			__( 'Registration Configuration', 'blt-events' ),
 			array( __CLASS__, 'render_registration_config_box' ),
 			'event',
 			'normal',
@@ -47,7 +47,7 @@ class BLT_Events_Event_Metabox {
 
 		add_meta_box(
 			'blt_event_registrations_summary',
-			'Registrations Summary',
+			__( 'Registrations Summary', 'blt-events' ),
 			array( __CLASS__, 'render_registrations_summary_box' ),
 			'event',
 			'side',
@@ -71,48 +71,48 @@ class BLT_Events_Event_Metabox {
 		?>
 		<table class="form-table blt-event-details">
 			<tr>
-				<th><label for="event_date">Start Date</label></th>
+				<th><label for="event_date"><?php esc_html_e( 'Start Date', 'blt-events' ); ?></label></th>
 				<td><input type="date" id="event_date" name="event_date" value="<?php echo esc_attr( $event_date ); ?>" required /></td>
 			</tr>
 			<tr>
-				<th><label for="event_end_date">End Date</label></th>
+				<th><label for="event_end_date"><?php esc_html_e( 'End Date', 'blt-events' ); ?></label></th>
 				<td>
 					<input type="date" id="event_end_date" name="event_end_date" value="<?php echo esc_attr( $event_end_date ); ?>" />
-					<p class="description">Leave blank for single-day events.</p>
+					<p class="description"><?php esc_html_e( 'Leave blank for single-day events.', 'blt-events' ); ?></p>
 				</td>
 			</tr>
 			<tr>
-				<th><label>All Day?</label></th>
-				<td><label><input type="checkbox" name="event_all_day" value="1" <?php checked( $event_all_day, '1' ); ?> /> This is an all-day event</label></td>
+				<th><label><?php esc_html_e( 'All Day?', 'blt-events' ); ?></label></th>
+				<td><label><input type="checkbox" name="event_all_day" value="1" <?php checked( $event_all_day, '1' ); ?> /> <?php esc_html_e( 'This is an all-day event', 'blt-events' ); ?></label></td>
 			</tr>
 			<tr class="blt-time-row" <?php echo $event_all_day === '1' ? 'style="display:none;"' : ''; ?>>
-				<th><label for="event_start_time">Start Time</label></th>
+				<th><label for="event_start_time"><?php esc_html_e( 'Start Time', 'blt-events' ); ?></label></th>
 				<td><input type="time" id="event_start_time" name="event_start_time" value="<?php echo esc_attr( $event_start_time ); ?>" /></td>
 			</tr>
 			<tr class="blt-time-row" <?php echo $event_all_day === '1' ? 'style="display:none;"' : ''; ?>>
-				<th><label for="event_end_time">End Time</label></th>
+				<th><label for="event_end_time"><?php esc_html_e( 'End Time', 'blt-events' ); ?></label></th>
 				<td><input type="time" id="event_end_time" name="event_end_time" value="<?php echo esc_attr( $event_end_time ); ?>" /></td>
 			</tr>
 			<tr>
-				<th><label for="event_type">Event Type</label></th>
+				<th><label for="event_type"><?php esc_html_e( 'Event Type', 'blt-events' ); ?></label></th>
 				<td>
 					<select id="event_type" name="event_type">
-						<option value="in-person" <?php selected( $event_type, 'in-person' ); ?>>In-Person</option>
-						<option value="online" <?php selected( $event_type, 'online' ); ?>>Online</option>
-						<option value="hybrid" <?php selected( $event_type, 'hybrid' ); ?>>Hybrid</option>
+						<option value="in-person" <?php selected( $event_type, 'in-person' ); ?>><?php esc_html_e( 'In-Person', 'blt-events' ); ?></option>
+						<option value="online" <?php selected( $event_type, 'online' ); ?>><?php esc_html_e( 'Online', 'blt-events' ); ?></option>
+						<option value="hybrid" <?php selected( $event_type, 'hybrid' ); ?>><?php esc_html_e( 'Hybrid', 'blt-events' ); ?></option>
 					</select>
 				</td>
 			</tr>
 			<tr>
-				<th><label for="event_venue">Venue</label></th>
+				<th><label for="event_venue"><?php esc_html_e( 'Venue', 'blt-events' ); ?></label></th>
 				<td><input type="text" id="event_venue" name="event_venue" value="<?php echo esc_attr( $event_venue ); ?>" class="regular-text" /></td>
 			</tr>
 			<tr>
-				<th><label for="event_location">Location / Address</label></th>
+				<th><label for="event_location"><?php esc_html_e( 'Location / Address', 'blt-events' ); ?></label></th>
 				<td><textarea id="event_location" name="event_location" class="large-text" rows="2"><?php echo esc_textarea( $event_location ); ?></textarea></td>
 			</tr>
 			<tr>
-				<th><label for="event_online_url">Online URL</label></th>
+				<th><label for="event_online_url"><?php esc_html_e( 'Online URL', 'blt-events' ); ?></label></th>
 				<td><input type="url" id="event_online_url" name="event_online_url" value="<?php echo esc_attr( $event_online_url ); ?>" class="regular-text" placeholder="https://" /></td>
 			</tr>
 		</table>
@@ -132,32 +132,32 @@ class BLT_Events_Event_Metabox {
 		$ticket_types_raw = get_post_meta( $post->ID, $prefix . 'ticket_types', true );
 		$ticket_types = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 		if ( ! is_array( $ticket_types ) ) {
-			$ticket_types = array( array( 'name' => 'General Admission', 'price' => '0', 'description' => '' ) );
+			$ticket_types = array( array( 'name' => __( 'General Admission', 'blt-events' ), 'price' => '0', 'description' => '' ) );
 		}
 		?>
 		<div id="blt-ticket-types">
-			<p class="description">Define the ticket types available for this event. Set price to 0 for free tickets.</p>
+			<p class="description"><?php esc_html_e( 'Define the ticket types available for this event. Set price to 0 for free tickets.', 'blt-events' ); ?></p>
 			<table class="widefat blt-tickets-table" id="blt-tickets-table">
 				<thead>
 					<tr>
-						<th style="width:30%">Name</th>
-						<th style="width:15%">Price</th>
-						<th style="width:40%">Description</th>
-						<th style="width:15%">Actions</th>
+						<th style="width:30%"><?php esc_html_e( 'Name', 'blt-events' ); ?></th>
+						<th style="width:15%"><?php esc_html_e( 'Price', 'blt-events' ); ?></th>
+						<th style="width:40%"><?php esc_html_e( 'Description', 'blt-events' ); ?></th>
+						<th style="width:15%"><?php esc_html_e( 'Actions', 'blt-events' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php foreach ( $ticket_types as $i => $ticket ) : ?>
 					<tr class="blt-ticket-row">
-						<td><input type="text" name="ticket_types[<?php echo $i; ?>][name]" value="<?php echo esc_attr( $ticket['name'] ?? '' ); ?>" class="widefat" required /></td>
-						<td><input type="number" name="ticket_types[<?php echo $i; ?>][price]" value="<?php echo esc_attr( $ticket['price'] ?? '0' ); ?>" step="0.01" min="0" class="widefat" /></td>
-						<td><input type="text" name="ticket_types[<?php echo $i; ?>][description]" value="<?php echo esc_attr( $ticket['description'] ?? '' ); ?>" class="widefat" /></td>
-						<td><button type="button" class="button blt-remove-ticket">&times; Remove</button></td>
+						<td><input type="text" name="ticket_types[<?php echo (int) $i; ?>][name]" value="<?php echo esc_attr( $ticket['name'] ?? '' ); ?>" class="widefat" required /></td>
+						<td><input type="number" name="ticket_types[<?php echo (int) $i; ?>][price]" value="<?php echo esc_attr( $ticket['price'] ?? '0' ); ?>" step="0.01" min="0" class="widefat" /></td>
+						<td><input type="text" name="ticket_types[<?php echo (int) $i; ?>][description]" value="<?php echo esc_attr( $ticket['description'] ?? '' ); ?>" class="widefat" /></td>
+						<td><button type="button" class="button blt-remove-ticket">&times; <?php esc_html_e( 'Remove', 'blt-events' ); ?></button></td>
 					</tr>
 					<?php endforeach; ?>
 				</tbody>
 			</table>
-			<p><button type="button" class="button button-secondary" id="blt-add-ticket">+ Add Ticket Type</button></p>
+			<p><button type="button" class="button button-secondary" id="blt-add-ticket">+ <?php esc_html_e( 'Add Ticket Type', 'blt-events' ); ?></button></p>
 		</div>
 
 		<script>
@@ -204,23 +204,23 @@ class BLT_Events_Event_Metabox {
 		?>
 		<table class="form-table">
 			<tr>
-				<th><label>Registration</label></th>
+				<th><label><?php esc_html_e( 'Registration', 'blt-events' ); ?></label></th>
 				<td>
-					<label><input type="checkbox" name="registration_open" value="1" <?php checked( $registration_open, '1' ); ?> /> Registration is open</label>
+					<label><input type="checkbox" name="registration_open" value="1" <?php checked( $registration_open, '1' ); ?> /> <?php esc_html_e( 'Registration is open', 'blt-events' ); ?></label>
 				</td>
 			</tr>
 			<tr>
-				<th><label for="capacity">Capacity</label></th>
+				<th><label for="capacity"><?php esc_html_e( 'Capacity', 'blt-events' ); ?></label></th>
 				<td>
 					<input type="number" id="capacity" name="capacity" value="<?php echo esc_attr( $capacity ); ?>" min="0" class="small-text" />
-					<p class="description">Maximum number of attendees. Leave at 0 for unlimited.</p>
+					<p class="description"><?php esc_html_e( 'Maximum number of attendees. Leave at 0 for unlimited.', 'blt-events' ); ?></p>
 				</td>
 			</tr>
 			<tr>
-				<th><label for="fieldset_id">Registration Fieldset</label></th>
+				<th><label for="fieldset_id"><?php esc_html_e( 'Registration Fieldset', 'blt-events' ); ?></label></th>
 				<td>
 					<select id="fieldset_id" name="fieldset_id">
-						<option value="">— Default Fieldset —</option>
+						<option value=""><?php esc_html_e( '— Default Fieldset —', 'blt-events' ); ?></option>
 						<?php if ( is_array( $fieldsets ) ) : ?>
 							<?php foreach ( $fieldsets as $fs ) : ?>
 								<option value="<?php echo esc_attr( $fs->id ); ?>" <?php selected( $fieldset_id, $fs->id ); ?>>
@@ -232,19 +232,19 @@ class BLT_Events_Event_Metabox {
 				</td>
 			</tr>
 			<tr>
-				<th><label>Group Discount</label></th>
+				<th><label><?php esc_html_e( 'Group Discount', 'blt-events' ); ?></label></th>
 				<td>
-					<label><input type="checkbox" name="group_discount_enabled" value="1" <?php checked( ! empty( $gd['enabled'] ) ); ?> /> Enable group discount</label>
+					<label><input type="checkbox" name="group_discount_enabled" value="1" <?php checked( ! empty( $gd['enabled'] ) ); ?> /> <?php esc_html_e( 'Enable group discount', 'blt-events' ); ?></label>
 					<div class="blt-group-discount-settings" <?php echo empty( $gd['enabled'] ) ? 'style="display:none;"' : ''; ?>>
 						<br>
-						<label>Min. Attendees: <input type="number" name="group_discount_min" value="<?php echo esc_attr( $gd['min_attendees'] ?? 5 ); ?>" min="2" class="small-text" /></label><br><br>
-						<label>Type:
+						<label><?php esc_html_e( 'Min. Attendees:', 'blt-events' ); ?> <input type="number" name="group_discount_min" value="<?php echo esc_attr( $gd['min_attendees'] ?? 5 ); ?>" min="2" class="small-text" /></label><br><br>
+						<label><?php esc_html_e( 'Type:', 'blt-events' ); ?>
 							<select name="group_discount_type">
-								<option value="percentage" <?php selected( $gd['type'] ?? '', 'percentage' ); ?>>Percentage</option>
-								<option value="flat" <?php selected( $gd['type'] ?? '', 'flat' ); ?>>Fixed Amount</option>
+								<option value="percentage" <?php selected( $gd['type'] ?? '', 'percentage' ); ?>><?php esc_html_e( 'Percentage', 'blt-events' ); ?></option>
+								<option value="flat" <?php selected( $gd['type'] ?? '', 'flat' ); ?>><?php esc_html_e( 'Fixed Amount', 'blt-events' ); ?></option>
 							</select>
 						</label><br><br>
-						<label>Amount: <input type="number" name="group_discount_amount" value="<?php echo esc_attr( $gd['amount'] ?? 10 ); ?>" step="0.01" min="0" class="small-text" /></label>
+						<label><?php esc_html_e( 'Amount:', 'blt-events' ); ?> <input type="number" name="group_discount_amount" value="<?php echo esc_attr( $gd['amount'] ?? 10 ); ?>" step="0.01" min="0" class="small-text" /></label>
 					</div>
 				</td>
 			</tr>
@@ -274,15 +274,15 @@ class BLT_Events_Event_Metabox {
 		$capacity = (int) get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'capacity', true );
 		?>
 		<div class="blt-registrations-summary">
-			<p><strong>Total Registrations:</strong> <?php echo intval( $total ); ?></p>
-			<p><strong>Confirmed:</strong> <?php echo intval( $confirmed ); ?></p>
-			<p><strong>Pending:</strong> <?php echo intval( $pending ); ?></p>
+			<p><strong><?php esc_html_e( 'Total Registrations:', 'blt-events' ); ?></strong> <?php echo intval( $total ); ?></p>
+			<p><strong><?php esc_html_e( 'Confirmed:', 'blt-events' ); ?></strong> <?php echo intval( $confirmed ); ?></p>
+			<p><strong><?php esc_html_e( 'Pending:', 'blt-events' ); ?></strong> <?php echo intval( $pending ); ?></p>
 			<?php if ( $capacity > 0 ) : ?>
-				<p><strong>Capacity:</strong> <?php echo intval( $confirmed ) . ' / ' . intval( $capacity ); ?></p>
+				<p><strong><?php esc_html_e( 'Capacity:', 'blt-events' ); ?></strong> <?php echo intval( $confirmed ) . ' / ' . intval( $capacity ); ?></p>
 			<?php endif; ?>
 			<p>
 				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-registrations&event_id=' . $post->ID ) ); ?>" class="button">
-					View All Registrations
+					<?php esc_html_e( 'View All Registrations', 'blt-events' ); ?>
 				</a>
 			</p>
 		</div>
@@ -303,14 +303,14 @@ class BLT_Events_Event_Metabox {
 		$prefix = BLT_EVENTS_PREFIX;
 
 		// Event details
-		update_post_meta( $post_id, $prefix . 'event_date', sanitize_text_field( $_POST['event_date'] ?? '' ) );
+		update_post_meta( $post_id, $prefix . 'event_date', sanitize_text_field( wp_unslash( $_POST['event_date'] ?? '' ) ) );
 		update_post_meta( $post_id, $prefix . 'event_end_date', sanitize_text_field( $_POST['event_end_date'] ?? '' ) );
 		update_post_meta( $post_id, $prefix . 'event_start_time', sanitize_text_field( $_POST['event_start_time'] ?? '' ) );
 		update_post_meta( $post_id, $prefix . 'event_end_time', sanitize_text_field( $_POST['event_end_time'] ?? '' ) );
 		update_post_meta( $post_id, $prefix . 'event_all_day', isset( $_POST['event_all_day'] ) ? '1' : '0' );
-		update_post_meta( $post_id, $prefix . 'event_type', sanitize_text_field( $_POST['event_type'] ?? 'in-person' ) );
-		update_post_meta( $post_id, $prefix . 'event_venue', sanitize_text_field( $_POST['event_venue'] ?? '' ) );
-		update_post_meta( $post_id, $prefix . 'event_location', sanitize_textarea_field( $_POST['event_location'] ?? '' ) );
+		update_post_meta( $post_id, $prefix . 'event_type', in_array( $_POST['event_type'] ?? '', array( 'in-person', 'online', 'hybrid' ), true ) ? $_POST['event_type'] : 'in-person' );
+		update_post_meta( $post_id, $prefix . 'event_venue', sanitize_text_field( wp_unslash( $_POST['event_venue'] ?? '' ) ) );
+		update_post_meta( $post_id, $prefix . 'event_location', sanitize_textarea_field( wp_unslash( $_POST['event_location'] ?? '' ) ) );
 		update_post_meta( $post_id, $prefix . 'event_online_url', esc_url_raw( $_POST['event_online_url'] ?? '' ) );
 
 		// Ticket types
@@ -319,9 +319,9 @@ class BLT_Events_Event_Metabox {
 			foreach ( $_POST['ticket_types'] as $ticket ) {
 				if ( ! empty( $ticket['name'] ) ) {
 					$ticket_types[] = array(
-						'name'        => sanitize_text_field( $ticket['name'] ),
+						'name'        => sanitize_text_field( wp_unslash( $ticket['name'] ) ),
 						'price'       => floatval( $ticket['price'] ?? 0 ),
-						'description' => sanitize_text_field( $ticket['description'] ?? '' ),
+						'description' => sanitize_text_field( wp_unslash( $ticket['description'] ?? '' ) ),
 					);
 				}
 			}
@@ -337,7 +337,7 @@ class BLT_Events_Event_Metabox {
 		$group_discount = array(
 			'enabled'       => ! empty( $_POST['group_discount_enabled'] ),
 			'min_attendees' => absint( $_POST['group_discount_min'] ?? 5 ),
-			'type'          => sanitize_text_field( $_POST['group_discount_type'] ?? 'percentage' ),
+			'type'          => in_array( $_POST['group_discount_type'] ?? '', array( 'percentage', 'flat' ), true ) ? $_POST['group_discount_type'] : 'percentage',
 			'amount'        => floatval( $_POST['group_discount_amount'] ?? 10 ),
 		);
 		update_post_meta( $post_id, $prefix . 'group_discount', wp_json_encode( $group_discount ) );
