@@ -148,7 +148,11 @@ class BLT_Events_REST_Fieldsets {
 			$data['consent_fields'] = wp_json_encode( $body['consent_fields'] );
 		}
 		if ( isset( $body['status'] ) ) {
-			$data['status'] = sanitize_text_field( $body['status'] );
+			$status = sanitize_text_field( $body['status'] );
+			if ( ! in_array( $status, array( 'active', 'inactive' ), true ) ) {
+				return new WP_Error( 'invalid_status', 'Status must be "active" or "inactive".', array( 'status' => 400 ) );
+			}
+			$data['status'] = $status;
 		}
 
 		$result = BLT_Events_Fieldsets::save_fieldset( $data );
@@ -186,7 +190,7 @@ class BLT_Events_REST_Fieldsets {
 		$event_id = $request->get_param( 'event_id' );
 
 		$event = get_post( $event_id );
-		if ( ! $event || $event->post_type !== 'event' ) {
+		if ( ! $event || $event->post_type !== 'event' || ! is_post_publicly_viewable( $event ) ) {
 			return new WP_Error( 'not_found', 'Event not found.', array( 'status' => 404 ) );
 		}
 

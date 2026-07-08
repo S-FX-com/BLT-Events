@@ -76,8 +76,8 @@ class BLT_Events_REST_Registrations {
 
 	public static function get_event_registrations( $request ) {
 		$event_id = $request->get_param( 'event_id' );
-		$page     = $request->get_param( 'page' );
-		$per_page = min( $request->get_param( 'per_page' ), 100 );
+		$page     = max( 1, (int) $request->get_param( 'page' ) );
+		$per_page = max( 1, min( (int) $request->get_param( 'per_page' ), 100 ) );
 		$status   = $request->get_param( 'status' );
 
 		$reg_db = new BLT_Events_Registrations_DB();
@@ -163,7 +163,7 @@ class BLT_Events_REST_Registrations {
 		$event_id = $request->get_param( 'event_id' );
 		$event    = get_post( $event_id );
 
-		if ( ! $event || $event->post_type !== 'event' ) {
+		if ( ! $event || $event->post_type !== 'event' || ! is_post_publicly_viewable( $event ) ) {
 			return new WP_Error( 'not_found', 'Event not found.', array( 'status' => 404 ) );
 		}
 

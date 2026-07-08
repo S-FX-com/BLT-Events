@@ -149,9 +149,9 @@ class BLT_Events_Event_Metabox {
 				<tbody>
 					<?php foreach ( $ticket_types as $i => $ticket ) : ?>
 					<tr class="blt-ticket-row">
-						<td><input type="text" name="ticket_types[<?php echo $i; ?>][name]" value="<?php echo esc_attr( $ticket['name'] ?? '' ); ?>" class="widefat" required /></td>
-						<td><input type="number" name="ticket_types[<?php echo $i; ?>][price]" value="<?php echo esc_attr( $ticket['price'] ?? '0' ); ?>" step="0.01" min="0" class="widefat" /></td>
-						<td><input type="text" name="ticket_types[<?php echo $i; ?>][description]" value="<?php echo esc_attr( $ticket['description'] ?? '' ); ?>" class="widefat" /></td>
+						<td><input type="text" name="ticket_types[<?php echo (int) $i; ?>][name]" value="<?php echo esc_attr( $ticket['name'] ?? '' ); ?>" class="widefat" required /></td>
+						<td><input type="number" name="ticket_types[<?php echo (int) $i; ?>][price]" value="<?php echo esc_attr( $ticket['price'] ?? '0' ); ?>" step="0.01" min="0" class="widefat" /></td>
+						<td><input type="text" name="ticket_types[<?php echo (int) $i; ?>][description]" value="<?php echo esc_attr( $ticket['description'] ?? '' ); ?>" class="widefat" /></td>
 						<td><button type="button" class="button blt-remove-ticket">&times; Remove</button></td>
 					</tr>
 					<?php endforeach; ?>
@@ -303,14 +303,14 @@ class BLT_Events_Event_Metabox {
 		$prefix = BLT_EVENTS_PREFIX;
 
 		// Event details
-		update_post_meta( $post_id, $prefix . 'event_date', sanitize_text_field( $_POST['event_date'] ?? '' ) );
+		update_post_meta( $post_id, $prefix . 'event_date', sanitize_text_field( wp_unslash( $_POST['event_date'] ?? '' ) ) );
 		update_post_meta( $post_id, $prefix . 'event_end_date', sanitize_text_field( $_POST['event_end_date'] ?? '' ) );
 		update_post_meta( $post_id, $prefix . 'event_start_time', sanitize_text_field( $_POST['event_start_time'] ?? '' ) );
 		update_post_meta( $post_id, $prefix . 'event_end_time', sanitize_text_field( $_POST['event_end_time'] ?? '' ) );
 		update_post_meta( $post_id, $prefix . 'event_all_day', isset( $_POST['event_all_day'] ) ? '1' : '0' );
-		update_post_meta( $post_id, $prefix . 'event_type', sanitize_text_field( $_POST['event_type'] ?? 'in-person' ) );
-		update_post_meta( $post_id, $prefix . 'event_venue', sanitize_text_field( $_POST['event_venue'] ?? '' ) );
-		update_post_meta( $post_id, $prefix . 'event_location', sanitize_textarea_field( $_POST['event_location'] ?? '' ) );
+		update_post_meta( $post_id, $prefix . 'event_type', in_array( $_POST['event_type'] ?? '', array( 'in-person', 'online', 'hybrid' ), true ) ? $_POST['event_type'] : 'in-person' );
+		update_post_meta( $post_id, $prefix . 'event_venue', sanitize_text_field( wp_unslash( $_POST['event_venue'] ?? '' ) ) );
+		update_post_meta( $post_id, $prefix . 'event_location', sanitize_textarea_field( wp_unslash( $_POST['event_location'] ?? '' ) ) );
 		update_post_meta( $post_id, $prefix . 'event_online_url', esc_url_raw( $_POST['event_online_url'] ?? '' ) );
 
 		// Ticket types
@@ -319,9 +319,9 @@ class BLT_Events_Event_Metabox {
 			foreach ( $_POST['ticket_types'] as $ticket ) {
 				if ( ! empty( $ticket['name'] ) ) {
 					$ticket_types[] = array(
-						'name'        => sanitize_text_field( $ticket['name'] ),
+						'name'        => sanitize_text_field( wp_unslash( $ticket['name'] ) ),
 						'price'       => floatval( $ticket['price'] ?? 0 ),
-						'description' => sanitize_text_field( $ticket['description'] ?? '' ),
+						'description' => sanitize_text_field( wp_unslash( $ticket['description'] ?? '' ) ),
 					);
 				}
 			}
@@ -337,7 +337,7 @@ class BLT_Events_Event_Metabox {
 		$group_discount = array(
 			'enabled'       => ! empty( $_POST['group_discount_enabled'] ),
 			'min_attendees' => absint( $_POST['group_discount_min'] ?? 5 ),
-			'type'          => sanitize_text_field( $_POST['group_discount_type'] ?? 'percentage' ),
+			'type'          => in_array( $_POST['group_discount_type'] ?? '', array( 'percentage', 'flat' ), true ) ? $_POST['group_discount_type'] : 'percentage',
 			'amount'        => floatval( $_POST['group_discount_amount'] ?? 10 ),
 		);
 		update_post_meta( $post_id, $prefix . 'group_discount', wp_json_encode( $group_discount ) );

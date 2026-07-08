@@ -53,20 +53,31 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 
 	public function prepare_items() {
+		global $wpdb;
+
+		$this->process_bulk_action();
+
 		$per_page     = 20;
 		$current_page = $this->get_pagenum();
 		$orderby      = sanitize_key( $_GET['orderby'] ?? 'created_at' );
 		$order        = ( isset( $_GET['order'] ) && strtoupper( $_GET['order'] ) === 'ASC' ) ? 'ASC' : 'DESC';
+
+		// Only allow ordering by real, sortable columns.
+		$sortable_keys = array_keys( $this->get_sortable_columns() );
+		if ( ! in_array( $orderby, $sortable_keys, true ) ) {
+			$orderby = 'created_at';
+		}
 
 		$where = array();
 		if ( ! empty( $_GET['event_id'] ) ) {
 			$where[] = array( 'column' => 'event_id', 'value' => absint( $_GET['event_id'] ) );
 		}
 		if ( ! empty( $_GET['status'] ) ) {
-			$where[] = array( 'column' => 'status', 'value' => sanitize_text_field( $_GET['status'] ) );
+			$where[] = array( 'column' => 'status', 'value' => sanitize_text_field( wp_unslash( $_GET['status'] ) ) );
 		}
 		if ( ! empty( $_GET['s'] ) ) {
-			$where[] = array( 'column' => 'customer_email', 'value' => '%' . sanitize_text_field( $_GET['s'] ) . '%', 'compare' => 'LIKE' );
+			$term    = sanitize_text_field( wp_unslash( $_GET['s'] ) );
+			$where[] = array( 'column' => 'customer_email', 'value' => '%' . $wpdb->esc_like( $term ) . '%', 'compare' => 'LIKE' );
 		}
 
 		$total_items = $this->reg_db->count( $where );
@@ -128,7 +139,11 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 
 	public function column_created_at( $item ) {
-		return esc_html( date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $item->created_at ) ) );
+		$timestamp = strtotime( $item->created_at );
+		if ( ! $timestamp ) {
+			return '—';
+		}
+		return esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $timestamp ) );
 	}
 
 	protected function extra_tablenav( $which ) {
@@ -136,16 +151,23 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			return;
 		}
 
-		$events = get_posts( array( 'post_type' => 'event', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC' ) );
+		$events = get_posts( array(
+			'post_type'      => 'event',
+			'posts_per_page' => 500,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		) );
 		$current_event  = absint( $_GET['event_id'] ?? 0 );
 		$current_status = sanitize_text_field( $_GET['status'] ?? '' );
 		?>
 		<div class="alignleft actions">
 			<select name="event_id">
 				<option value="">All Events</option>
-				<?php foreach ( $events as $ev ) : ?>
-					<option value="<?php echo esc_attr( $ev->ID ); ?>" <?php selected( $current_event, $ev->ID ); ?>>
-						<?php echo esc_html( $ev->post_title ); ?>
+				<?php foreach ( $events as $ev_id ) : ?>
+					<option value="<?php echo esc_attr( $ev_id ); ?>" <?php selected( $current_event, $ev_id ); ?>>
+						<?php echo esc_html( get_the_title( $ev_id ) ); ?>
 					</option>
 				<?php endforeach; ?>
 			</select>
@@ -165,6 +187,26 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			'confirm' => 'Confirm',
 			'cancel'  => 'Cancel',
 		);
+	}
+
+	private function process_bulk_action() {
+		$action = $this->current_action();
+		if ( ! in_array( $action, array( 'confirm', 'cancel' ), true ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		check_admin_referer( 'bulk-' . $this->_args['plural'] );
+
+		$ids = array_map( 'absint', (array) ( $_REQUEST['registration_ids'] ?? array() ) );
+		$new_status = $action === 'confirm' ? 'confirmed' : 'cancelled';
+
+		foreach ( array_filter( $ids ) as $id ) {
+			BLT_Events_Registrations::update_status( $id, $new_status );
+		}
 	}
 }
 
@@ -215,7 +257,7 @@ class BLT_Events_Registrations_List {
 			'where' => $where,
 		) );
 
-		$filename = 'registrations-' . ( $event_id ? $event_id . '-' : '' ) . date( 'Y-m-d' ) . '.csv';
+		$filename = 'registrations-' . ( $event_id ? $event_id . '-' : '' ) . wp_date( 'Y-m-d' ) . '.csv';
 
 		header( 'Content-Type: text/csv; charset=UTF-8' );
 		header( 'Content-Disposition: attachment; filename=' . $filename );
@@ -224,9 +266,15 @@ class BLT_Events_Registrations_List {
 
 		fputcsv( $output, array( 'ID', 'Event', 'Name', 'Email', 'Phone', 'Attendees', 'Total', 'Paid', 'Provider', 'Status', 'Date' ) );
 
+		// Prime post caches once so event titles don't trigger a query per row.
+		$event_ids = array_unique( wp_list_pluck( $registrations, 'event_id' ) );
+		if ( $event_ids ) {
+			_prime_post_caches( $event_ids, false, false );
+		}
+
 		foreach ( $registrations as $reg ) {
 			$event = get_post( $reg->event_id );
-			fputcsv( $output, array(
+			fputcsv( $output, array_map( array( __CLASS__, 'escape_csv_field' ), array(
 				$reg->id,
 				$event ? $event->post_title : $reg->event_id,
 				$reg->customer_name,
@@ -238,10 +286,25 @@ class BLT_Events_Registrations_List {
 				$reg->payment_provider,
 				$reg->status,
 				$reg->created_at,
-			) );
+			) ) );
 		}
 
 		fclose( $output );
 		exit;
+	}
+
+	/**
+	 * Neutralize spreadsheet formula injection: registrant-supplied values
+	 * starting with =, +, -, @, tab, or CR would otherwise execute as
+	 * formulas when the export is opened in Excel/LibreOffice.
+	 */
+	public static function escape_csv_field( $value ) {
+		$value = (string) $value;
+
+		if ( $value !== '' && strpbrk( $value[0], "=+-@\t\r" ) !== false ) {
+			$value = "'" . $value;
+		}
+
+		return $value;
 	}
 }

@@ -28,7 +28,18 @@
 			}
 		});
 
-		totalPrice = total;
+		// Apply coupon discount to the displayed total (the server
+		// recomputes the authoritative amount at checkout).
+		if (appliedCoupon) {
+			var amount = parseFloat(appliedCoupon.amount) || 0;
+			var discount =
+				appliedCoupon.type === "percentage"
+					? total * (amount / 100)
+					: amount;
+			total = Math.max(0, total - discount);
+		}
+
+		totalPrice = Math.round(total * 100) / 100;
 
 		// Update total display
 		$(".blt-registration-form .blt-total-amount").text(
@@ -93,6 +104,7 @@
 						.addClass("blt-msg-error")
 						.show();
 				}
+				recalculateTotal();
 			},
 		});
 	});

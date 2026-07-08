@@ -106,11 +106,23 @@ class BLT_Events_Coupons {
 	 * @param float $amount_saved    The discount amount applied.
 	 */
 	public static function record_usage( $coupon_id, $registration_id, $amount_saved ) {
+		global $wpdb;
 		$prefix = '_blt_';
 
-		// Increment total uses
-		$total_uses = (int) get_post_meta( $coupon_id, $prefix . 'total_uses', true );
-		update_post_meta( $coupon_id, $prefix . 'total_uses', $total_uses + 1 );
+		// Increment total uses atomically so concurrent registrations
+		// cannot lose updates.
+		$updated = $wpdb->query( $wpdb->prepare(
+			"UPDATE {$wpdb->postmeta} SET meta_value = meta_value + 1 WHERE post_id = %d AND meta_key = %s",
+			$coupon_id,
+			$prefix . 'total_uses'
+		) );
+
+		if ( ! $updated ) {
+			// Meta row doesn't exist yet.
+			add_post_meta( $coupon_id, $prefix . 'total_uses', 1, true );
+		}
+
+		wp_cache_delete( $coupon_id, 'post_meta' );
 
 		// Update total savings
 		$total_savings = (float) get_post_meta( $coupon_id, $prefix . 'total_savings', true );

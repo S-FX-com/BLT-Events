@@ -24,13 +24,21 @@ class BLT_Events_Calendar_Shortcode {
 			'past'     => 'no',
 		), $atts );
 
+		// Clamp limit so shortcode input can't trigger an unbounded query.
+		$limit = intval( $atts['limit'] );
+		if ( $limit < 1 || $limit > 100 ) {
+			$limit = 12;
+		}
+
 		$args = array(
 			'post_type'      => 'event',
 			'post_status'    => 'publish',
-			'posts_per_page' => intval( $atts['limit'] ),
+			'posts_per_page' => $limit,
 			'meta_key'       => '_blt_event_date',
+			'meta_type'      => 'DATE',
 			'orderby'        => 'meta_value',
 			'order'          => 'ASC',
+			'no_found_rows'  => true,
 		);
 
 		// Filter out past events by default
@@ -89,7 +97,7 @@ class BLT_Events_Calendar_Shortcode {
 				$time_display = '';
 				if ( $all_day === '1' ) {
 					$time_display = 'All Day';
-				} elseif ( $start_time ) {
+				} elseif ( $start_time && $event_date ) {
 					$time_display = date_i18n( get_option( 'time_format', 'g:i A' ), strtotime( $event_date . ' ' . $start_time ) );
 					if ( $end_time ) {
 						$time_display .= ' - ' . date_i18n( get_option( 'time_format', 'g:i A' ), strtotime( $event_date . ' ' . $end_time ) );

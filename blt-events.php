@@ -3,7 +3,7 @@
  * Plugin Name: BLT Events
  * Plugin URI:  https://s-fx.com
  * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
- * Version:     2.0.0
+ * Version:     2.1.0
  * Author:      S-FX.COM
  * Author URI:  https://s-fx.com
  * License:     GPL2
@@ -15,13 +15,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.0.0' );
+define( 'BLT_EVENTS_VERSION', '2.1.0' );
 define( 'BLT_EVENTS_DB_VERSION', '1.0' );
 define( 'BLT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_FILE', __FILE__ );
 define( 'BLT_EVENTS_PREFIX', '_blt_' );
 define( 'BLT_EVENTS_TEXT_DOMAIN', 'blt-events' );
+
+// ---------- Update checker ----------
+// Serves updates from GitHub releases (zip asset built by .github/workflows/release.yml).
+require_once BLT_EVENTS_PLUGIN_DIR . 'includes/lib/plugin-update-checker/plugin-update-checker.php';
+
+$blt_events_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+	'https://github.com/S-FX-com/BLT-Events/',
+	__FILE__,
+	'blt-events'
+);
+$blt_events_update_checker->getVcsApi()->enableReleaseAssets();
 
 // ---------- Autoloader ----------
 spl_autoload_register( function ( $class ) {
@@ -53,6 +64,7 @@ spl_autoload_register( function ( $class ) {
 		'payment-provider'       => 'includes/payment/class-payment-provider.php',
 		'stripe-handler'         => 'includes/payment/class-stripe-handler.php',
 		'surecart-integration'   => 'includes/payment/class-surecart-integration.php',
+		'fluentcart-integration' => 'includes/payment/class-fluentcart-integration.php',
 		// Admin
 		'admin'                  => 'includes/admin/class-admin.php',
 		'admin-settings'         => 'includes/admin/class-admin-settings.php',
@@ -99,6 +111,7 @@ function blt_events_init() {
 	// Payment
 	BLT_Events_Stripe_Handler::init();
 	BLT_Events_SureCart_Integration::init();
+	BLT_Events_FluentCart_Integration::init();
 
 	// Admin
 	if ( is_admin() ) {

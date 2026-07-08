@@ -37,12 +37,20 @@ class BLT_Events_Registrations {
 	public static function ajax_register() {
 		check_ajax_referer( 'blt_registration_nonce', 'nonce' );
 
+		if ( ! self::check_rate_limit() ) {
+			wp_send_json_error( array( 'message' => 'Too many registration attempts. Please try again in a few minutes.' ) );
+		}
+
 		$event_id = absint( $_POST['event_id'] ?? 0 );
-		if ( ! $event_id || get_post_type( $event_id ) !== 'event' ) {
+		if ( ! $event_id || get_post_type( $event_id ) !== 'event' || get_post_status( $event_id ) !== 'publish' ) {
 			wp_send_json_error( array( 'message' => 'Invalid event.' ) );
 		}
 
-		$result = self::process_registration( $event_id, $_POST );
+		if ( get_post_meta( $event_id, '_blt_registration_open', true ) !== '1' ) {
+			wp_send_json_error( array( 'message' => 'Registration is closed for this event.' ) );
+		}
+
+		$result = self::process_registration( $event_id, wp_unslash( $_POST ) );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
@@ -53,6 +61,39 @@ class BLT_Events_Registrations {
 			'registration_id' => $result['registration_id'],
 			'group_id'        => $result['group_id'],
 		) );
+	}
+
+	/**
+	 * Simple per-IP rate limit for the public registration endpoint,
+	 * limiting database-flooding and email spam. The nonce alone does not
+	 * throttle, since it is rendered to every visitor.
+	 *
+	 * @return bool True when the request is within the limit.
+	 */
+	private static function check_rate_limit() {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		if ( ! $ip ) {
+			return true;
+		}
+
+		/**
+		 * Filter the maximum registrations allowed per IP per 10 minutes.
+		 * Return 0 to disable rate limiting.
+		 */
+		$max = (int) apply_filters( 'blt_events_registration_rate_limit', 10 );
+		if ( $max <= 0 ) {
+			return true;
+		}
+
+		$key   = 'blt_reg_rl_' . md5( $ip );
+		$count = (int) get_transient( $key );
+
+		if ( $count >= $max ) {
+			return false;
+		}
+
+		set_transient( $key, $count + 1, 10 * MINUTE_IN_SECONDS );
+		return true;
 	}
 
 	/**
@@ -76,14 +117,24 @@ class BLT_Events_Registrations {
 			return $validated;
 		}
 
-		// Check capacity
+		// Check capacity (under an advisory lock so concurrent submissions
+		// cannot oversell the last spots).
+		global $wpdb;
 		$capacity = (int) get_post_meta( $event_id, '_blt_capacity', true );
 		$ticket_data = self::parse_ticket_selections( $event_id, $data );
 		$total_attendees = $ticket_data['total_quantity'];
 
+		$lock_name = 'blt_events_reg_' . $event_id;
+		$locked    = false;
+
 		if ( $capacity > 0 ) {
+			$locked = (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 5)', $lock_name ) );
+
 			$current_count = self::$reg_db->get_event_registration_count( $event_id );
 			if ( ( $current_count + $total_attendees ) > $capacity ) {
+				if ( $locked ) {
+					$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+				}
 				return new WP_Error( 'capacity_exceeded', 'Sorry, there are not enough spots available.' );
 			}
 		}
@@ -91,6 +142,9 @@ class BLT_Events_Registrations {
 		// Duplicate check
 		$email = $validated['email'] ?? '';
 		if ( $email && self::$reg_db->email_registered_for_event( $email, $event_id ) ) {
+			if ( $locked ) {
+				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+			}
 			return new WP_Error( 'duplicate_registration', 'This email is already registered for this event.' );
 		}
 
@@ -134,6 +188,10 @@ class BLT_Events_Registrations {
 
 		$registration_id = self::$reg_db->insert( $reg_data );
 
+		if ( $locked ) {
+			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+		}
+
 		if ( ! $registration_id ) {
 			return new WP_Error( 'db_error', 'Failed to create registration.' );
 		}
@@ -157,6 +215,20 @@ class BLT_Events_Registrations {
 		do_action( 'blt_registration_created', $registration_id, $result );
 
 		return $result;
+	}
+
+	/**
+	 * Calculate the authoritative order total for an event from submitted
+	 * form data (ticket quantities + coupon code). Used by payment
+	 * providers so charge amounts are never trusted from the client.
+	 *
+	 * @param int   $event_id The event post ID.
+	 * @param array $data     Submitted form data (unslashed).
+	 * @return array Pricing array: subtotal, discount, total, coupon_id, coupon_data.
+	 */
+	public static function calculate_order_total( $event_id, $data ) {
+		$ticket_data = self::parse_ticket_selections( $event_id, $data );
+		return self::calculate_total( $event_id, $ticket_data, $data );
 	}
 
 	/**
@@ -264,15 +336,32 @@ class BLT_Events_Registrations {
 			'custom_fields'  => wp_json_encode( $primary_validated ),
 		);
 
-		// Additional attendees from form data
+		// Server-side prices per ticket type name, so attendee rows never
+		// store client-supplied prices.
+		$ticket_prices = array();
+		foreach ( $ticket_data['selections'] as $selection ) {
+			$ticket_prices[ $selection['name'] ] = $selection['price'];
+		}
+
+		// Additional attendees from form data (bounded by the validated
+		// total quantity so one request cannot flood the attendees table).
 		if ( isset( $data['attendees'] ) && is_array( $data['attendees'] ) ) {
-			foreach ( $data['attendees'] as $idx => $att ) {
+			$max_additional = max( 0, (int) $ticket_data['total_quantity'] - 1 );
+			$additional     = array_slice( array_values( $data['attendees'] ), 0, $max_additional );
+
+			foreach ( $additional as $att ) {
+				if ( ! is_array( $att ) ) {
+					continue;
+				}
+
+				$ticket_type = sanitize_text_field( $att['ticket_type'] ?? '' );
+
 				$attendees[] = array(
 					'attendee_name'  => sanitize_text_field( $att['name'] ?? '' ),
 					'attendee_email' => sanitize_email( $att['email'] ?? '' ),
 					'attendee_phone' => BLT_Events_Helpers::sanitize_phone( $att['phone'] ?? '' ),
-					'ticket_type'    => sanitize_text_field( $att['ticket_type'] ?? '' ),
-					'ticket_price'   => floatval( $att['ticket_price'] ?? 0 ),
+					'ticket_type'    => $ticket_type,
+					'ticket_price'   => isset( $ticket_prices[ $ticket_type ] ) ? (float) $ticket_prices[ $ticket_type ] : 0,
 					'custom_fields'  => isset( $att['custom_fields'] ) ? wp_json_encode( $att['custom_fields'] ) : null,
 				);
 			}
@@ -304,7 +393,7 @@ class BLT_Events_Registrations {
 			'code'   => $code,
 			'type'   => $type,
 			'amount' => $amount,
-			'label'  => $type === 'percentage' ? $amount . '% off' : '$' . number_format( $amount, 2 ) . ' off',
+			'label'  => $type === 'percentage' ? $amount . '% off' : '$' . number_format( (float) $amount, 2 ) . ' off',
 		) );
 	}
 

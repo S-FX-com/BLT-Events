@@ -59,6 +59,10 @@ class BLT_Events_Registration_Shortcode {
 			return self::render_surecart_form( $event_id, $event );
 		}
 
+		if ( $provider === 'fluentcart' ) {
+			return self::render_fluentcart_form( $event_id, $event );
+		}
+
 		return self::render_standard_form( $event_id, $event, $provider );
 	}
 
@@ -117,7 +121,7 @@ class BLT_Events_Registration_Shortcode {
 						<span class="blt-ticket-price"><?php echo (float) $ticket['price'] > 0 ? esc_html( BLT_Events_Helpers::format_price( $ticket['price'] ) ) : 'Free'; ?></span>
 						<div class="blt-quantity-controls">
 							<button type="button" class="blt-qty-btn minus-btn">&minus;</button>
-							<input type="number" name="ticket_quantity_<?php echo $i; ?>" class="blt-ticket-quantity" value="0" min="0" data-price="<?php echo esc_attr( $ticket['price'] ); ?>" data-index="<?php echo $i; ?>" />
+							<input type="number" name="ticket_quantity_<?php echo (int) $i; ?>" class="blt-ticket-quantity" value="0" min="0" data-price="<?php echo esc_attr( $ticket['price'] ); ?>" data-index="<?php echo (int) $i; ?>" />
 							<button type="button" class="blt-qty-btn plus-btn">+</button>
 						</div>
 					</div>
@@ -243,6 +247,70 @@ class BLT_Events_Registration_Shortcode {
 				</div>
 
 				<div id="blt-sc-message" class="blt-checkout-message" style="display:none;"></div>
+			<?php endif; ?>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Render the FluentCart checkout form (ticket selection + redirect
+	 * to FluentCart instant checkout).
+	 */
+	private static function render_fluentcart_form( $event_id, $event ) {
+		$ticket_types_raw = get_post_meta( $event_id, '_blt_ticket_types', true );
+		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
+		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
+
+		$variation_ids = get_post_meta( $event_id, '_blt_fc_variation_ids', true );
+		$variation_ids = is_array( $variation_ids ) ? $variation_ids : array();
+
+		// Check whether every ticket type has a synced FluentCart variation.
+		$all_synced = ! empty( $ticket_types );
+		foreach ( $ticket_types as $i => $t ) {
+			if ( empty( $variation_ids[ $i ] ) ) {
+				$all_synced = false;
+				break;
+			}
+		}
+
+		wp_enqueue_script( 'blt-events-fluentcart-checkout' );
+
+		ob_start();
+		?>
+		<div class="blt-fluentcart-form" data-event-id="<?php echo esc_attr( $event_id ); ?>">
+			<?php if ( ! $all_synced || ! BLT_Events_FluentCart_Integration::is_configured() ) : ?>
+				<div class="blt-sync-notice">
+					<p><?php esc_html_e( 'Tickets for this event are being set up. Please check back shortly.', 'blt-events' ); ?></p>
+				</div>
+			<?php else : ?>
+				<div class="blt-ticket-selection">
+					<h3><?php esc_html_e( 'Select Tickets', 'blt-events' ); ?></h3>
+					<?php foreach ( $ticket_types as $i => $ticket ) : ?>
+						<?php if ( empty( $variation_ids[ $i ] ) ) continue; ?>
+						<label class="blt-ticket-type">
+							<input type="radio" name="blt-fc-ticket"
+								value="<?php echo esc_attr( $variation_ids[ $i ] ); ?>"
+								data-price="<?php echo esc_attr( isset( $ticket['price'] ) ? (float) $ticket['price'] : 0 ); ?>" />
+							<span class="blt-ticket-name"><?php echo esc_html( isset( $ticket['name'] ) ? $ticket['name'] : __( 'Ticket', 'blt-events' ) ); ?></span>
+							<span class="blt-ticket-price"><?php echo isset( $ticket['price'] ) && (float) $ticket['price'] > 0 ? esc_html( BLT_Events_Helpers::format_price( $ticket['price'] ) ) : esc_html__( 'Free', 'blt-events' ); ?></span>
+						</label>
+					<?php endforeach; ?>
+
+					<div class="blt-quantity-controls">
+						<label for="blt-fc-quantity-<?php echo esc_attr( $event_id ); ?>"><?php esc_html_e( 'Quantity', 'blt-events' ); ?></label>
+						<input type="number" id="blt-fc-quantity-<?php echo esc_attr( $event_id ); ?>" class="blt-fc-quantity" value="1" min="1" />
+					</div>
+
+					<div class="blt-total-amount"><?php echo esc_html( BLT_Events_Helpers::format_price( 0, true ) ); ?></div>
+				</div>
+
+				<div class="blt-checkout-actions">
+					<button type="button" class="blt-fc-checkout-btn blt-submit-btn" disabled>
+						<?php esc_html_e( 'Proceed to Checkout', 'blt-events' ); ?>
+					</button>
+					<p class="blt-checkout-note"><?php esc_html_e( 'You will be redirected to the secure checkout page.', 'blt-events' ); ?></p>
+				</div>
 			<?php endif; ?>
 		</div>
 		<?php

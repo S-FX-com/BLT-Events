@@ -130,12 +130,13 @@ class BLT_Events_Fieldsets {
 
 		foreach ( $fields as $field ) {
 			$key   = $field['key'];
-			$value = isset( $posted_data[ $key ] ) ? trim( $posted_data[ $key ] ) : '';
+			$raw   = $posted_data[ $key ] ?? '';
+			$value = is_scalar( $raw ) ? trim( (string) $raw ) : '';
 
 			// Handle "other" select values
 			if ( $field['type'] === 'select' && ! empty( $field['allow_other'] ) && $value === '__other__' ) {
-				$other_key = $key . '__other';
-				$value = isset( $posted_data[ $other_key ] ) ? trim( $posted_data[ $other_key ] ) : '';
+				$other_raw = $posted_data[ $key . '__other' ] ?? '';
+				$value     = is_scalar( $other_raw ) ? trim( (string) $other_raw ) : '';
 			}
 
 			// Required check

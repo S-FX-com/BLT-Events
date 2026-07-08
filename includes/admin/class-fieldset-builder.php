@@ -125,7 +125,7 @@ class BLT_Events_Fieldset_Builder {
 
 					<div id="blt-fields-sortable" class="blt-fields-list">
 						<?php foreach ( $fields as $i => $field ) : ?>
-							<div class="blt-field-item" data-index="<?php echo $i; ?>">
+							<div class="blt-field-item" data-index="<?php echo (int) $i; ?>">
 								<div class="blt-field-header">
 									<span class="blt-field-drag dashicons dashicons-move"></span>
 									<span class="blt-field-label"><?php echo esc_html( $field['label'] ); ?></span>
@@ -134,26 +134,26 @@ class BLT_Events_Fieldset_Builder {
 									<button type="button" class="blt-field-remove dashicons dashicons-trash"></button>
 								</div>
 								<div class="blt-field-settings" style="display:none;">
-									<input type="hidden" name="fields[<?php echo $i; ?>][key]" value="<?php echo esc_attr( $field['key'] ); ?>" />
-									<label>Label: <input type="text" name="fields[<?php echo $i; ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" /></label>
+									<input type="hidden" name="fields[<?php echo (int) $i; ?>][key]" value="<?php echo esc_attr( $field['key'] ); ?>" />
+									<label>Label: <input type="text" name="fields[<?php echo (int) $i; ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" /></label>
 									<label>Type:
-										<select name="fields[<?php echo $i; ?>][type]">
+										<select name="fields[<?php echo (int) $i; ?>][type]">
 											<?php foreach ( array( 'text', 'email', 'tel', 'url', 'number', 'date', 'select', 'textarea', 'checkbox' ) as $t ) : ?>
-												<option value="<?php echo $t; ?>" <?php selected( $field['type'], $t ); ?>><?php echo ucfirst( $t ); ?></option>
+												<option value="<?php echo esc_attr( $t ); ?>" <?php selected( $field['type'], $t ); ?>><?php echo esc_html( ucfirst( $t ) ); ?></option>
 											<?php endforeach; ?>
 										</select>
 									</label>
 									<label>Width:
-										<select name="fields[<?php echo $i; ?>][width]">
+										<select name="fields[<?php echo (int) $i; ?>][width]">
 											<option value="full" <?php selected( $field['width'] ?? 'full', 'full' ); ?>>Full</option>
 											<option value="half" <?php selected( $field['width'] ?? '', 'half' ); ?>>Half</option>
 											<option value="third" <?php selected( $field['width'] ?? '', 'third' ); ?>>Third</option>
 										</select>
 									</label>
-									<label><input type="checkbox" name="fields[<?php echo $i; ?>][required]" value="1" <?php checked( ! empty( $field['required'] ) ); ?> /> Required</label>
-									<label>Placeholder: <input type="text" name="fields[<?php echo $i; ?>][placeholder]" value="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>" /></label>
-									<label>Options (comma-separated): <input type="text" name="fields[<?php echo $i; ?>][options_str]" value="<?php echo esc_attr( implode( ', ', $field['options'] ?? array() ) ); ?>" /></label>
-									<label><input type="checkbox" name="fields[<?php echo $i; ?>][allow_other]" value="1" <?php checked( ! empty( $field['allow_other'] ) ); ?> /> Allow "Other" option</label>
+									<label><input type="checkbox" name="fields[<?php echo (int) $i; ?>][required]" value="1" <?php checked( ! empty( $field['required'] ) ); ?> /> Required</label>
+									<label>Placeholder: <input type="text" name="fields[<?php echo (int) $i; ?>][placeholder]" value="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>" /></label>
+									<label>Options (comma-separated): <input type="text" name="fields[<?php echo (int) $i; ?>][options_str]" value="<?php echo esc_attr( implode( ', ', $field['options'] ?? array() ) ); ?>" /></label>
+									<label><input type="checkbox" name="fields[<?php echo (int) $i; ?>][allow_other]" value="1" <?php checked( ! empty( $field['allow_other'] ) ); ?> /> Allow "Other" option</label>
 								</div>
 							</div>
 						<?php endforeach; ?>
