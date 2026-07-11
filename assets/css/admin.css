@@ -27,6 +27,43 @@
 	padding: 8px 10px;
 }
 
+/* --- Meeting Integrations --- */
+.blt-integration-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 1rem 0 0.25rem;
+}
+
+.blt-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.blt-badge-on {
+	background: #d1fae5;
+	color: #065f46;
+}
+
+.blt-badge-off {
+	background: #f3f4f6;
+	color: #6b7280;
+}
+
+.blt-redirect-uri {
+	display: inline-block;
+	padding: 4px 8px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	word-break: break-all;
+}
+
 /* --- Address Autocomplete --- */
 .blt-address-autocomplete {
 	position: relative;

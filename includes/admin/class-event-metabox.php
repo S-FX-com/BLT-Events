@@ -73,6 +73,13 @@ class BLT_Events_Event_Metabox {
 
 		$is_physical = in_array( $event_type, array( 'in-person', 'hybrid' ), true );
 		$is_online   = in_array( $event_type, array( 'online', 'hybrid' ), true );
+
+		$has_meetings        = class_exists( 'BLT_Events_Meeting_Providers' );
+		$connected_providers = $has_meetings ? BLT_Events_Meeting_Providers::connected() : array();
+		$meeting_auto        = get_post_meta( $post->ID, $prefix . 'meeting_auto', true ) === '1';
+		$meeting_provider    = get_post_meta( $post->ID, $prefix . 'meeting_provider', true );
+		$meeting_type        = get_post_meta( $post->ID, $prefix . 'meeting_type', true ) ?: 'meeting';
+		$meeting_room        = $has_meetings ? BLT_Events_Meeting_Providers::get_room( $post->ID ) : null;
 		?>
 		<table class="form-table blt-event-details">
 			<tr>
@@ -132,9 +139,62 @@ class BLT_Events_Event_Metabox {
 				<th><label for="event_online_url"><?php esc_html_e( 'Registration / Webinar Link', 'blt-events' ); ?></label></th>
 				<td>
 					<input type="url" id="event_online_url" name="event_online_url" value="<?php echo esc_attr( $event_online_url ); ?>" class="regular-text" placeholder="https://" />
-					<p class="description"><?php esc_html_e( 'The Zoom, Teams, webinar, or registration link attendees use to join the event online.', 'blt-events' ); ?></p>
+					<p class="description"><?php esc_html_e( 'The Zoom, Teams, webinar, or registration link attendees use to join the event online. Auto-created rooms fill this in for you.', 'blt-events' ); ?></p>
 				</td>
 			</tr>
+			<?php if ( empty( $connected_providers ) ) : ?>
+				<tr class="blt-field-online" <?php echo $is_online ? '' : 'style="display:none;"'; ?>>
+					<th><?php esc_html_e( 'Meeting Room', 'blt-events' ); ?></th>
+					<td>
+						<p class="description">
+							<?php
+							printf(
+								/* translators: %s: settings page URL. */
+								wp_kses( __( 'Connect Zoom, Microsoft Teams, GoTo, or ClickMeeting under <a href="%s">Settings</a> to auto-create a meeting room here.', 'blt-events' ), array( 'a' => array( 'href' => array() ) ) ),
+								esc_url( admin_url( 'edit.php?post_type=event&page=blt-events-settings#integrations' ) )
+							);
+							?>
+						</p>
+					</td>
+				</tr>
+			<?php else : ?>
+				<tr class="blt-field-online" <?php echo $is_online ? '' : 'style="display:none;"'; ?>>
+					<th><?php esc_html_e( 'Auto-create Room', 'blt-events' ); ?></th>
+					<td>
+						<label><input type="checkbox" id="blt-meeting-auto" name="meeting_auto_create" value="1" <?php checked( $meeting_auto ); ?> /> <?php esc_html_e( 'Automatically create an online meeting room for this event', 'blt-events' ); ?></label>
+					</td>
+				</tr>
+				<tr class="blt-field-online blt-meeting-options" <?php echo $is_online && $meeting_auto ? '' : 'style="display:none;"'; ?>>
+					<th><label for="meeting_provider"><?php esc_html_e( 'Provider', 'blt-events' ); ?></label></th>
+					<td>
+						<select id="meeting_provider" name="meeting_provider">
+							<?php foreach ( $connected_providers as $p ) : ?>
+								<option value="<?php echo esc_attr( $p->slug() ); ?>" data-webinars="<?php echo $p->supports_webinars() ? '1' : '0'; ?>" <?php selected( $meeting_provider, $p->slug() ); ?>>
+									<?php echo esc_html( $p->name() ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+					</td>
+				</tr>
+				<tr class="blt-field-online blt-meeting-options blt-meeting-type-row" <?php echo $is_online && $meeting_auto ? '' : 'style="display:none;"'; ?>>
+					<th><label for="meeting_type"><?php esc_html_e( 'Room Type', 'blt-events' ); ?></label></th>
+					<td>
+						<select id="meeting_type" name="meeting_type">
+							<option value="meeting" <?php selected( $meeting_type, 'meeting' ); ?>><?php esc_html_e( 'Meeting', 'blt-events' ); ?></option>
+							<option value="webinar" <?php selected( $meeting_type, 'webinar' ); ?>><?php esc_html_e( 'Webinar', 'blt-events' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<?php if ( $meeting_room && ! empty( $meeting_room['join_url'] ) ) : ?>
+					<tr class="blt-field-online blt-meeting-options" <?php echo $is_online && $meeting_auto ? '' : 'style="display:none;"'; ?>>
+						<th><?php esc_html_e( 'Created Room', 'blt-events' ); ?></th>
+						<td>
+							<a href="<?php echo esc_url( $meeting_room['join_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $meeting_room['join_url'] ); ?></a>
+							<p><label><input type="checkbox" name="meeting_recreate" value="1" /> <?php esc_html_e( 'Recreate the room on save (generates a new room and link)', 'blt-events' ); ?></label></p>
+						</td>
+					</tr>
+				<?php endif; ?>
+			<?php endif; ?>
 		</table>
 		<?php
 	}
@@ -391,5 +451,15 @@ class BLT_Events_Event_Metabox {
 			'amount'        => $gd_amount,
 		);
 		update_post_meta( $post_id, $prefix . 'group_discount', wp_json_encode( $group_discount ) );
+
+		// Auto-create an online meeting room (Zoom/Teams/GoTo/ClickMeeting) and
+		// fill the join link in. Runs after all date/time/location meta is saved
+		// so the room reflects the event's current schedule.
+		if ( class_exists( 'BLT_Events_Meeting_Providers' ) ) {
+			$join_url = BLT_Events_Meeting_Providers::maybe_create_room_on_save( $post_id, wp_unslash( $_POST ), $event_type );
+			if ( $join_url ) {
+				update_post_meta( $post_id, $prefix . 'event_online_url', esc_url_raw( $join_url ) );
+			}
+		}
 	}
 }

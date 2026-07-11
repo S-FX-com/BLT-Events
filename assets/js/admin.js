@@ -38,15 +38,40 @@ jQuery(document).ready(function ($) {
 	// in-person → venue + address, online → registration/webinar link,
 	// hybrid → both.
 	var $eventType = $("#event_type");
+	var $meetingAuto = $("#blt-meeting-auto");
+	var $meetingProvider = $("#meeting_provider");
+
+	var isOnlineEvent = function () {
+		var type = $eventType.val();
+		return type === "online" || type === "hybrid";
+	};
+
+	// The meeting options (provider, room type, existing room) only apply to an
+	// online/hybrid event with auto-create enabled; the room-type row only
+	// applies to providers that distinguish webinars from meetings.
+	var updateMeetingOptions = function () {
+		var show = isOnlineEvent() && $meetingAuto.is(":checked");
+		$(".blt-meeting-options").toggle(show);
+		if (show) {
+			var supportsWebinars =
+				$meetingProvider.find("option:selected").data("webinars") == 1;
+			$(".blt-meeting-type-row").toggle(!!supportsWebinars);
+		}
+	};
+
 	if ($eventType.length) {
 		var toggleEventTypeFields = function () {
 			var type = $eventType.val();
 			$(".blt-field-physical").toggle(type === "in-person" || type === "hybrid");
 			$(".blt-field-online").toggle(type === "online" || type === "hybrid");
+			updateMeetingOptions();
 		};
 		toggleEventTypeFields();
 		$eventType.on("change", toggleEventTypeFields);
 	}
+
+	$meetingAuto.on("change", updateMeetingOptions);
+	$meetingProvider.on("change", updateMeetingOptions);
 
 	// All-day events don't need start/end times.
 	$('input[name="event_all_day"]').on("change", function () {
