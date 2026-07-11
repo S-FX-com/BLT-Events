@@ -91,6 +91,26 @@ class BLT_Events_Admin_Settings {
 				'sanitize_callback' => 'absint',
 			) );
 		}
+
+		// Meeting integration credentials (one option per provider field).
+		if ( class_exists( 'BLT_Events_Meeting_Providers' ) ) {
+			foreach ( BLT_Events_Meeting_Providers::all() as $provider ) {
+				foreach ( $provider->credential_fields() as $field ) {
+					$option_name = 'blt_events_' . $field['key'];
+					if ( ! empty( $field['secret'] ) ) {
+						register_setting( 'blt_events_settings', $option_name, array(
+							'sanitize_callback' => function ( $value ) use ( $option_name ) {
+								return self::sanitize_secret( $value, $option_name );
+							},
+						) );
+					} else {
+						register_setting( 'blt_events_settings', $option_name, array(
+							'sanitize_callback' => 'sanitize_text_field',
+						) );
+					}
+				}
+			}
+		}
 	}
 
 	public static function sanitize_payment_provider( $value ) {
@@ -133,6 +153,117 @@ class BLT_Events_Admin_Settings {
 				? esc_attr__( 'Saved — leave blank to keep current value', 'blt-events' )
 				: esc_attr__( 'Not set', 'blt-events' )
 		);
+	}
+
+	/**
+	 * Render the "Online Meeting Integrations" settings block: one card per
+	 * provider with its credentials, connection status, and (for OAuth
+	 * providers) a Connect/Disconnect control.
+	 */
+	private static function render_integrations_section() {
+		if ( ! class_exists( 'BLT_Events_Meeting_Providers' ) ) {
+			return;
+		}
+		?>
+		<tr><th colspan="2"><h2 class="title" id="integrations"><?php esc_html_e( 'Online Meeting Integrations', 'blt-events' ); ?></h2></th></tr>
+		<tr>
+			<td colspan="2">
+				<p class="description"><?php esc_html_e( 'Connect the platforms you use. Once a provider is connected, online and hybrid events can auto-create a meeting room from the event editor and drop the join link in automatically.', 'blt-events' ); ?></p>
+			</td>
+		</tr>
+		<?php
+		foreach ( BLT_Events_Meeting_Providers::all() as $provider ) {
+			$connected = $provider->is_connected();
+			?>
+			<tr>
+				<th colspan="2">
+					<h3 class="blt-integration-title">
+						<?php echo esc_html( $provider->name() ); ?>
+						<?php if ( $connected ) : ?>
+							<span class="blt-badge blt-badge-on"><?php esc_html_e( 'Connected', 'blt-events' ); ?></span>
+						<?php else : ?>
+							<span class="blt-badge blt-badge-off"><?php esc_html_e( 'Not connected', 'blt-events' ); ?></span>
+						<?php endif; ?>
+					</h3>
+				</th>
+			</tr>
+			<?php
+			foreach ( $provider->credential_fields() as $field ) {
+				self::render_integration_field( $field );
+			}
+
+			if ( $provider->is_oauth() ) {
+				self::render_oauth_controls( $provider );
+			}
+		}
+	}
+
+	/**
+	 * Render a single provider credential field row (text or secret).
+	 *
+	 * @param array $field
+	 */
+	private static function render_integration_field( $field ) {
+		$option_name = 'blt_events_' . $field['key'];
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $field['label'] ); ?></th>
+			<td>
+				<?php if ( ! empty( $field['secret'] ) ) : ?>
+					<?php self::render_secret_field( $option_name ); ?>
+				<?php else : ?>
+					<input type="text" name="<?php echo esc_attr( $option_name ); ?>" value="<?php echo esc_attr( get_option( $option_name, '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>" />
+				<?php endif; ?>
+				<?php if ( ! empty( $field['description'] ) ) : ?>
+					<p class="description"><?php echo esc_html( $field['description'] ); ?></p>
+				<?php endif; ?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Render the redirect URI and Connect/Disconnect control for an OAuth
+	 * provider.
+	 *
+	 * @param BLT_Events_Meeting_Provider $provider
+	 */
+	private static function render_oauth_controls( $provider ) {
+		$slug = $provider->slug();
+		?>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Redirect URI', 'blt-events' ); ?></th>
+			<td>
+				<code class="blt-redirect-uri"><?php echo esc_html( $provider->callback_url() ); ?></code>
+				<p class="description"><?php esc_html_e( 'Register this exact URL as an allowed redirect URI in the provider\'s developer console.', 'blt-events' ); ?></p>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Connection', 'blt-events' ); ?></th>
+			<td>
+				<?php if ( $provider->is_connected() ) : ?>
+					<?php
+					$disconnect = wp_nonce_url(
+						admin_url( 'admin-post.php?action=blt_events_meeting_disconnect&provider=' . $slug ),
+						'blt_events_meeting_disconnect_' . $slug
+					);
+					?>
+					<a href="<?php echo esc_url( $disconnect ); ?>" class="button"><?php esc_html_e( 'Disconnect', 'blt-events' ); ?></a>
+				<?php elseif ( $provider->is_configured() ) : ?>
+					<?php
+					$connect = wp_nonce_url(
+						admin_url( 'admin-post.php?action=blt_events_meeting_connect&provider=' . $slug ),
+						'blt_events_meeting_connect_' . $slug
+					);
+					?>
+					<a href="<?php echo esc_url( $connect ); ?>" class="button button-primary"><?php esc_html_e( 'Connect', 'blt-events' ); ?></a>
+					<p class="description"><?php esc_html_e( 'Save the client credentials first, then connect.', 'blt-events' ); ?></p>
+				<?php else : ?>
+					<p class="description"><?php esc_html_e( 'Enter and save the client credentials above to enable connecting.', 'blt-events' ); ?></p>
+				<?php endif; ?>
+			</td>
+		</tr>
+		<?php
 	}
 
 	public static function render_settings_page() {
@@ -220,6 +351,9 @@ class BLT_Events_Admin_Settings {
 							<p class="description"><?php echo wp_kses_post( sprintf( __( 'FluentCart runs on this site, so no API keys are needed. Event ticket types are synced to FluentCart products automatically when an event is saved, and checkout uses FluentCart\'s instant checkout. Install FluentCart from %s if it is not detected.', 'blt-events' ), '<a href="https://fluentcart.com" target="_blank" rel="noopener noreferrer">fluentcart.com</a>' ) ); ?></p>
 						</td>
 					</tr>
+
+					<!-- Online Meeting Integrations -->
+					<?php self::render_integrations_section(); ?>
 
 					<!-- Display Settings -->
 					<tr><th colspan="2"><h2 class="title"><?php esc_html_e( 'Display Settings', 'blt-events' ); ?></h2></th></tr>

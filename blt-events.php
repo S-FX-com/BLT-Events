@@ -65,6 +65,13 @@ spl_autoload_register( function ( $class ) {
 		'stripe-handler'         => 'includes/payment/class-stripe-handler.php',
 		'surecart-integration'   => 'includes/payment/class-surecart-integration.php',
 		'fluentcart-integration' => 'includes/payment/class-fluentcart-integration.php',
+		// Meeting integrations
+		'meeting-provider'       => 'includes/integrations/class-meeting-provider.php',
+		'meeting-providers'      => 'includes/integrations/class-meeting-providers.php',
+		'zoom-integration'       => 'includes/integrations/class-zoom-integration.php',
+		'teams-integration'      => 'includes/integrations/class-teams-integration.php',
+		'goto-integration'       => 'includes/integrations/class-goto-integration.php',
+		'clickmeeting-integration' => 'includes/integrations/class-clickmeeting-integration.php',
 		// Admin
 		'admin'                  => 'includes/admin/class-admin.php',
 		'admin-settings'         => 'includes/admin/class-admin-settings.php',
@@ -118,6 +125,9 @@ function blt_events_init() {
 	BLT_Events_Stripe_Handler::init();
 	BLT_Events_SureCart_Integration::init();
 	BLT_Events_FluentCart_Integration::init();
+
+	// Meeting integrations (settings, OAuth routes, room creation, attendee sync)
+	BLT_Events_Meeting_Providers::init();
 
 	// Admin
 	if ( is_admin() ) {
