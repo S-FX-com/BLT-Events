@@ -3,7 +3,7 @@
  * Plugin Name: BLT Events
  * Plugin URI:  https://s-fx.com
  * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
- * Version:     2.1.0
+ * Version:     2.2.0
  * Author:      S-FX.COM
  * Author URI:  https://s-fx.com
  * License:     GPL2
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.1.0' );
+define( 'BLT_EVENTS_VERSION', '2.2.0' );
 define( 'BLT_EVENTS_DB_VERSION', '1.0' );
 define( 'BLT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
