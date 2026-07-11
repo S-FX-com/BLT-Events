@@ -67,7 +67,12 @@ class BLT_Events_Event_Metabox {
 		$event_location   = get_post_meta( $post->ID, $prefix . 'event_location', true );
 		$event_venue      = get_post_meta( $post->ID, $prefix . 'event_venue', true );
 		$event_online_url = get_post_meta( $post->ID, $prefix . 'event_online_url', true );
+		$event_latitude   = get_post_meta( $post->ID, $prefix . 'event_latitude', true );
+		$event_longitude  = get_post_meta( $post->ID, $prefix . 'event_longitude', true );
 		$event_type       = get_post_meta( $post->ID, $prefix . 'event_type', true ) ?: 'in-person';
+
+		$is_physical = in_array( $event_type, array( 'in-person', 'hybrid' ), true );
+		$is_online   = in_array( $event_type, array( 'online', 'hybrid' ), true );
 		?>
 		<table class="form-table blt-event-details">
 			<tr>
@@ -101,29 +106,36 @@ class BLT_Events_Event_Metabox {
 						<option value="online" <?php selected( $event_type, 'online' ); ?>><?php esc_html_e( 'Online', 'blt-events' ); ?></option>
 						<option value="hybrid" <?php selected( $event_type, 'hybrid' ); ?>><?php esc_html_e( 'Hybrid', 'blt-events' ); ?></option>
 					</select>
+					<p class="description"><?php esc_html_e( 'In-person events get venue and address fields, online events get a registration/webinar link, and hybrid events get both.', 'blt-events' ); ?></p>
 				</td>
 			</tr>
-			<tr>
+			<tr class="blt-field-physical" <?php echo $is_physical ? '' : 'style="display:none;"'; ?>>
 				<th><label for="event_venue"><?php esc_html_e( 'Venue', 'blt-events' ); ?></label></th>
-				<td><input type="text" id="event_venue" name="event_venue" value="<?php echo esc_attr( $event_venue ); ?>" class="regular-text" /></td>
+				<td>
+					<input type="text" id="event_venue" name="event_venue" value="<?php echo esc_attr( $event_venue ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. Grand Hotel Ballroom', 'blt-events' ); ?>" />
+					<p class="description"><?php esc_html_e( 'The name of the place where the event is held.', 'blt-events' ); ?></p>
+				</td>
 			</tr>
-			<tr>
-				<th><label for="event_location"><?php esc_html_e( 'Location / Address', 'blt-events' ); ?></label></th>
-				<td><textarea id="event_location" name="event_location" class="large-text" rows="2"><?php echo esc_textarea( $event_location ); ?></textarea></td>
+			<tr class="blt-field-physical" <?php echo $is_physical ? '' : 'style="display:none;"'; ?>>
+				<th><label for="event_location"><?php esc_html_e( 'Address', 'blt-events' ); ?></label></th>
+				<td>
+					<div class="blt-address-autocomplete">
+						<input type="text" id="event_location" name="event_location" value="<?php echo esc_attr( $event_location ); ?>" class="large-text" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-owns="blt-address-suggestions" placeholder="<?php esc_attr_e( 'Start typing an address…', 'blt-events' ); ?>" />
+						<input type="hidden" id="event_latitude" name="event_latitude" value="<?php echo esc_attr( $event_latitude ); ?>" />
+						<input type="hidden" id="event_longitude" name="event_longitude" value="<?php echo esc_attr( $event_longitude ); ?>" />
+						<ul id="blt-address-suggestions" class="blt-address-suggestions" role="listbox" style="display:none;"></ul>
+					</div>
+					<p class="description"><?php esc_html_e( 'Suggestions are provided by OpenStreetMap as you type. Picking one also stores the venue coordinates.', 'blt-events' ); ?></p>
+				</td>
 			</tr>
-			<tr>
-				<th><label for="event_online_url"><?php esc_html_e( 'Online URL', 'blt-events' ); ?></label></th>
-				<td><input type="url" id="event_online_url" name="event_online_url" value="<?php echo esc_attr( $event_online_url ); ?>" class="regular-text" placeholder="https://" /></td>
+			<tr class="blt-field-online" <?php echo $is_online ? '' : 'style="display:none;"'; ?>>
+				<th><label for="event_online_url"><?php esc_html_e( 'Registration / Webinar Link', 'blt-events' ); ?></label></th>
+				<td>
+					<input type="url" id="event_online_url" name="event_online_url" value="<?php echo esc_attr( $event_online_url ); ?>" class="regular-text" placeholder="https://" />
+					<p class="description"><?php esc_html_e( 'The Zoom, Teams, webinar, or registration link attendees use to join the event online.', 'blt-events' ); ?></p>
+				</td>
 			</tr>
 		</table>
-
-		<script>
-		jQuery(document).ready(function($){
-			$('input[name="event_all_day"]').on('change', function() {
-				$('.blt-time-row').toggle(!this.checked);
-			});
-		});
-		</script>
 		<?php
 	}
 
@@ -303,15 +315,48 @@ class BLT_Events_Event_Metabox {
 		$prefix = BLT_EVENTS_PREFIX;
 
 		// Event details
-		update_post_meta( $post_id, $prefix . 'event_date', sanitize_text_field( wp_unslash( $_POST['event_date'] ?? '' ) ) );
-		update_post_meta( $post_id, $prefix . 'event_end_date', sanitize_text_field( $_POST['event_end_date'] ?? '' ) );
-		update_post_meta( $post_id, $prefix . 'event_start_time', sanitize_text_field( $_POST['event_start_time'] ?? '' ) );
-		update_post_meta( $post_id, $prefix . 'event_end_time', sanitize_text_field( $_POST['event_end_time'] ?? '' ) );
-		update_post_meta( $post_id, $prefix . 'event_all_day', isset( $_POST['event_all_day'] ) ? '1' : '0' );
-		update_post_meta( $post_id, $prefix . 'event_type', in_array( $_POST['event_type'] ?? '', array( 'in-person', 'online', 'hybrid' ), true ) ? $_POST['event_type'] : 'in-person' );
-		update_post_meta( $post_id, $prefix . 'event_venue', sanitize_text_field( wp_unslash( $_POST['event_venue'] ?? '' ) ) );
-		update_post_meta( $post_id, $prefix . 'event_location', sanitize_textarea_field( wp_unslash( $_POST['event_location'] ?? '' ) ) );
-		update_post_meta( $post_id, $prefix . 'event_online_url', esc_url_raw( $_POST['event_online_url'] ?? '' ) );
+		$event_date = sanitize_text_field( wp_unslash( $_POST['event_date'] ?? '' ) );
+		$event_end_date = sanitize_text_field( $_POST['event_end_date'] ?? '' );
+		if ( $event_date && $event_end_date && $event_end_date < $event_date ) {
+			// An end date before the start date is invalid; treat as single-day.
+			$event_end_date = '';
+		}
+
+		$all_day    = isset( $_POST['event_all_day'] );
+		$start_time = $all_day ? '' : sanitize_text_field( $_POST['event_start_time'] ?? '' );
+		$end_time   = $all_day ? '' : sanitize_text_field( $_POST['event_end_time'] ?? '' );
+
+		update_post_meta( $post_id, $prefix . 'event_date', $event_date );
+		update_post_meta( $post_id, $prefix . 'event_end_date', $event_end_date );
+		update_post_meta( $post_id, $prefix . 'event_start_time', $start_time );
+		update_post_meta( $post_id, $prefix . 'event_end_time', $end_time );
+		update_post_meta( $post_id, $prefix . 'event_all_day', $all_day ? '1' : '0' );
+
+		$event_type = in_array( $_POST['event_type'] ?? '', array( 'in-person', 'online', 'hybrid' ), true ) ? $_POST['event_type'] : 'in-person';
+		update_post_meta( $post_id, $prefix . 'event_type', $event_type );
+
+		// Location fields only apply to the selected event type: physical
+		// events keep venue/address/coordinates, online events keep the
+		// registration/webinar link, hybrid events keep both.
+		$is_physical = in_array( $event_type, array( 'in-person', 'hybrid' ), true );
+		$is_online   = in_array( $event_type, array( 'online', 'hybrid' ), true );
+
+		$venue      = $is_physical ? sanitize_text_field( wp_unslash( $_POST['event_venue'] ?? '' ) ) : '';
+		$location   = $is_physical ? sanitize_text_field( wp_unslash( $_POST['event_location'] ?? '' ) ) : '';
+		$online_url = $is_online ? esc_url_raw( $_POST['event_online_url'] ?? '' ) : '';
+
+		$latitude  = $is_physical && $location !== '' ? trim( wp_unslash( $_POST['event_latitude'] ?? '' ) ) : '';
+		$longitude = $is_physical && $location !== '' ? trim( wp_unslash( $_POST['event_longitude'] ?? '' ) ) : '';
+		if ( ! is_numeric( $latitude ) || ! is_numeric( $longitude ) || abs( (float) $latitude ) > 90 || abs( (float) $longitude ) > 180 ) {
+			$latitude  = '';
+			$longitude = '';
+		}
+
+		update_post_meta( $post_id, $prefix . 'event_venue', $venue );
+		update_post_meta( $post_id, $prefix . 'event_location', $location );
+		update_post_meta( $post_id, $prefix . 'event_online_url', $online_url );
+		update_post_meta( $post_id, $prefix . 'event_latitude', $latitude );
+		update_post_meta( $post_id, $prefix . 'event_longitude', $longitude );
 
 		// Ticket types
 		$ticket_types = array();
@@ -334,11 +379,16 @@ class BLT_Events_Event_Metabox {
 		update_post_meta( $post_id, $prefix . 'fieldset_id', absint( $_POST['fieldset_id'] ?? 0 ) );
 
 		// Group discount
+		$gd_type   = in_array( $_POST['group_discount_type'] ?? '', array( 'percentage', 'flat' ), true ) ? $_POST['group_discount_type'] : 'percentage';
+		$gd_amount = floatval( $_POST['group_discount_amount'] ?? 10 );
+		if ( 'percentage' === $gd_type ) {
+			$gd_amount = min( $gd_amount, 100 );
+		}
 		$group_discount = array(
 			'enabled'       => ! empty( $_POST['group_discount_enabled'] ),
-			'min_attendees' => absint( $_POST['group_discount_min'] ?? 5 ),
-			'type'          => in_array( $_POST['group_discount_type'] ?? '', array( 'percentage', 'flat' ), true ) ? $_POST['group_discount_type'] : 'percentage',
-			'amount'        => floatval( $_POST['group_discount_amount'] ?? 10 ),
+			'min_attendees' => max( 2, absint( $_POST['group_discount_min'] ?? 5 ) ),
+			'type'          => $gd_type,
+			'amount'        => $gd_amount,
 		);
 		update_post_meta( $post_id, $prefix . 'group_discount', wp_json_encode( $group_discount ) );
 	}
