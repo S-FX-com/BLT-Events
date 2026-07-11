@@ -92,7 +92,14 @@ class BLT_Events_GoTo_Integration extends BLT_Events_Meeting_Provider {
 		update_option( 'blt_events_goto_refresh_token', $body['refresh_token'], false );
 		$this->cache_access_token( $body );
 
-		$key = $this->fetch_organizer_key( $body['access_token'] );
+		// The current authentication.logmeininc.com token response does not
+		// carry organizer_key (only the retired api.getgo.com token did), so it
+		// is resolved from the identity API below. Prefer an organizer_key in
+		// the token body if a legacy/alternate flow ever supplies one.
+		$key = ! empty( $body['organizer_key'] )
+			? (string) $body['organizer_key']
+			: $this->fetch_organizer_key( $body['access_token'] );
+
 		if ( is_wp_error( $key ) ) {
 			return $key;
 		}
@@ -173,7 +180,10 @@ class BLT_Events_GoTo_Integration extends BLT_Events_Meeting_Provider {
 	}
 
 	/**
-	 * Resolve the organizer key for the connected user (SCIM id).
+	 * Resolve the organizer key for the connected user from the identity API.
+	 *
+	 * Per GoTo's token-migration guide, the SCIM identity endpoint's "id"
+	 * field IS the GoToWebinar organizer key used in the G2W REST paths.
 	 *
 	 * @param string $token
 	 * @return string|WP_Error
