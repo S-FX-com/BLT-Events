@@ -105,6 +105,12 @@ class BLT_Events_Registrations {
 	 * @return array|WP_Error Registration result array or WP_Error.
 	 */
 	public static function process_registration( $event_id, $data, $payment = array() ) {
+		// The registration cutoff is also enforced server-side so stale or
+		// hand-crafted submissions can't slip in after it passes.
+		if ( BLT_Events_Helpers::registration_cutoff_passed( $event_id ) ) {
+			return new WP_Error( 'registration_closed', __( 'Registration for this event has closed.', 'blt-events' ) );
+		}
+
 		// Get event fieldset and validate
 		$fieldset = BLT_Events_Fieldsets::get_event_fieldset( $event_id );
 		if ( ! $fieldset ) {
@@ -163,6 +169,12 @@ class BLT_Events_Registrations {
 
 		if ( ! empty( $payment['payment_id'] ) ) {
 			$status = 'confirmed';
+		}
+
+		// Events requiring manual approval hold every registration as
+		// pending until an admin confirms it.
+		if ( get_post_meta( $event_id, '_blt_require_approval', true ) === '1' ) {
+			$status = 'pending';
 		}
 
 		// Insert registration
@@ -235,9 +247,10 @@ class BLT_Events_Registrations {
 	 * Parse ticket type selections from form data.
 	 */
 	private static function parse_ticket_selections( $event_id, $data ) {
-		$ticket_types_raw = get_post_meta( $event_id, '_blt_ticket_types', true );
-		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
-		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
+		// Only tickets inside their sale window and open to the current
+		// visitor's role count; quantities submitted for hidden tickets
+		// are ignored.
+		$ticket_types = BLT_Events_Helpers::available_ticket_types( $event_id );
 
 		$selections     = array();
 		$total_quantity = 0;

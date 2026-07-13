@@ -47,6 +47,11 @@ class BLT_Events_Registration_Shortcode {
 			return '<div class="blt-registration-closed"><p>' . esc_html__( 'Registration is currently closed for this event.', 'blt-events' ) . '</p></div>';
 		}
 
+		// Check registration cutoff
+		if ( BLT_Events_Helpers::registration_cutoff_passed( $event_id ) ) {
+			return '<div class="blt-registration-closed"><p>' . esc_html__( 'Registration for this event has closed.', 'blt-events' ) . '</p></div>';
+		}
+
 		// Check capacity
 		$capacity = (int) get_post_meta( $event_id, '_blt_capacity', true );
 		if ( $capacity > 0 ) {
@@ -79,9 +84,14 @@ class BLT_Events_Registration_Shortcode {
 		$fields   = BLT_Events_Fieldsets::get_fields( $fieldset );
 		$consent_fields = BLT_Events_Fieldsets::get_consent_fields( $fieldset );
 
-		$ticket_types_raw = get_post_meta( $event_id, '_blt_ticket_types', true );
-		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
-		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
+		// Only tickets inside their sale window and open to the current
+		// visitor's role are shown; original indexes are preserved.
+		$all_ticket_types = BLT_Events_Helpers::get_ticket_types( $event_id );
+		$ticket_types     = BLT_Events_Helpers::available_ticket_types( $event_id );
+
+		if ( ! empty( $all_ticket_types ) && empty( $ticket_types ) ) {
+			return '<div class="blt-registration-closed"><p>' . esc_html__( 'Tickets are not currently on sale for this event.', 'blt-events' ) . '</p></div>';
+		}
 
 		$has_paid_tickets = false;
 		foreach ( $ticket_types as $t ) {
@@ -200,15 +210,19 @@ class BLT_Events_Registration_Shortcode {
 	 * Render the SureCart checkout form (ticket selection + redirect).
 	 */
 	private static function render_surecart_form( $event_id, $event ) {
-		$ticket_types_raw = get_post_meta( $event_id, '_blt_ticket_types', true );
-		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
-		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
+		$all_ticket_types = BLT_Events_Helpers::get_ticket_types( $event_id );
+		$ticket_types     = BLT_Events_Helpers::available_ticket_types( $event_id );
+
+		if ( ! empty( $all_ticket_types ) && empty( $ticket_types ) ) {
+			return '<div class="blt-registration-closed"><p>' . esc_html__( 'Tickets are not currently on sale for this event.', 'blt-events' ) . '</p></div>';
+		}
 
 		$price_ids = get_post_meta( $event_id, '_blt_sc_price_ids', true ) ?: array();
 
-		// Check if products are synced
+		// Check if products are synced (all tickets sync, even ones the
+		// current visitor can't see).
 		$all_synced = true;
-		foreach ( $ticket_types as $i => $t ) {
+		foreach ( $all_ticket_types as $i => $t ) {
 			if ( empty( $price_ids[ $i ] ) ) {
 				$all_synced = false;
 				break;
@@ -263,16 +277,20 @@ class BLT_Events_Registration_Shortcode {
 	 * to FluentCart instant checkout).
 	 */
 	private static function render_fluentcart_form( $event_id, $event ) {
-		$ticket_types_raw = get_post_meta( $event_id, '_blt_ticket_types', true );
-		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
-		$ticket_types     = is_array( $ticket_types ) ? $ticket_types : array();
+		$all_ticket_types = BLT_Events_Helpers::get_ticket_types( $event_id );
+		$ticket_types     = BLT_Events_Helpers::available_ticket_types( $event_id );
+
+		if ( ! empty( $all_ticket_types ) && empty( $ticket_types ) ) {
+			return '<div class="blt-registration-closed"><p>' . esc_html__( 'Tickets are not currently on sale for this event.', 'blt-events' ) . '</p></div>';
+		}
 
 		$variation_ids = get_post_meta( $event_id, '_blt_fc_variation_ids', true );
 		$variation_ids = is_array( $variation_ids ) ? $variation_ids : array();
 
-		// Check whether every ticket type has a synced FluentCart variation.
-		$all_synced = ! empty( $ticket_types );
-		foreach ( $ticket_types as $i => $t ) {
+		// Check whether every ticket type has a synced FluentCart variation
+		// (all tickets sync, even ones the current visitor can't see).
+		$all_synced = ! empty( $all_ticket_types );
+		foreach ( $all_ticket_types as $i => $t ) {
 			if ( empty( $variation_ids[ $i ] ) ) {
 				$all_synced = false;
 				break;

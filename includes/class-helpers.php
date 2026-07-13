@@ -269,6 +269,91 @@ class BLT_Events_Helpers {
     }
 
     /**
+     * Get an event's ticket types as an array (stored as JSON post meta).
+     *
+     * @param int $event_id The event post ID.
+     * @return array Ticket type arrays keyed by their original index.
+     */
+    public static function get_ticket_types( $event_id ) {
+        $raw   = get_post_meta( $event_id, '_blt_ticket_types', true );
+        $types = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+
+        return is_array( $types ) ? $types : array();
+    }
+
+    /**
+     * Get the ticket types currently purchasable by the current visitor,
+     * i.e. inside their sale window and not restricted to a role the
+     * visitor doesn't have. Original indexes are preserved because
+     * payment integrations map products/prices by ticket index.
+     *
+     * @param int $event_id The event post ID.
+     * @return array Available ticket type arrays keyed by original index.
+     */
+    public static function available_ticket_types( $event_id ) {
+        return array_filter( self::get_ticket_types( $event_id ), array( __CLASS__, 'ticket_is_available' ) );
+    }
+
+    /**
+     * Whether a ticket type is currently available to the current visitor.
+     *
+     * A ticket is unavailable before its sale start, after its sale end,
+     * or when it is restricted to roles the current user doesn't have.
+     *
+     * @param array $ticket Ticket type array.
+     * @return bool
+     */
+    public static function ticket_is_available( $ticket ) {
+        $now = current_time( 'Y-m-d H:i' );
+
+        if ( ! empty( $ticket['sale_start_date'] ) ) {
+            $start = $ticket['sale_start_date'] . ' ' . ( ! empty( $ticket['sale_start_time'] ) ? $ticket['sale_start_time'] : '00:00' );
+            if ( $now < $start ) {
+                return false;
+            }
+        }
+
+        if ( ! empty( $ticket['sale_end_date'] ) ) {
+            $end = $ticket['sale_end_date'] . ' ' . ( ! empty( $ticket['sale_end_time'] ) ? $ticket['sale_end_time'] : '23:59' );
+            if ( $now > $end ) {
+                return false;
+            }
+        }
+
+        $roles = isset( $ticket['roles'] ) && is_array( $ticket['roles'] ) ? $ticket['roles'] : array();
+        if ( ! empty( $roles ) ) {
+            if ( ! is_user_logged_in() ) {
+                return false;
+            }
+            $user = wp_get_current_user();
+            if ( ! array_intersect( $roles, (array) $user->roles ) ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether an event's registration cutoff has passed. Events without a
+     * cutoff date never pass; a cutoff date without a time closes at the
+     * end of that day.
+     *
+     * @param int $event_id The event post ID.
+     * @return bool
+     */
+    public static function registration_cutoff_passed( $event_id ) {
+        $date = get_post_meta( $event_id, '_blt_registration_cutoff_date', true );
+        if ( ! $date ) {
+            return false;
+        }
+
+        $time = get_post_meta( $event_id, '_blt_registration_cutoff_time', true );
+
+        return current_time( 'Y-m-d H:i' ) > $date . ' ' . ( $time ?: '23:59' );
+    }
+
+    /**
      * The custom capability for managing BLT Events admin screens/data.
      * Granted to administrators on activation; grant it to other roles
      * (e.g. shop managers) to give them access without manage_options.

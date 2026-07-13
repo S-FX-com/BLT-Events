@@ -235,5 +235,34 @@ function blt_events_enqueue_admin_assets( $hook ) {
 		BLT_EVENTS_VERSION,
 		true
 	);
+
+	// The Add/Edit Event screen gets its own card-based editor UI.
+	if ( $screen && 'post' === $screen->base && 'event' === $post_type ) {
+		wp_enqueue_style(
+			'blt-events-event-editor',
+			BLT_EVENTS_PLUGIN_URL . 'assets/css/event-editor.css',
+			array( 'dashicons' ),
+			BLT_EVENTS_VERSION
+		);
+
+		wp_enqueue_script(
+			'blt-events-event-editor',
+			BLT_EVENTS_PLUGIN_URL . 'assets/js/event-editor.js',
+			array( 'jquery' ),
+			BLT_EVENTS_VERSION,
+			true
+		);
+
+		$currency = BLT_Events_Helpers::get_currency_config();
+		wp_localize_script( 'blt-events-event-editor', 'bltEventEditor', array(
+			'paid'           => __( 'Paid', 'blt-events' ),
+			'free'           => __( 'Free', 'blt-events' ),
+			'currencySymbol' => $currency['currencySymbol'] ?: '$',
+			'allDayNotice'   => __( 'Time fields are hidden because this is an all-day event.', 'blt-events' ),
+			'noEndNotice'    => __( 'End date and end time are hidden because no end time is set.', 'blt-events' ),
+			'mapPlaceholder' => __( 'Map preview after address is entered', 'blt-events' ),
+			'mapTitle'       => __( 'Venue map preview', 'blt-events' ),
+		) );
+	}
 }
 add_action( 'admin_enqueue_scripts', 'blt_events_enqueue_admin_assets' );
