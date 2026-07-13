@@ -1,8 +1,12 @@
 name: Release Plugin
 
-# Creates a GitHub release (with an installable plugin zip) whenever the
-# plugin version in blt-events.php changes on main. The zip asset is what
-# the bundled plugin-update-checker serves to sites as an update.
+# Creates a GitHub release (with an installable plugin zip) for every
+# push to main. If the merged PR didn't bump the plugin version in
+# blt-events.php, this workflow bumps the patch version itself, commits
+# that directly to main, and releases the bumped version - so every
+# merge to main always produces a release without relying on PR authors
+# to remember a manual version bump. The zip asset is what the bundled
+# plugin-update-checker serves to sites as an update.
 
 on:
   push:
@@ -15,6 +19,9 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # The version-bump commit below is pushed with this marker so its
+    # own triggered run doesn't try to bump (and release) a second time.
+    if: "!contains(github.event.head_commit.message, '[skip release]')"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,13 +45,42 @@ jobs:
           TAG="v${{ steps.version.outputs.version }}"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Release $TAG already exists - skipping."
+            echo "Release $TAG already exists - this merge didn't bump the version."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Auto-bump patch version
+        id: bump
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          OLD="${{ steps.version.outputs.version }}"
+          MAJOR=$(echo "$OLD" | cut -d. -f1)
+          MINOR=$(echo "$OLD" | cut -d. -f2)
+          PATCH=$(echo "$OLD" | cut -d. -f3)
+          NEW="$MAJOR.$MINOR.$((PATCH + 1))"
+
+          sed -i "s/^\( \* Version:\s*\)$OLD\$/\1$NEW/" blt-events.php
+          sed -i "s/define( 'BLT_EVENTS_VERSION', '$OLD' );/define( 'BLT_EVENTS_VERSION', '$NEW' );/" blt-events.php
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Bump version to $NEW for release [skip release]"
+          git push origin HEAD:main
+
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "Bumped version: $OLD -> $NEW"
+
+      - name: Resolve release version
+        id: release_version
+        run: |
+          if [ "${{ steps.check.outputs.exists }}" == "true" ]; then
+            echo "version=${{ steps.bump.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build plugin zip
-        if: steps.check.outputs.exists == 'false'
         run: |
           mkdir -p build/blt-events
           rsync -a . build/blt-events \
@@ -59,13 +95,13 @@ jobs:
           unzip -l blt-events.zip | head -n 20
 
       - name: Create GitHub release
-        if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v${{ steps.version.outputs.version }}"
+          TAG="v${{ steps.release_version.outputs.version }}"
           gh release create "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "BLT Events $TAG" \
             --generate-notes \
+            --target main \
             build/blt-events.zip
