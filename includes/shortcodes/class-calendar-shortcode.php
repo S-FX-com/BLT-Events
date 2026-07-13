@@ -41,15 +41,30 @@ class BLT_Events_Calendar_Shortcode {
 			'no_found_rows'  => true,
 		);
 
+		// Events marked "Hide from Calendar" stay accessible via direct
+		// link but never appear in calendar listings.
+		$args['meta_query'] = array(
+			array(
+				'relation' => 'OR',
+				array(
+					'key'     => '_blt_hide_from_calendar',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => '_blt_hide_from_calendar',
+					'value'   => '1',
+					'compare' => '!=',
+				),
+			),
+		);
+
 		// Filter out past events by default
 		if ( $atts['past'] !== 'yes' ) {
-			$args['meta_query'] = array(
-				array(
-					'key'     => '_blt_event_date',
-					'value'   => current_time( 'Y-m-d' ),
-					'compare' => '>=',
-					'type'    => 'DATE',
-				),
+			$args['meta_query'][] = array(
+				'key'     => '_blt_event_date',
+				'value'   => current_time( 'Y-m-d' ),
+				'compare' => '>=',
+				'type'    => 'DATE',
 			);
 		}
 

@@ -13,20 +13,6 @@
 	margin-top: 1.5rem;
 }
 
-/* --- Event Metabox --- */
-.blt-event-details .form-table {
-	margin-top: 0;
-}
-
-.blt-event-details .form-table th {
-	width: 140px;
-	padding: 10px 10px 10px 0;
-}
-
-.blt-event-details .form-table td {
-	padding: 8px 10px;
-}
-
 /* --- Meeting Integrations --- */
 .blt-integration-title {
 	display: flex;
@@ -104,56 +90,6 @@
 .blt-address-suggestion.is-active {
 	background: #f0f6fc;
 	color: #0a4b78;
-}
-
-/* --- Ticket Types Table --- */
-.blt-tickets-table {
-	margin-top: 0.5rem;
-}
-
-.blt-tickets-table thead th {
-	padding: 8px 10px;
-	font-weight: 600;
-}
-
-.blt-tickets-table tbody td {
-	padding: 6px 8px;
-	vertical-align: middle;
-}
-
-.blt-ticket-row .widefat {
-	width: 100%;
-}
-
-.blt-remove-ticket {
-	color: #dc2626;
-}
-
-#blt-add-ticket {
-	margin-top: 0.5rem;
-}
-
-/* --- Registration Config --- */
-.blt-group-discount-settings {
-	margin-top: 0.5rem;
-	padding: 1rem;
-	background: #f9fafb;
-	border-radius: 6px;
-}
-
-.blt-group-discount-settings label {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.375rem;
-}
-
-/* --- Registrations Summary Sidebar --- */
-.blt-registrations-summary p {
-	margin: 0.5rem 0;
-}
-
-.blt-registrations-summary .button {
-	margin-top: 0.75rem;
 }
 
 /* --- Status Badges --- */
