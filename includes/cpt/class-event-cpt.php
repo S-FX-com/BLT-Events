@@ -26,6 +26,7 @@ class BLT_Events_Event_CPT {
     public static function init() {
         add_action( 'init', array( __CLASS__, 'register_post_type' ) );
         add_action( 'init', array( __CLASS__, 'register_taxonomies' ) );
+        add_filter( 'use_block_editor_for_post_type', array( __CLASS__, 'disable_block_editor' ), 10, 2 );
     }
 
     /**
@@ -96,5 +97,19 @@ class BLT_Events_Event_CPT {
         );
 
         register_taxonomy( 'event_category', array( self::$slug ), $args );
+    }
+
+    /**
+     * Force the event post type onto the classic editor. The Add/Edit
+     * Event screen is built from metaboxes designed for that layout;
+     * show_in_rest stays enabled so the REST API and Query Loop blocks
+     * keep working on the front end.
+     */
+    public static function disable_block_editor( $use_block_editor, $post_type ) {
+        if ( self::$slug === $post_type ) {
+            return false;
+        }
+
+        return $use_block_editor;
     }
 }
