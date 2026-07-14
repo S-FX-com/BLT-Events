@@ -59,6 +59,79 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 	}
 
 	/**
+	 * Attendee counts per ticket type for an event, excluding attendees
+	 * whose registration was cancelled.
+	 *
+	 * @param int $event_id The event post ID.
+	 * @return array Map of ticket type name => attendee count.
+	 */
+	public function count_by_ticket_type( $event_id ) {
+		global $wpdb;
+
+		$registrations_table = $wpdb->prefix . 'blt_registrations';
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT COALESCE(NULLIF(a.ticket_type, ''), '—') AS ticket_type, COUNT(*) AS total
+				 FROM {$this->table_name} a
+				 INNER JOIN {$registrations_table} r ON r.id = a.registration_id
+				 WHERE a.event_id = %d
+				   AND r.status != 'cancelled'
+				 GROUP BY COALESCE(NULLIF(a.ticket_type, ''), '—')
+				 ORDER BY total DESC",
+				absint( $event_id )
+			)
+		);
+
+		$counts = array();
+		foreach ( $rows as $row ) {
+			$counts[ $row->ticket_type ] = (int) $row->total;
+		}
+
+		return $counts;
+	}
+
+	/**
+	 * Number of checked-in attendees for an event.
+	 *
+	 * @param int $event_id The event post ID.
+	 * @return int
+	 */
+	public function count_checked_in( $event_id ) {
+		global $wpdb;
+
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$this->table_name}
+				 WHERE event_id = %d AND check_in_status = 'checked_in'",
+				absint( $event_id )
+			)
+		);
+	}
+
+	/**
+	 * Total attendees for an event, excluding cancelled registrations.
+	 *
+	 * @param int $event_id The event post ID.
+	 * @return int
+	 */
+	public function count_for_event( $event_id ) {
+		global $wpdb;
+
+		$registrations_table = $wpdb->prefix . 'blt_registrations';
+
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*)
+				 FROM {$this->table_name} a
+				 INNER JOIN {$registrations_table} r ON r.id = a.registration_id
+				 WHERE a.event_id = %d AND r.status != 'cancelled'",
+				absint( $event_id )
+			)
+		);
+	}
+
+	/**
 	 * Bulk insert multiple attendees for a registration.
 	 *
 	 * Each entry in $attendees_data should be an associative array with keys

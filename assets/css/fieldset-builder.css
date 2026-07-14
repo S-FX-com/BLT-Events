@@ -123,6 +123,38 @@
 	min-width: 160px;
 }
 
+/* --- Data Mapping group inside a field's settings panel --- */
+.blt-map-group {
+	flex-basis: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	padding-top: 0.75rem;
+	margin-top: 0.25rem;
+	border-top: 1px dashed var(--blt-border, #dcdcde);
+}
+
+.blt-map-heading {
+	flex-basis: 100%;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--blt-muted-fg, #646970);
+}
+
+.blt-map-group label {
+	font-size: 0.875rem;
+	color: var(--blt-muted-fg, #646970);
+}
+
+.blt-map-help {
+	flex-basis: 100%;
+	font-size: 12px;
+	color: var(--blt-muted-fg, #646970);
+}
+
 /* --- Consent Fields --- */
 .blt-consent-item {
 	display: flex;

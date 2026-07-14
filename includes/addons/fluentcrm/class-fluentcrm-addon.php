@@ -63,6 +63,34 @@ class BLT_Events_FluentCRM_Addon {
 			'status'     => $status,
 		);
 
+		// Apply the fieldset's per-field FluentCRM mappings: mapped values
+		// land on core contact columns when the slug matches one, otherwise
+		// they're collected as custom field values.
+		$mapped_custom_fields = array();
+		$core_contact_columns = array(
+			'prefix', 'first_name', 'last_name', 'email', 'phone', 'timezone',
+			'address_line_1', 'address_line_2', 'city', 'state', 'postal_code',
+			'country', 'date_of_birth',
+		);
+
+		if ( class_exists( 'BLT_Events_Fieldsets' ) && is_array( $custom_fields ) ) {
+			$fieldset = BLT_Events_Fieldsets::get_event_fieldset( $reg->event_id );
+			foreach ( BLT_Events_Fieldsets::get_fields( $fieldset ) as $field ) {
+				$slug  = $field['map_fluentcrm'] ?? '';
+				$value = $custom_fields[ $field['key'] ] ?? '';
+
+				if ( $slug === '' || $value === '' || ! is_scalar( $value ) ) {
+					continue;
+				}
+
+				if ( in_array( $slug, $core_contact_columns, true ) ) {
+					$contact_data[ $slug ] = (string) $value;
+				} else {
+					$mapped_custom_fields[ $slug ] = (string) $value;
+				}
+			}
+		}
+
 		$api = FluentCrmApi( 'contacts' );
 
 		// Create or update contact
@@ -93,7 +121,8 @@ class BLT_Events_FluentCRM_Addon {
 			}
 		}
 
-		// Store custom meta
+		// Store custom meta: legacy zero-config defaults first, then the
+		// fieldset's explicit FluentCRM mappings (which win on conflict).
 		if ( method_exists( $contact, 'updateCustomFieldsValues' ) ) {
 			$meta = array();
 
@@ -103,6 +132,8 @@ class BLT_Events_FluentCRM_Addon {
 			if ( ! empty( $custom_fields['job_title'] ) ) {
 				$meta['job_title'] = $custom_fields['job_title'];
 			}
+
+			$meta = array_merge( $meta, $mapped_custom_fields );
 
 			if ( ! empty( $meta ) ) {
 				$contact->updateCustomFieldsValues( $meta );

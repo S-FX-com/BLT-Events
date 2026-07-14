@@ -84,6 +84,58 @@
 	color: var(--blt-primary, #2271b1);
 }
 
+/* --- Registrations: per-event dashboard --- */
+.blt-dashboard-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 24px;
+}
+
+.blt-dashboard-col h3 {
+	margin: 0 0 12px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--blt-fg, #1e1e1e);
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--blt-surface-muted, #f6f7f7);
+}
+
+.blt-dash-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 0 0 8px;
+	font-size: 13px;
+}
+
+.blt-dash-label {
+	color: var(--blt-muted-fg, #646970);
+	flex-shrink: 0;
+}
+
+.blt-dash-total {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid var(--blt-surface-muted, #f6f7f7);
+}
+
+.blt-dash-links {
+	margin: 12px 0 0;
+	font-size: 13px;
+}
+
+.blt-dash-links span {
+	color: var(--blt-border, #dcdcde);
+	margin: 0 4px;
+}
+
+@media (max-width: 960px) {
+	.blt-dashboard-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
 /* --- General Admin Tweaks --- */
 .widefat td {
 	vertical-align: middle;
