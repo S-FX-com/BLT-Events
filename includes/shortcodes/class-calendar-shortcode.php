@@ -130,7 +130,239 @@ class BLT_Events_Calendar_Shortcode {
 	 * ------------------------------------------------------------------ */
 
 	private static function render_list_view( $atts, $view ) {
-		// Clamp limit so shortcode input can't trigger an unbounded query.
+		if ( 'grid' === $view ) {
+			return self::render_grid_view( $atts );
+		}
+
+		return self::render_events_list( $atts );
+	}
+
+	/**
+	 * The month/day/time meta for an event, resolved once.
+	 *
+	 * @return array{date:string,end_date:string,start:string,end:string,all_day:bool}
+	 */
+	private static function event_when( $event_id ) {
+		return array(
+			'date'     => get_post_meta( $event_id, '_blt_event_date', true ),
+			'end_date' => get_post_meta( $event_id, '_blt_event_end_date', true ),
+			'start'    => get_post_meta( $event_id, '_blt_event_start_time', true ),
+			'end'      => get_post_meta( $event_id, '_blt_event_end_time', true ),
+			'all_day'  => get_post_meta( $event_id, '_blt_event_all_day', true ) === '1',
+		);
+	}
+
+	/**
+	 * Build the "July 04 @ 8:00 am - 1:00 pm" style date/time line for the
+	 * list view, collapsing multi-day and all-day events sensibly.
+	 */
+	private static function list_datetime_label( $when ) {
+		if ( empty( $when['date'] ) ) {
+			return '';
+		}
+
+		$time_format = get_option( 'time_format', 'g:i a' );
+		$day_label   = date_i18n( 'F j', strtotime( $when['date'] ) );
+
+		// Multi-day: "July 4 - July 6".
+		if ( ! empty( $when['end_date'] ) && $when['end_date'] !== $when['date'] ) {
+			return $day_label . ' - ' . date_i18n( 'F j', strtotime( $when['end_date'] ) );
+		}
+
+		if ( $when['all_day'] || empty( $when['start'] ) ) {
+			return $day_label . ' ' . __( '@ All Day', 'blt-events' );
+		}
+
+		$label = $day_label . ' @ ' . date_i18n( $time_format, strtotime( $when['date'] . ' ' . $when['start'] ) );
+		if ( ! empty( $when['end'] ) ) {
+			$label .= ' - ' . date_i18n( $time_format, strtotime( $when['date'] . ' ' . $when['end'] ) );
+		}
+
+		return $label;
+	}
+
+	/**
+	 * The events list view: a search/navigation toolbar above events grouped
+	 * under month headers, each row showing the day, date/time, title,
+	 * excerpt, location, and featured image.
+	 */
+	private static function render_events_list( $atts ) {
+		$limit = intval( $atts['limit'] );
+		if ( $limit < 1 || $limit > 100 ) {
+			$limit = 12;
+		}
+
+		$paged  = max( 1, (int) ( $_GET['blt_paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$search = isset( $_GET['blt_search'] ) ? sanitize_text_field( wp_unslash( $_GET['blt_search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$args = array(
+			'post_type'      => 'event',
+			'post_status'    => 'publish',
+			'posts_per_page' => $limit,
+			'paged'          => $paged,
+			'meta_key'       => '_blt_event_date',
+			'meta_type'      => 'DATE',
+			'orderby'        => 'meta_value',
+			'order'          => 'ASC',
+			'meta_query'     => array( self::visibility_meta_query() ),
+		);
+
+		if ( $search !== '' ) {
+			$args['s'] = $search;
+		}
+
+		if ( $atts['past'] !== 'yes' ) {
+			$args['meta_query'][] = array(
+				'key'     => '_blt_event_date',
+				'value'   => current_time( 'Y-m-d' ),
+				'compare' => '>=',
+				'type'    => 'DATE',
+			);
+		}
+
+		self::maybe_add_category_filter( $args, $atts );
+
+		$query = new WP_Query( $args );
+
+		ob_start();
+		?>
+		<div class="blt-events-calendar blt-events-listing">
+			<?php self::render_list_toolbar( $atts, $query, $paged, $search ); ?>
+
+			<?php if ( ! $query->have_posts() ) : ?>
+				<div class="blt-events-empty"><p><?php echo $search !== '' ? esc_html__( 'No events match your search.', 'blt-events' ) : esc_html__( 'No upcoming events found.', 'blt-events' ); ?></p></div>
+			<?php else : ?>
+				<div class="blt-list-events">
+					<?php
+					$current_month = '';
+					while ( $query->have_posts() ) :
+						$query->the_post();
+						$event_id = get_the_ID();
+						$when     = self::event_when( $event_id );
+
+						if ( empty( $when['date'] ) ) {
+							continue;
+						}
+
+						$month_key = date_i18n( 'Y-m', strtotime( $when['date'] ) );
+						if ( $month_key !== $current_month ) {
+							$current_month = $month_key;
+							?>
+							<div class="blt-list-month">
+								<h2><?php echo esc_html( date_i18n( 'F Y', strtotime( $when['date'] ) ) ); ?></h2>
+							</div>
+							<?php
+						}
+
+						$venue = BLT_Events_Helpers::get_event_location_string( $event_id );
+						?>
+						<article class="blt-list-event">
+							<div class="blt-list-date" aria-hidden="true">
+								<span class="blt-list-day"><?php echo esc_html( date_i18n( 'j', strtotime( $when['date'] ) ) ); ?></span>
+								<span class="blt-list-weekday"><?php echo esc_html( strtoupper( date_i18n( 'D', strtotime( $when['date'] ) ) ) ); ?></span>
+							</div>
+
+							<div class="blt-list-body">
+								<p class="blt-list-datetime"><?php echo esc_html( self::list_datetime_label( $when ) ); ?></p>
+								<h3 class="blt-list-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+								<?php if ( has_excerpt() ) : ?>
+									<p class="blt-list-excerpt"><?php echo esc_html( get_the_excerpt() ); ?></p>
+								<?php endif; ?>
+								<?php if ( $venue ) : ?>
+									<p class="blt-list-location"><?php echo self::pin_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><span><?php echo esc_html( $venue ); ?></span></p>
+								<?php endif; ?>
+							</div>
+
+							<?php if ( has_post_thumbnail() ) : ?>
+								<a class="blt-list-image" href="<?php the_permalink(); ?>"><?php the_post_thumbnail( 'medium_large' ); ?></a>
+							<?php endif; ?>
+						</article>
+					<?php endwhile; ?>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+		wp_reset_postdata();
+		return ob_get_clean();
+	}
+
+	/**
+	 * Toolbar for the list view: previous/next paging, "Today", an optional
+	 * view menu, and a keyword search box.
+	 */
+	private static function render_list_toolbar( $atts, $query, $paged, $search ) {
+		$base       = remove_query_arg( array( 'blt_paged', 'blt_search', 'blt_view', 'blt_month' ) );
+		$search_url = remove_query_arg( array( 'blt_paged', 'blt_month' ) );
+		$max_pages  = (int) $query->max_num_pages;
+
+		$prev_url = $paged > 1 ? add_query_arg( 'blt_paged', $paged - 1, $search !== '' ? add_query_arg( 'blt_search', $search, $base ) : $base ) : '';
+		$next_url = $paged < $max_pages ? add_query_arg( 'blt_paged', $paged + 1, $search !== '' ? add_query_arg( 'blt_search', $search, $base ) : $base ) : '';
+		$today_url = $search !== '' ? add_query_arg( 'blt_search', $search, $base ) : $base;
+		?>
+		<div class="blt-list-toolbar">
+			<div class="blt-list-nav">
+				<a class="blt-list-navbtn <?php echo $prev_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $prev_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Previous events', 'blt-events' ); ?>"<?php echo $prev_url ? '' : ' aria-disabled="true"'; ?>>&lsaquo;</a>
+				<a class="blt-list-navbtn <?php echo $next_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $next_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Next events', 'blt-events' ); ?>"<?php echo $next_url ? '' : ' aria-disabled="true"'; ?>>&rsaquo;</a>
+				<a class="blt-list-today" href="<?php echo esc_url( $today_url ); ?>"><?php esc_html_e( 'Today', 'blt-events' ); ?></a>
+				<?php if ( 'yes' === $atts['switcher'] ) : ?>
+					<?php self::render_view_menu( 'list' ); ?>
+				<?php endif; ?>
+			</div>
+
+			<form class="blt-list-search" method="get" role="search">
+				<?php
+				// Preserve non-paging query context across the search submit.
+				foreach ( array( 'page_id', 'p', 'blt_view' ) as $keep ) {
+					if ( isset( $_GET[ $keep ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+						printf( '<input type="hidden" name="%s" value="%s" />', esc_attr( $keep ), esc_attr( sanitize_text_field( wp_unslash( $_GET[ $keep ] ) ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					}
+				}
+				?>
+				<span class="blt-list-search-field">
+					<?php echo self::search_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<input type="search" name="blt_search" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search for events', 'blt-events' ); ?>" />
+				</span>
+				<button type="submit" class="blt-list-find"><?php esc_html_e( 'Find events', 'blt-events' ); ?></button>
+			</form>
+		</div>
+		<?php
+	}
+
+	/**
+	 * A compact "view" dropdown (List / Grid / Month) used inside the list
+	 * toolbar. Uses a native <details> element so it needs no JavaScript.
+	 */
+	private static function render_view_menu( $active ) {
+		$base  = remove_query_arg( array( 'blt_view', 'blt_month', 'blt_paged' ) );
+		$views = array(
+			'list'     => __( 'List', 'blt-events' ),
+			'grid'     => __( 'Grid', 'blt-events' ),
+			'calendar' => __( 'Month', 'blt-events' ),
+		);
+		?>
+		<details class="blt-view-menu">
+			<summary aria-label="<?php esc_attr_e( 'Change view', 'blt-events' ); ?>"><span class="blt-view-menu-chevron" aria-hidden="true">&#9662;</span></summary>
+			<ul>
+				<?php foreach ( $views as $view => $label ) : ?>
+					<li><a href="<?php echo esc_url( add_query_arg( 'blt_view', $view, $base ) ); ?>" class="<?php echo $active === $view ? 'is-active' : ''; ?>"><?php echo esc_html( $label ); ?></a></li>
+				<?php endforeach; ?>
+			</ul>
+		</details>
+		<?php
+	}
+
+	private static function pin_icon() {
+		return '<svg class="blt-list-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+	}
+
+	private static function search_icon() {
+		return '<svg class="blt-list-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+	}
+
+	/**
+	 * The card-grid view (unchanged card layout).
+	 */
+	private static function render_grid_view( $atts ) {
 		$limit = intval( $atts['limit'] );
 		if ( $limit < 1 || $limit > 100 ) {
 			$limit = 12;
@@ -148,7 +380,6 @@ class BLT_Events_Calendar_Shortcode {
 			'meta_query'     => array( self::visibility_meta_query() ),
 		);
 
-		// Filter out past events by default
 		if ( $atts['past'] !== 'yes' ) {
 			$args['meta_query'][] = array(
 				'key'     => '_blt_event_date',
@@ -165,7 +396,7 @@ class BLT_Events_Calendar_Shortcode {
 		ob_start();
 
 		if ( 'yes' === $atts['switcher'] ) {
-			self::render_switcher( $view );
+			self::render_switcher( 'grid' );
 		}
 
 		if ( ! $query->have_posts() ) {
@@ -173,10 +404,8 @@ class BLT_Events_Calendar_Shortcode {
 			wp_reset_postdata();
 			return ob_get_clean();
 		}
-
-		$view_class = $view === 'grid' ? 'blt-events-grid' : 'blt-events-list';
 		?>
-		<div class="blt-events-calendar <?php echo esc_attr( $view_class ); ?>">
+		<div class="blt-events-calendar blt-events-grid">
 			<?php while ( $query->have_posts() ) : $query->the_post(); ?>
 				<?php
 				$event_id    = get_the_ID();
@@ -202,7 +431,6 @@ class BLT_Events_Calendar_Shortcode {
 					}
 				}
 
-				// Price range
 				$min_price = PHP_INT_MAX;
 				$max_price = 0;
 				if ( is_array( $tickets ) ) {
