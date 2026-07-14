@@ -110,6 +110,30 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 	}
 
 	/**
+	 * Whether an email has a confirmed registration for an event. Used to
+	 * decide whether to reveal the online meeting link to a visitor.
+	 *
+	 * @param string $email    The customer email.
+	 * @param int    $event_id The event post ID.
+	 * @return bool
+	 */
+	public function email_confirmed_for_event( $email, $event_id ) {
+		global $wpdb;
+
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$this->table_name}
+				 WHERE customer_email = %s AND event_id = %d AND status = %s",
+				sanitize_email( $email ),
+				absint( $event_id ),
+				'confirmed'
+			)
+		);
+
+		return (int) $count > 0;
+	}
+
+	/**
 	 * Check if an email is already registered for a specific event.
 	 *
 	 * Used for duplicate registration prevention.

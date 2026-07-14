@@ -2,13 +2,19 @@
 /**
  * BLT Events - Front-End Single Event View
  *
- * Wraps single event content with the event layout: a meta bar (date,
- * time, location), the description, a sidebar with add-to-calendar and
- * share actions, and the registration form. Rendered through the
- * the_content filter so it works inside any theme's single template.
+ * Renders the single event layout via the_content: featured image across
+ * the top, then a two-column body — main column (category, title,
+ * description, collapsible agenda, registration) and a sidebar (date box,
+ * register/buy CTA, address or virtual link, map).
+ *
+ * Markup follows BEM under the `blt-event` block so it folds cleanly into
+ * a theme or utility framework (e.g. ACSS). The plugin's own visual styles
+ * are self-contained in single-event.css and can be switched off in
+ * Settings > General (the "Single Event Styles" toggle), leaving only the
+ * structural BEM classes for the site to style.
  *
  * Themes/plugins can add sidebar content (e.g. presenters) via the
- * blt_events_single_sidebar action, and disable the whole wrapper with
+ * blt_events_single_sidebar action, and disable the wrapper entirely with
  * the blt_events_render_single filter.
  */
 
@@ -27,6 +33,13 @@ class BLT_Events_Single_Event {
 		add_action( 'admin_post_nopriv_blt_event_ics', array( __CLASS__, 'download_ics' ) );
 	}
 
+	/**
+	 * Whether the plugin's self-contained single-event styling should load.
+	 */
+	public static function styles_enabled() {
+		return get_option( 'blt_events_single_styles', '1' ) === '1';
+	}
+
 	public static function register_assets() {
 		wp_register_style(
 			'blt-events-single',
@@ -35,7 +48,7 @@ class BLT_Events_Single_Event {
 			BLT_EVENTS_VERSION
 		);
 
-		if ( is_singular( 'event' ) ) {
+		if ( is_singular( 'event' ) && self::styles_enabled() ) {
 			wp_enqueue_style( 'blt-events-single' );
 		}
 	}
@@ -74,11 +87,6 @@ class BLT_Events_Single_Event {
 			return $content;
 		}
 
-		/**
-		 * Filter whether BLT Events renders the single event layout.
-		 * Return false to leave the content untouched (e.g. when a page
-		 * builder template handles the layout).
-		 */
 		if ( ! apply_filters( 'blt_events_render_single', true, $event ) ) {
 			return $content;
 		}
@@ -105,7 +113,7 @@ class BLT_Events_Single_Event {
 		$event_id = $event->ID;
 
 		$date_format = get_option( 'blt_events_date_format', 'F j, Y' );
-		$time_format = get_option( 'time_format', 'g:i A' );
+		$time_format = get_option( 'time_format', 'g:i a' );
 
 		$event_date = get_post_meta( $event_id, '_blt_event_date', true );
 		$end_date   = get_post_meta( $event_id, '_blt_event_end_date', true );
@@ -114,24 +122,12 @@ class BLT_Events_Single_Event {
 		$all_day    = get_post_meta( $event_id, '_blt_event_all_day', true ) === '1';
 		$multi_day  = get_post_meta( $event_id, '_blt_multi_day', true ) === '1';
 		$event_type = get_post_meta( $event_id, '_blt_event_type', true ) ?: 'in-person';
-		$venue      = get_post_meta( $event_id, '_blt_event_venue', true );
-		$location   = get_post_meta( $event_id, '_blt_event_location', true );
-		$online_url = get_post_meta( $event_id, '_blt_event_online_url', true );
 
-		$days = array();
-		if ( $multi_day ) {
-			$days_raw = get_post_meta( $event_id, '_blt_event_days', true );
-			$decoded  = is_string( $days_raw ) ? json_decode( $days_raw, true ) : $days_raw;
-			$days     = is_array( $decoded ) ? $decoded : array();
-		}
-
-		// Date label.
 		$date_label = $event_date ? date_i18n( $date_format, strtotime( $event_date ) ) : '';
 		if ( $multi_day && $end_date && $end_date !== $event_date ) {
 			$date_label .= ' – ' . date_i18n( $date_format, strtotime( $end_date ) );
 		}
 
-		// Time label.
 		if ( $all_day ) {
 			$time_label = __( 'All Day', 'blt-events' );
 		} elseif ( $start_time && $event_date ) {
@@ -144,145 +140,249 @@ class BLT_Events_Single_Event {
 			$time_label = '';
 		}
 
-		// Location lines.
-		$location_lines = array();
-		if ( in_array( $event_type, array( 'in-person', 'hybrid' ), true ) ) {
-			if ( $venue ) {
-				$location_lines[] = $venue;
-			}
-			if ( $location ) {
-				$location_lines[] = $location;
-			}
-		}
-		$is_online = in_array( $event_type, array( 'online', 'hybrid' ), true );
-
-		$google_url = BLT_Events_Helpers::get_google_calendar_url( $event );
-		$ics_url    = admin_url( 'admin-post.php?action=blt_event_ics&event_id=' . $event_id );
-		$permalink  = get_permalink( $event_id );
+		$has_shortcode = has_shortcode( $event->post_content, 'blt_event_registration' );
 
 		ob_start();
 		?>
-		<div class="blt-single-event">
-			<div class="blt-single-layout">
-				<div class="blt-single-main">
-					<div class="blt-event-meta-bar">
-						<?php if ( $date_label ) : ?>
-							<div class="blt-meta-item">
-								<span class="blt-meta-icon" aria-hidden="true"><?php echo self::icon( 'calendar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-								<span class="blt-meta-text"><?php echo esc_html( $date_label ); ?></span>
-							</div>
-						<?php endif; ?>
+		<div class="blt-event">
+			<?php if ( has_post_thumbnail( $event_id ) ) : ?>
+				<div class="blt-event__featured">
+					<?php echo get_the_post_thumbnail( $event_id, 'large', array( 'class' => 'blt-event__featured-img' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
+			<?php endif; ?>
 
-						<?php if ( $time_label ) : ?>
-							<div class="blt-meta-item">
-								<span class="blt-meta-icon" aria-hidden="true"><?php echo self::icon( 'clock' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-								<span class="blt-meta-text"><?php echo esc_html( $time_label ); ?></span>
-							</div>
-						<?php endif; ?>
+			<div class="blt-event__layout">
+				<div class="blt-event__main">
+					<?php self::render_categories( $event_id ); ?>
 
-						<?php if ( ! empty( $location_lines ) ) : ?>
-							<div class="blt-meta-item">
-								<span class="blt-meta-icon" aria-hidden="true"><?php echo self::icon( 'pin' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-								<span class="blt-meta-text">
-									<?php foreach ( $location_lines as $line ) : ?>
-										<span class="blt-meta-line"><?php echo esc_html( $line ); ?></span>
-									<?php endforeach; ?>
-								</span>
-							</div>
-						<?php elseif ( $is_online ) : ?>
-							<div class="blt-meta-item">
-								<span class="blt-meta-icon" aria-hidden="true"><?php echo self::icon( 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-								<span class="blt-meta-text"><?php esc_html_e( 'Online Event', 'blt-events' ); ?></span>
-							</div>
-						<?php endif; ?>
-					</div>
+					<h1 class="blt-event__title"><?php echo esc_html( get_the_title( $event_id ) ); ?></h1>
 
-					<?php if ( $multi_day && count( $days ) > 1 ) : ?>
-						<div class="blt-event-schedule">
-							<h3><?php esc_html_e( 'Schedule', 'blt-events' ); ?></h3>
-							<ul>
-								<?php foreach ( $days as $day ) : ?>
-									<?php
-									$day_date = $day['date'] ?? '';
-									if ( ! $day_date ) {
-										continue;
-									}
-									$day_start = $day['start'] ?? '';
-									$day_end   = $day['end'] ?? '';
-
-									$day_time = $day_start === ''
-										? __( 'All Day', 'blt-events' )
-										: date_i18n( $time_format, strtotime( $day_date . ' ' . $day_start ) )
-											. ( $day_end ? ' – ' . date_i18n( $time_format, strtotime( $day_date . ' ' . $day_end ) ) : '' );
-									?>
-									<li>
-										<span class="blt-schedule-date"><?php echo esc_html( date_i18n( $date_format, strtotime( $day_date ) ) ); ?></span>
-										<span class="blt-schedule-time"><?php echo esc_html( $day_time ); ?></span>
-									</li>
-								<?php endforeach; ?>
-							</ul>
-						</div>
-					<?php endif; ?>
-
-					<div class="blt-event-description">
+					<div class="blt-event__description">
 						<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already-filtered post content. ?>
 					</div>
+
+					<?php self::render_agenda( $event_id, $time_format ); ?>
+
+					<?php if ( ! $has_shortcode ) : ?>
+						<div class="blt-event__registration" id="blt-event-registration">
+							<h2 class="blt-event__section-title"><?php esc_html_e( 'Register', 'blt-events' ); ?></h2>
+							<?php echo BLT_Events_Registration_Shortcode::render( array( 'event_id' => $event_id ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
+					<?php endif; ?>
 				</div>
 
-				<aside class="blt-single-sidebar">
-					<div class="blt-sidebar-actions">
-						<a class="blt-cal-button" href="<?php echo esc_url( $google_url ); ?>" target="_blank" rel="noopener noreferrer">
-							+ <?php esc_html_e( 'Add to Google Calendar', 'blt-events' ); ?>
-						</a>
-						<a class="blt-cal-button" href="<?php echo esc_url( $ics_url ); ?>">
-							+ <?php esc_html_e( 'iCal / Outlook export', 'blt-events' ); ?>
-						</a>
-					</div>
-
+				<aside class="blt-event__sidebar">
 					<?php
+					self::render_datebox( $event_id, $date_label, $time_label );
+					self::render_cta( $event_id );
+					self::render_location( $event_id, $event_type );
+
 					/**
-					 * Extra sidebar content for the single event view —
-					 * presenters, sponsors, related links, and so on.
+					 * Extra sidebar content — presenters, sponsors, etc.
 					 *
-					 * @param int $event_id The event post ID.
+					 * @param int $event_id
 					 */
 					do_action( 'blt_events_single_sidebar', $event_id );
 					?>
-
-					<div class="blt-share">
-						<h4><?php esc_html_e( 'Share', 'blt-events' ); ?></h4>
-						<div class="blt-share-buttons">
-							<a href="<?php echo esc_url( 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode( $permalink ) ); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e( 'Share on LinkedIn', 'blt-events' ); ?>">in</a>
-							<a href="<?php echo esc_url( 'https://twitter.com/intent/tweet?url=' . rawurlencode( $permalink ) . '&text=' . rawurlencode( $event->post_title ) ); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e( 'Share on X', 'blt-events' ); ?>">&#120143;</a>
-							<a href="<?php echo esc_url( 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $permalink ) ); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e( 'Share on Facebook', 'blt-events' ); ?>">f</a>
-						</div>
-					</div>
 				</aside>
 			</div>
-
-			<?php if ( ! has_shortcode( $event->post_content, 'blt_event_registration' ) ) : ?>
-				<div class="blt-single-registration" id="blt-register">
-					<h3><?php esc_html_e( 'Event Registration', 'blt-events' ); ?></h3>
-					<?php echo BLT_Events_Registration_Shortcode::render( array( 'event_id' => $event_id ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-				</div>
-			<?php endif; ?>
 		</div>
 		<?php
 		return ob_get_clean();
 	}
 
-	/**
-	 * Inline SVG icons (stroke follows currentColor so the theme's text
-	 * color applies).
-	 */
-	private static function icon( $name ) {
-		$icons = array(
-			'calendar' => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-			'clock'    => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-			'pin'      => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-			'globe'    => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-		);
+	private static function render_categories( $event_id ) {
+		$terms = get_the_terms( $event_id, 'event_category' );
+		if ( empty( $terms ) || is_wp_error( $terms ) ) {
+			return;
+		}
+		?>
+		<div class="blt-event__categories">
+			<?php foreach ( $terms as $term ) : ?>
+				<a class="blt-event__category" href="<?php echo esc_url( (string) get_term_link( $term ) ); ?>"><?php echo esc_html( $term->name ); ?></a>
+			<?php endforeach; ?>
+		</div>
+		<?php
+	}
 
-		return $icons[ $name ] ?? '';
+	/**
+	 * Collapsible agenda, rendered only when enabled and populated.
+	 */
+	private static function render_agenda( $event_id, $time_format ) {
+		if ( get_post_meta( $event_id, '_blt_agenda_enabled', true ) !== '1' ) {
+			return;
+		}
+
+		$raw   = get_post_meta( $event_id, '_blt_agenda', true );
+		$items = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+		if ( empty( $items ) || ! is_array( $items ) ) {
+			return;
+		}
+		?>
+		<details class="blt-event__agenda" open>
+			<summary class="blt-event__agenda-summary">
+				<span class="blt-event__section-title"><?php esc_html_e( 'Event Schedule', 'blt-events' ); ?></span>
+				<span class="blt-event__agenda-chevron" aria-hidden="true">&#9662;</span>
+			</summary>
+			<ul class="blt-event__agenda-list">
+				<?php foreach ( $items as $item ) : ?>
+					<?php
+					$label = $item['label'] ?? '';
+					$start = $item['start'] ?? '';
+					$end   = $item['end'] ?? '';
+					if ( $label === '' && $start === '' ) {
+						continue;
+					}
+
+					$time = '';
+					if ( $start !== '' ) {
+						$time = date_i18n( $time_format, strtotime( '2000-01-01 ' . $start ) );
+						if ( $end !== '' ) {
+							$time .= ' - ' . date_i18n( $time_format, strtotime( '2000-01-01 ' . $end ) );
+						}
+					}
+					?>
+					<li class="blt-event__agenda-item">
+						<?php if ( $time ) : ?>
+							<span class="blt-event__agenda-time"><?php echo esc_html( $time ); ?></span>
+						<?php endif; ?>
+						<span class="blt-event__agenda-label"><?php echo esc_html( $label ); ?></span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</details>
+		<?php
+	}
+
+	private static function render_datebox( $event_id, $date_label, $time_label ) {
+		$event_date = get_post_meta( $event_id, '_blt_event_date', true );
+		$day        = $event_date ? date_i18n( 'j', strtotime( $event_date ) ) : '';
+		?>
+		<div class="blt-event__card blt-event__datebox">
+			<div class="blt-event__datebox-head">
+				<?php if ( $day !== '' ) : ?>
+					<span class="blt-event__datebox-day"><?php echo esc_html( $day ); ?></span>
+				<?php endif; ?>
+				<span class="blt-event__datebox-meta">
+					<span class="blt-event__datebox-label"><?php esc_html_e( 'Event Date', 'blt-events' ); ?></span>
+					<span class="blt-event__datebox-value"><?php echo esc_html( $date_label ); ?></span>
+				</span>
+			</div>
+			<?php if ( $time_label ) : ?>
+				<p class="blt-event__datebox-time"><?php echo esc_html( $time_label ); ?></p>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Price summary + a CTA that jumps to the registration panel.
+	 */
+	private static function render_cta( $event_id ) {
+		$tickets = BLT_Events_Helpers::get_ticket_types( $event_id );
+
+		$min_price = null;
+		$has_paid  = false;
+		foreach ( $tickets as $ticket ) {
+			$price = isset( $ticket['price'] ) ? (float) $ticket['price'] : 0;
+			if ( $price > 0 ) {
+				$has_paid  = true;
+				$min_price = ( $min_price === null ) ? $price : min( $min_price, $price );
+			}
+		}
+
+		$cta_label = $has_paid ? __( 'Buy tickets', 'blt-events' ) : __( 'Register', 'blt-events' );
+		?>
+		<div class="blt-event__card blt-event__cta">
+			<div class="blt-event__cta-price">
+				<?php if ( $has_paid && $min_price !== null ) : ?>
+					<span class="blt-event__cta-from"><?php esc_html_e( 'FROM', 'blt-events' ); ?></span>
+					<span class="blt-event__cta-amount"><?php echo esc_html( BLT_Events_Helpers::format_price( $min_price ) ); ?></span>
+				<?php else : ?>
+					<span class="blt-event__cta-amount"><?php esc_html_e( 'Free', 'blt-events' ); ?></span>
+				<?php endif; ?>
+			</div>
+			<a class="blt-event__cta-button" href="#blt-event-registration">
+				<?php echo esc_html( $cta_label ); ?> <span aria-hidden="true">&rarr;</span>
+			</a>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Address block for physical events, or a "Virtual" block for online
+	 * events. For online/hybrid events, the actual join link is revealed
+	 * only to a logged-in visitor with a confirmed registration.
+	 */
+	private static function render_location( $event_id, $event_type ) {
+		$is_online   = in_array( $event_type, array( 'online', 'hybrid' ), true );
+		$is_physical = in_array( $event_type, array( 'in-person', 'hybrid' ), true );
+
+		$venue    = get_post_meta( $event_id, '_blt_event_venue', true );
+		$location = get_post_meta( $event_id, '_blt_event_location', true );
+
+		if ( $is_physical && ( $venue || $location ) ) {
+			$address = trim( $venue . ( $venue && $location ? ', ' : '' ) . $location );
+			?>
+			<div class="blt-event__card blt-event__address">
+				<h3 class="blt-event__card-title"><?php esc_html_e( 'Address', 'blt-events' ); ?></h3>
+				<p class="blt-event__address-text"><?php echo esc_html( $address ); ?></p>
+				<?php self::render_map( $event_id ); ?>
+			</div>
+			<?php
+		}
+
+		if ( $is_online ) {
+			self::render_virtual( $event_id );
+		}
+	}
+
+	/**
+	 * "Virtual" block. Shows the join link to confirmed registrants,
+	 * otherwise a note that the link is shared after registration.
+	 */
+	private static function render_virtual( $event_id ) {
+		$online_url = get_post_meta( $event_id, '_blt_event_online_url', true );
+		$can_see    = false;
+
+		if ( $online_url && is_user_logged_in() && class_exists( 'BLT_Events_Registrations_DB' ) ) {
+			$reg_db  = new BLT_Events_Registrations_DB();
+			$can_see = $reg_db->email_confirmed_for_event( wp_get_current_user()->user_email, $event_id );
+		}
+		?>
+		<div class="blt-event__card blt-event__virtual">
+			<h3 class="blt-event__card-title"><?php esc_html_e( 'Virtual', 'blt-events' ); ?></h3>
+			<?php if ( $can_see ) : ?>
+				<p class="blt-event__virtual-text"><?php esc_html_e( 'You are registered. Join here:', 'blt-events' ); ?></p>
+				<a class="blt-event__virtual-link" href="<?php echo esc_url( $online_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $online_url ); ?></a>
+			<?php else : ?>
+				<p class="blt-event__virtual-text"><?php esc_html_e( 'This is a virtual event. The join link is sent to attendees and shown here once your registration is confirmed.', 'blt-events' ); ?></p>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * A keyless OpenStreetMap embed centred on the event coordinates, when
+	 * latitude/longitude are set on the event.
+	 */
+	private static function render_map( $event_id ) {
+		$lat = get_post_meta( $event_id, '_blt_event_latitude', true );
+		$lng = get_post_meta( $event_id, '_blt_event_longitude', true );
+
+		if ( ! is_numeric( $lat ) || ! is_numeric( $lng ) ) {
+			return;
+		}
+
+		$lat = (float) $lat;
+		$lng = (float) $lng;
+		$d   = 0.01; // Bounding-box padding (~1km).
+		$bbox = sprintf( '%f,%f,%f,%f', $lng - $d, $lat - $d, $lng + $d, $lat + $d );
+		$src  = 'https://www.openstreetmap.org/export/embed.html?bbox=' . rawurlencode( $bbox ) . '&layer=mapnik&marker=' . rawurlencode( $lat . ',' . $lng );
+		?>
+		<div class="blt-event__map">
+			<iframe title="<?php esc_attr_e( 'Event location map', 'blt-events' ); ?>" src="<?php echo esc_url( $src ); ?>" loading="lazy"></iframe>
+		</div>
+		<?php
 	}
 }

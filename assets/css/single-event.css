@@ -1,184 +1,298 @@
 /* ========================================
    BLT Events - Single Event (front end)
-   Two-column event layout: meta bar + description on the left,
-   calendar/share actions on the right, registration below.
-   Inherits the theme's fonts and text color; override the accent with
-   --blt-events-accent on any ancestor.
+   BEM under the `blt-event` block. Self-contained and theme-agnostic;
+   this stylesheet is only loaded when Settings > General > "Single Event
+   Styles" is on. When off, the same BEM markup renders unstyled for the
+   site's own framework (e.g. ACSS) to pick up.
+
+   Override the accent from anywhere with --blt-event-accent.
    ======================================== */
 
-.blt-single-event {
-	--blt-accent: var(--blt-events-accent, #1f2937);
-	margin: 0 auto;
+.blt-event {
+	--blt-event-accent: #111827;
+	--blt-event-link: #2271b1;
+	--blt-event-border: rgba(0, 0, 0, 0.12);
+	--blt-event-muted: #6b7280;
+	--blt-event-radius: 10px;
+	color: #1f2937;
 }
 
-.blt-single-layout {
+/* --- Featured image --- */
+.blt-event__featured {
+	margin-bottom: 2rem;
+}
+
+.blt-event__featured-img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: var(--blt-event-radius);
+}
+
+/* --- Layout --- */
+.blt-event__layout {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 260px;
+	grid-template-columns: minmax(0, 1fr) 320px;
 	gap: 2.5rem;
 	align-items: start;
 }
 
-/* --- Meta bar --- */
-.blt-event-meta-bar {
+/* --- Categories --- */
+.blt-event__categories {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 1rem 2.5rem;
-	margin-bottom: 2rem;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
 }
 
-.blt-meta-item {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.75rem;
-}
-
-.blt-meta-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 40px;
-	height: 40px;
-	flex-shrink: 0;
-	border: 1px solid currentColor;
-	border-radius: 8px;
-	opacity: 0.85;
-}
-
-.blt-meta-text {
+.blt-event__category {
+	display: inline-block;
+	padding: 0.2rem 0.6rem;
+	background: #f0f0f1;
+	border-radius: 4px;
+	font-size: 0.75rem;
 	font-weight: 600;
-	line-height: 1.5;
-	padding-top: 0.35rem;
+	color: #374151;
+	text-decoration: none;
 }
 
-.blt-meta-line {
-	display: block;
+.blt-event__category:hover {
+	background: #e2e3e5;
+	color: #111827;
 }
 
-/* --- Multi-day schedule --- */
-.blt-event-schedule {
-	margin-bottom: 2rem;
+/* --- Title & description --- */
+.blt-event__title {
+	margin: 0 0 1rem;
+	font-size: 2.25rem;
+	line-height: 1.15;
+	font-weight: 700;
 }
 
-.blt-event-schedule h3 {
-	margin: 0 0 0.75rem;
-	font-size: 1.05rem;
+.blt-event__description {
+	font-size: 1rem;
+	line-height: 1.7;
 }
 
-.blt-event-schedule ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-radius: 10px;
-	overflow: hidden;
+.blt-event__description > *:first-child {
+	margin-top: 0;
 }
 
-.blt-event-schedule li {
+.blt-event__section-title {
+	font-size: 1.35rem;
+	font-weight: 700;
+}
+
+/* --- Agenda (collapsible) --- */
+.blt-event__agenda {
+	margin: 2rem 0;
+	border-top: 1px solid var(--blt-event-border);
+	padding-top: 1.25rem;
+}
+
+.blt-event__agenda-summary {
 	display: flex;
-	flex-wrap: wrap;
+	align-items: center;
 	justify-content: space-between;
-	gap: 0.5rem 1rem;
-	margin: 0;
-	padding: 0.75rem 1rem;
+	cursor: pointer;
+	list-style: none;
+}
+
+.blt-event__agenda-summary::-webkit-details-marker {
+	display: none;
+}
+
+.blt-event__agenda-chevron {
+	transition: transform 0.15s ease;
+	color: var(--blt-event-muted);
+}
+
+.blt-event__agenda[open] .blt-event__agenda-chevron {
+	transform: rotate(180deg);
+}
+
+.blt-event__agenda-list {
+	list-style: none;
+	margin: 1rem 0 0;
+	padding: 0;
+}
+
+.blt-event__agenda-item {
+	display: flex;
+	gap: 0.75rem;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid var(--blt-event-border);
 	font-size: 0.95rem;
 }
 
-.blt-event-schedule li + li {
-	border-top: 1px solid rgba(0, 0, 0, 0.08);
+.blt-event__agenda-item:last-child {
+	border-bottom: none;
 }
 
-.blt-schedule-date {
-	font-weight: 600;
+.blt-event__agenda-time {
+	flex-shrink: 0;
+	min-width: 9.5rem;
+	color: var(--blt-event-muted);
+	font-variant-numeric: tabular-nums;
 }
 
-.blt-schedule-time {
-	opacity: 0.75;
+.blt-event__agenda-label {
+	font-weight: 500;
 }
 
-/* --- Sidebar --- */
-.blt-sidebar-actions {
+/* --- Registration panel --- */
+.blt-event__registration {
+	margin-top: 2.5rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--blt-event-border);
+	scroll-margin-top: 2rem;
+}
+
+.blt-event__registration .blt-event__section-title {
+	display: block;
+	margin-bottom: 1.25rem;
+}
+
+/* --- Sidebar cards --- */
+.blt-event__card {
+	border: 1px solid var(--blt-event-border);
+	border-radius: var(--blt-event-radius);
+	padding: 1.25rem;
+	margin-bottom: 1.25rem;
+}
+
+.blt-event__card-title {
+	margin: 0 0 0.6rem;
+	font-size: 1.05rem;
+	font-weight: 700;
+}
+
+/* Date box */
+.blt-event__datebox-head {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+}
+
+.blt-event__datebox-day {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	flex-shrink: 0;
+	border: 1px solid var(--blt-event-border);
+	border-radius: 8px;
+	font-size: 1.4rem;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.blt-event__datebox-meta {
 	display: flex;
 	flex-direction: column;
-	gap: 0.6rem;
-	margin-bottom: 1.75rem;
 }
 
-.blt-cal-button {
-	display: block;
-	padding: 0.65rem 1rem;
-	background: var(--blt-accent);
-	color: #ffffff;
+.blt-event__datebox-label {
+	font-size: 0.75rem;
+	color: var(--blt-event-muted);
+}
+
+.blt-event__datebox-value {
+	font-size: 1.05rem;
+	font-weight: 700;
+}
+
+.blt-event__datebox-time {
+	margin: 0.85rem 0 0;
+	font-size: 0.9rem;
+	color: var(--blt-event-muted);
+}
+
+/* CTA card */
+.blt-event__cta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.blt-event__cta-price {
+	display: flex;
+	align-items: baseline;
+	gap: 0.35rem;
+}
+
+.blt-event__cta-from {
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	color: var(--blt-event-muted);
+}
+
+.blt-event__cta-amount {
+	font-size: 1.05rem;
+	font-weight: 700;
+}
+
+.blt-event__cta-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.6rem 1.1rem;
+	background: var(--blt-event-accent);
+	color: #fff;
 	border-radius: 6px;
 	font-size: 0.85rem;
 	font-weight: 600;
 	text-decoration: none;
-	text-align: center;
+	white-space: nowrap;
 	transition: opacity 0.15s;
 }
 
-.blt-cal-button:hover,
-.blt-cal-button:focus {
-	color: #ffffff;
-	opacity: 0.85;
+.blt-event__cta-button:hover,
+.blt-event__cta-button:focus {
+	color: #fff;
+	opacity: 0.88;
 }
 
-.blt-share h4 {
-	margin: 0 0 0.6rem;
-	padding-top: 1.25rem;
-	border-top: 1px solid rgba(0, 0, 0, 0.1);
-	font-size: 0.95rem;
+/* Address / virtual */
+.blt-event__address-text,
+.blt-event__virtual-text {
+	margin: 0 0 0.75rem;
+	font-size: 0.9rem;
+	line-height: 1.5;
+	color: #374151;
 }
 
-.blt-share-buttons {
-	display: flex;
-	gap: 0.5rem;
+.blt-event__virtual-link {
+	font-size: 0.9rem;
+	color: var(--blt-event-link);
+	word-break: break-all;
 }
 
-.blt-share-buttons a {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 34px;
-	height: 34px;
-	border: 1px solid rgba(0, 0, 0, 0.25);
-	border-radius: 6px;
-	font-size: 0.85rem;
-	font-weight: 700;
-	text-decoration: none;
-	color: inherit;
-	transition: background 0.15s, color 0.15s;
+/* Map */
+.blt-event__map {
+	margin-top: 0.75rem;
+	border-radius: 8px;
+	overflow: hidden;
+	border: 1px solid var(--blt-event-border);
 }
 
-.blt-share-buttons a:hover {
-	background: var(--blt-accent);
-	border-color: var(--blt-accent);
-	color: #ffffff;
-}
-
-/* --- Registration section --- */
-.blt-single-registration {
-	max-width: 560px;
-	margin: 3rem auto 0;
-	padding: 2rem;
-	background: #ffffff;
-	border: 1px solid rgba(0, 0, 0, 0.08);
-	border-radius: 12px;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-.blt-single-registration > h3 {
-	margin: 0 0 1.25rem;
-	text-align: center;
+.blt-event__map iframe {
+	display: block;
+	width: 100%;
+	height: 200px;
+	border: 0;
 }
 
 /* --- Responsive --- */
 @media (max-width: 860px) {
-	.blt-single-layout {
+	.blt-event__layout {
 		grid-template-columns: 1fr;
 	}
 
-	.blt-single-sidebar {
-		border-top: 1px solid rgba(0, 0, 0, 0.1);
-		padding-top: 1.5rem;
+	.blt-event__title {
+		font-size: 1.8rem;
 	}
 }

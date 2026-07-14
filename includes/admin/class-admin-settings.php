@@ -63,6 +63,9 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_general', 'blt_events_currency_symbol_custom', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_currency_symbol' ),
 		) );
+		register_setting( 'blt_events_settings_general', 'blt_events_single_styles', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
+		) );
 
 		// --- Payments ---
 		register_setting( 'blt_events_settings_payments', 'blt_events_payment_provider', array(
@@ -405,6 +408,32 @@ class BLT_Events_Admin_Settings {
 							<?php
 						},
 						__( 'Overrides the symbol shown before prices. Leave blank to use the selected currency\'s symbol.', 'blt-events' )
+					);
+					?>
+				</div>
+			</div>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Front-End Styling', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'Controls whether the plugin ships its own CSS for the single event page.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<?php
+					self::render_field(
+						__( 'Single Event Styles', 'blt-events' ),
+						function () {
+							?>
+							<label class="blt-toggle">
+								<input type="checkbox" name="blt_events_single_styles" value="1" <?php checked( get_option( 'blt_events_single_styles', '1' ), '1' ); ?> />
+								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+								<span class="blt-toggle-text">
+									<span class="blt-toggle-label"><?php esc_html_e( 'Load the plugin\'s single event styling', 'blt-events' ); ?></span>
+									<span class="blt-toggle-desc"><?php esc_html_e( 'Turn off to style the event page entirely with your theme or framework (e.g. ACSS). The markup keeps its BEM class names either way.', 'blt-events' ); ?></span>
+								</span>
+							</label>
+							<?php
+						}
 					);
 					?>
 				</div>

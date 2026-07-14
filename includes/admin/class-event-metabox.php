@@ -22,6 +22,7 @@ class BLT_Events_Event_Metabox {
 			'blt_event_details',
 			'blt_event_type',
 			'blt_event_tickets',
+			'blt_event_agenda',
 			'blt_event_registration_config',
 			'blt_event_options',
 			'blt_event_registrations_summary',
@@ -66,6 +67,15 @@ class BLT_Events_Event_Metabox {
 			'event',
 			'normal',
 			'high'
+		);
+
+		add_meta_box(
+			'blt_event_agenda',
+			__( 'Event Schedule', 'blt-events' ),
+			array( __CLASS__, 'render_agenda_box' ),
+			'event',
+			'normal',
+			'default'
 		);
 
 		add_meta_box(
@@ -523,6 +533,60 @@ class BLT_Events_Event_Metabox {
 	}
 
 	/* ----------------------------------------------------------------
+	 * Event Schedule / Agenda
+	 * ---------------------------------------------------------------- */
+
+	public static function render_agenda_box( $post ) {
+		$prefix  = BLT_EVENTS_PREFIX;
+		$enabled = get_post_meta( $post->ID, $prefix . 'agenda_enabled', true ) === '1';
+
+		$raw   = get_post_meta( $post->ID, $prefix . 'agenda', true );
+		$items = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+		$items = is_array( $items ) ? array_values( $items ) : array();
+
+		if ( empty( $items ) ) {
+			$items = array( array( 'start' => '', 'end' => '', 'label' => '' ) );
+		}
+		?>
+		<div class="blt-editor">
+			<div class="blt-toggle-row">
+				<span class="blt-toggle-text">
+					<span>
+						<span class="blt-toggle-title"><?php esc_html_e( 'Show an agenda on the event page', 'blt-events' ); ?></span>
+						<span class="blt-toggle-desc"><?php esc_html_e( 'Displays a collapsible schedule of sessions on the single event page.', 'blt-events' ); ?></span>
+					</span>
+				</span>
+				<span class="blt-toggle">
+					<input type="checkbox" name="agenda_enabled" id="blt-agenda-enabled" value="1" <?php checked( $enabled ); ?> />
+					<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+				</span>
+			</div>
+
+			<div class="blt-agenda-panel" id="blt-agenda-panel" <?php echo $enabled ? '' : 'style="display:none;"'; ?>>
+				<div class="blt-agenda-header" aria-hidden="true">
+					<span><?php esc_html_e( 'Start', 'blt-events' ); ?></span>
+					<span><?php esc_html_e( 'End', 'blt-events' ); ?></span>
+					<span><?php esc_html_e( 'Session', 'blt-events' ); ?></span>
+					<span></span>
+				</div>
+				<div id="blt-agenda-rows">
+					<?php foreach ( $items as $i => $item ) : ?>
+						<div class="blt-agenda-row">
+							<input type="time" class="blt-input" name="agenda[<?php echo (int) $i; ?>][start]" value="<?php echo esc_attr( $item['start'] ?? '' ); ?>" />
+							<input type="time" class="blt-input" name="agenda[<?php echo (int) $i; ?>][end]" value="<?php echo esc_attr( $item['end'] ?? '' ); ?>" />
+							<input type="text" class="blt-input" name="agenda[<?php echo (int) $i; ?>][label]" value="<?php echo esc_attr( $item['label'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'e.g. Registration & networking', 'blt-events' ); ?>" />
+							<button type="button" class="blt-agenda-remove dashicons dashicons-trash" aria-label="<?php esc_attr_e( 'Remove session', 'blt-events' ); ?>"></button>
+						</div>
+					<?php endforeach; ?>
+				</div>
+				<button type="button" class="blt-btn-dashed" id="blt-add-agenda">+ <?php esc_html_e( 'Add Session', 'blt-events' ); ?></button>
+				<p class="blt-help"><?php esc_html_e( 'Each session shows as "start - end: session". Leave times blank for an untimed item.', 'blt-events' ); ?></p>
+			</div>
+		</div>
+		<?php
+	}
+
+	/* ----------------------------------------------------------------
 	 * Registration Configuration
 	 * ---------------------------------------------------------------- */
 
@@ -881,6 +945,32 @@ class BLT_Events_Event_Metabox {
 			}
 		}
 		update_post_meta( $post_id, $prefix . 'ticket_types', wp_json_encode( $ticket_types ) );
+
+		// Agenda / schedule
+		update_post_meta( $post_id, $prefix . 'agenda_enabled', isset( $_POST['agenda_enabled'] ) ? '1' : '0' );
+		$agenda = array();
+		if ( isset( $_POST['agenda'] ) && is_array( $_POST['agenda'] ) ) {
+			foreach ( $_POST['agenda'] as $row ) {
+				if ( ! is_array( $row ) ) {
+					continue;
+				}
+				$label = sanitize_text_field( wp_unslash( $row['label'] ?? '' ) );
+				$start = self::sanitize_time( $row['start'] ?? '' );
+				$end   = self::sanitize_time( $row['end'] ?? '' );
+
+				// Skip fully empty rows.
+				if ( $label === '' && $start === '' && $end === '' ) {
+					continue;
+				}
+
+				$agenda[] = array(
+					'start' => $start,
+					'end'   => $end,
+					'label' => $label,
+				);
+			}
+		}
+		update_post_meta( $post_id, $prefix . 'agenda', wp_json_encode( $agenda ) );
 
 		// Registration config
 		update_post_meta( $post_id, $prefix . 'registration_open', isset( $_POST['registration_open'] ) ? '1' : '0' );

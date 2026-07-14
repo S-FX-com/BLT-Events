@@ -429,6 +429,37 @@ jQuery(document).ready(function ($) {
 	syncSingleTicketDates();
 
 	/* ----------------------------------------------------------------
+	 * Agenda / schedule
+	 * ---------------------------------------------------------------- */
+	$("#blt-agenda-enabled").on("change", function () {
+		$("#blt-agenda-panel").toggle(this.checked);
+	});
+
+	var $agendaRows = $("#blt-agenda-rows");
+	var agendaIndex = $agendaRows.children(".blt-agenda-row").length;
+
+	$("#blt-add-agenda").on("click", function () {
+		var $row = $(
+			'<div class="blt-agenda-row">' +
+				'<input type="time" class="blt-input" name="agenda[' + agendaIndex + '][start]" />' +
+				'<input type="time" class="blt-input" name="agenda[' + agendaIndex + '][end]" />' +
+				'<input type="text" class="blt-input" name="agenda[' + agendaIndex + '][label]" />' +
+				'<button type="button" class="blt-agenda-remove dashicons dashicons-trash"></button>' +
+			"</div>"
+		);
+		$agendaRows.append($row);
+		agendaIndex++;
+	});
+
+	$agendaRows.on("click", ".blt-agenda-remove", function () {
+		if ($agendaRows.children(".blt-agenda-row").length > 1) {
+			$(this).closest(".blt-agenda-row").remove();
+		} else {
+			$(this).closest(".blt-agenda-row").find("input").val("");
+		}
+	});
+
+	/* ----------------------------------------------------------------
 	 * Registration configuration
 	 * ---------------------------------------------------------------- */
 	$("#blt-registration-open").on("change", function () {
