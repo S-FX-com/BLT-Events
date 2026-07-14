@@ -249,9 +249,9 @@ class BLT_Events_Admin_Settings {
 	public static function render_settings_page() {
 		$current = self::current_tab();
 		?>
-		<div class="wrap blt-events-settings">
-			<div class="blt-settings-header">
-				<h1><?php esc_html_e( 'BLT Events', 'blt-events' ); ?> <span class="blt-settings-header-sub"><?php esc_html_e( 'Settings', 'blt-events' ); ?></span></h1>
+		<div class="wrap blt-ui blt-events-settings">
+			<div class="blt-admin-page-header">
+				<h1><?php esc_html_e( 'BLT Events', 'blt-events' ); ?> <span class="blt-admin-page-header-sub"><?php esc_html_e( 'Settings', 'blt-events' ); ?></span></h1>
 			</div>
 
 			<?php settings_errors(); ?>
@@ -400,13 +400,13 @@ class BLT_Events_Admin_Settings {
 					<p><?php esc_html_e( 'Choose which payment provider handles paid event registrations.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
-					<div class="blt-provider-cards" role="radiogroup" aria-label="<?php esc_attr_e( 'Payment provider', 'blt-events' ); ?>">
+					<div class="blt-select-cards" role="radiogroup" aria-label="<?php esc_attr_e( 'Payment provider', 'blt-events' ); ?>">
 						<?php foreach ( $providers as $value => $provider ) : ?>
-							<label class="blt-provider-card <?php echo $payment_provider === $value ? 'is-selected' : ''; ?>">
+							<label class="blt-select-card <?php echo $payment_provider === $value ? 'is-selected' : ''; ?>">
 								<input type="radio" name="blt_events_payment_provider" value="<?php echo esc_attr( $value ); ?>" <?php checked( $payment_provider, $value ); ?> />
-								<span class="blt-provider-card-check" aria-hidden="true"></span>
-								<span class="blt-provider-card-name"><?php echo esc_html( $provider['name'] ); ?></span>
-								<span class="blt-provider-card-desc"><?php echo esc_html( $provider['desc'] ); ?></span>
+								<span class="blt-select-card-check" aria-hidden="true"></span>
+								<span class="blt-select-card-name"><?php echo esc_html( $provider['name'] ); ?></span>
+								<span class="blt-select-card-desc"><?php echo esc_html( $provider['desc'] ); ?></span>
 							</label>
 						<?php endforeach; ?>
 					</div>
@@ -530,9 +530,9 @@ class BLT_Events_Admin_Settings {
 			<div class="blt-callout">
 				<strong><?php esc_html_e( 'Template variables', 'blt-events' ); ?></strong>
 				<span><?php esc_html_e( 'Use these placeholders in any subject or body — they are replaced per attendee when the email is sent:', 'blt-events' ); ?></span>
-				<span class="blt-var-chips">
+				<span class="blt-chips">
 					<?php foreach ( $variables as $variable ) : ?>
-						<code class="blt-var-chip"><?php echo esc_html( $variable ); ?></code>
+						<code class="blt-chip"><?php echo esc_html( $variable ); ?></code>
 					<?php endforeach; ?>
 				</span>
 			</div>

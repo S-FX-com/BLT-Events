@@ -128,14 +128,14 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 
 	public function column_status( $item ) {
-		$statuses = array(
-			'confirmed' => '#059669',
-			'pending'   => '#d97706',
-			'cancelled' => '#dc2626',
-			'refunded'  => '#6b7280',
+		$known_statuses = array( 'confirmed', 'pending', 'cancelled', 'refunded' );
+		$badge_status   = in_array( $item->status, $known_statuses, true ) ? $item->status : 'refunded';
+
+		return sprintf(
+			'<span class="blt-badge blt-badge-%1$s">%2$s</span>',
+			esc_attr( $badge_status ),
+			esc_html( ucfirst( $item->status ) )
 		);
-		$color = $statuses[ $item->status ] ?? '#6b7280';
-		return '<span style="color:' . esc_attr( $color ) . ';font-weight:600;">' . esc_html( ucfirst( $item->status ) ) . '</span>';
 	}
 
 	public function column_created_at( $item ) {
@@ -220,21 +220,26 @@ class BLT_Events_Registrations_List {
 		$table = new BLT_Events_Registrations_List_Table();
 		$table->prepare_items();
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Event Registrations', 'blt-events' ); ?></h1>
+		<div class="wrap blt-ui blt-events-registrations">
+			<div class="blt-admin-page-header">
+				<h1><?php esc_html_e( 'Event Registrations', 'blt-events' ); ?></h1>
+				<div class="blt-admin-page-actions">
+					<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=blt_export_registrations&event_id=' . absint( $_GET['event_id'] ?? 0 ) . '&_wpnonce=' . wp_create_nonce( 'blt_export' ) ) ); ?>" class="button button-primary">
+						<?php esc_html_e( 'Export CSV', 'blt-events' ); ?>
+					</a>
+				</div>
+			</div>
 
-			<form method="get">
-				<input type="hidden" name="post_type" value="event" />
-				<input type="hidden" name="page" value="blt-registrations" />
-				<?php $table->search_box( __( 'Search', 'blt-events' ), 'search_registration' ); ?>
-				<?php $table->display(); ?>
-			</form>
-
-			<p>
-				<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=blt_export_registrations&event_id=' . absint( $_GET['event_id'] ?? 0 ) . '&_wpnonce=' . wp_create_nonce( 'blt_export' ) ) ); ?>" class="button">
-					<?php esc_html_e( 'Export CSV', 'blt-events' ); ?>
-				</a>
-			</p>
+			<div class="blt-card">
+				<div class="blt-card-body">
+					<form method="get">
+						<input type="hidden" name="post_type" value="event" />
+						<input type="hidden" name="page" value="blt-registrations" />
+						<?php $table->search_box( __( 'Search', 'blt-events' ), 'search_registration' ); ?>
+						<?php $table->display(); ?>
+					</form>
+				</div>
+			</div>
 		</div>
 		<?php
 	}
