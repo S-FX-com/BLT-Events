@@ -41,9 +41,17 @@
 	--blt-radius-sm: 4px;
 }
 
-/* --- Page shell --- */
+/* --- Page shell ---
+   Form-oriented screens (Settings, Fieldsets) stay at a readable measure.
+   Data-table screens add `.blt-ui-wide` to use the full content width —
+   WordPress already indents the content area to clear the admin sidebar,
+   so "full width" here means full width of that area, not the viewport. */
 .blt-ui {
 	max-width: 960px;
+}
+
+.blt-ui.blt-ui-wide {
+	max-width: none;
 }
 
 .blt-ui .blt-admin-page-header {

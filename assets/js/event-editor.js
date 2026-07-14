@@ -361,6 +361,74 @@ jQuery(document).ready(function ($) {
 	});
 
 	/* ----------------------------------------------------------------
+	 * Single ticket: mirror the event's start/end dates onto the ticket's
+	 * sale window. With more than one ticket type each keeps its own dates
+	 * (left blank unless set), matching the requested behaviour.
+	 * ---------------------------------------------------------------- */
+	var getEventDateRange = function () {
+		if ($multiDay.is(":checked")) {
+			var dates = $("#blt-day-rows .blt-day-row input[type=date]")
+				.map(function () {
+					return $(this).val();
+				})
+				.get()
+				.filter(function (v) {
+					return v;
+				})
+				.sort();
+			if (dates.length) {
+				return { start: dates[0], end: dates[dates.length - 1] };
+			}
+			return { start: "", end: "" };
+		}
+		var d = $("#event_date").val() || "";
+		return { start: d, end: d };
+	};
+
+	var syncSingleTicketDates = function () {
+		var $tickets = $ticketList.children(".blt-ticket");
+		if ($tickets.length !== 1) {
+			return;
+		}
+
+		var range = getEventDateRange();
+		var $ticket = $tickets.first();
+
+		// Only fill blanks or values we previously auto-filled, so a value
+		// the user typed is never overwritten.
+		var apply = function (selector, value) {
+			if (!value) {
+				return;
+			}
+			var $input = $ticket.find(selector);
+			if ($input.length && ($input.val() === "" || $input.data("bltAutofill"))) {
+				$input.val(value).data("bltAutofill", true);
+			}
+		};
+
+		apply('input[name$="[sale_start_date]"]', range.start);
+		apply('input[name$="[sale_end_date]"]', range.end);
+	};
+
+	// A manual edit to a sale date opts that field out of auto-alignment.
+	$(document).on(
+		"input",
+		'.blt-ticket input[name$="[sale_start_date]"], .blt-ticket input[name$="[sale_end_date]"]',
+		function () {
+			$(this).data("bltAutofill", false);
+		}
+	);
+
+	// Re-align whenever the event dates or ticket count change.
+	$(document).on("change input", "#event_date, #blt-day-rows input[type=date]", syncSingleTicketDates);
+	$multiDay.on("change", syncSingleTicketDates);
+	$(document).on("click", ".blt-add-ticket, .blt-ticket-remove", function () {
+		// Defer so the row is added/removed before we count tickets.
+		window.setTimeout(syncSingleTicketDates, 0);
+	});
+	syncSingleTicketDates();
+
+	/* ----------------------------------------------------------------
 	 * Registration configuration
 	 * ---------------------------------------------------------------- */
 	$("#blt-registration-open").on("change", function () {
