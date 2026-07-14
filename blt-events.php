@@ -236,6 +236,24 @@ function blt_events_enqueue_admin_assets( $hook ) {
 		true
 	);
 
+	// The Settings screen gets its own tabbed, card-based UI.
+	if ( strpos( $hook, 'blt-events-settings' ) !== false ) {
+		wp_enqueue_style(
+			'blt-events-settings',
+			BLT_EVENTS_PLUGIN_URL . 'assets/css/settings.css',
+			array( 'blt-events-admin' ),
+			BLT_EVENTS_VERSION
+		);
+
+		wp_enqueue_script(
+			'blt-events-settings',
+			BLT_EVENTS_PLUGIN_URL . 'assets/js/settings.js',
+			array( 'jquery' ),
+			BLT_EVENTS_VERSION,
+			true
+		);
+	}
+
 	// The Add/Edit Event screen gets its own card-based editor UI.
 	if ( $screen && 'post' === $screen->base && 'event' === $post_type ) {
 		wp_enqueue_style(
