@@ -261,7 +261,7 @@ class BLT_Events_Event_Metabox {
 						printf(
 							/* translators: %s: settings page URL. */
 							wp_kses( __( 'Connect Zoom, Microsoft Teams, GoTo, or ClickMeeting under <a href="%s">Settings</a> to auto-create a meeting room here.', 'blt-events' ), array( 'a' => array( 'href' => array() ) ) ),
-							esc_url( admin_url( 'edit.php?post_type=event&page=blt-events-settings#integrations' ) )
+							esc_url( admin_url( 'edit.php?post_type=event&page=blt-events-settings&tab=integrations' ) )
 						);
 						?>
 					</p>

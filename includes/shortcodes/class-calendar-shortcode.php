@@ -2,8 +2,15 @@
 /**
  * BLT Events - Calendar Shortcode
  *
- * [blt_events_calendar] - Renders events in list or grid view.
- * Usage: [blt_events_calendar view="list" category="" limit="12"]
+ * [blt_events_calendar] - Renders events as a list, a card grid, or a full
+ * month calendar with previous/next navigation.
+ *
+ * Usage:
+ *   [blt_events_calendar view="list" category="" limit="12" past="no" switcher="no"]
+ *   view="list"     - vertical list of event cards (default)
+ *   view="grid"     - card grid
+ *   view="calendar" - month grid with prev/next month navigation
+ *   switcher="yes"  - show a List / Month toggle so visitors can flip views
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,8 +29,107 @@ class BLT_Events_Calendar_Shortcode {
 			'category' => '',
 			'limit'    => 12,
 			'past'     => 'no',
+			'switcher' => 'no',
 		), $atts );
 
+		$view = self::resolve_view( $atts );
+
+		wp_enqueue_style( 'blt-events' );
+		wp_enqueue_style( 'blt-events-calendar', BLT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), BLT_EVENTS_VERSION );
+
+		if ( 'calendar' === $view ) {
+			return self::render_month_view( $atts );
+		}
+
+		return self::render_list_view( $atts, $view );
+	}
+
+	/**
+	 * Resolve the active view: the shortcode attribute, optionally overridden
+	 * by the visitor via ?blt_view= when the switcher is enabled.
+	 */
+	private static function resolve_view( $atts ) {
+		$allowed = array( 'list', 'grid', 'calendar' );
+
+		$view = strtolower( $atts['view'] );
+		if ( 'month' === $view ) {
+			$view = 'calendar';
+		}
+		if ( ! in_array( $view, $allowed, true ) ) {
+			$view = 'list';
+		}
+
+		if ( 'yes' === $atts['switcher'] && isset( $_GET['blt_view'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$requested = sanitize_key( wp_unslash( $_GET['blt_view'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( in_array( $requested, $allowed, true ) ) {
+				$view = $requested;
+			}
+		}
+
+		return $view;
+	}
+
+	/**
+	 * Base meta query: events marked "Hide from Calendar" stay accessible via
+	 * direct link but never appear in calendar listings.
+	 */
+	private static function visibility_meta_query() {
+		return array(
+			'relation' => 'OR',
+			array(
+				'key'     => '_blt_hide_from_calendar',
+				'compare' => 'NOT EXISTS',
+			),
+			array(
+				'key'     => '_blt_hide_from_calendar',
+				'value'   => '1',
+				'compare' => '!=',
+			),
+		);
+	}
+
+	/**
+	 * Optional event_category tax query from the shortcode's category attribute.
+	 */
+	private static function maybe_add_category_filter( &$args, $atts ) {
+		if ( ! empty( $atts['category'] ) ) {
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'event_category',
+					'field'    => 'slug',
+					'terms'    => array_map( 'trim', explode( ',', $atts['category'] ) ),
+				),
+			);
+		}
+	}
+
+	/**
+	 * View switcher (List | Grid | Month) shown when switcher="yes".
+	 */
+	private static function render_switcher( $active ) {
+		$base = remove_query_arg( array( 'blt_view', 'blt_month' ) );
+
+		$views = array(
+			'list'     => __( 'List', 'blt-events' ),
+			'grid'     => __( 'Grid', 'blt-events' ),
+			'calendar' => __( 'Month', 'blt-events' ),
+		);
+		?>
+		<div class="blt-view-switcher" role="group" aria-label="<?php esc_attr_e( 'Change events view', 'blt-events' ); ?>">
+			<?php foreach ( $views as $view => $label ) : ?>
+				<a href="<?php echo esc_url( add_query_arg( 'blt_view', $view, $base ) ); ?>" class="blt-view-switch <?php echo $active === $view ? 'is-active' : ''; ?>">
+					<?php echo esc_html( $label ); ?>
+				</a>
+			<?php endforeach; ?>
+		</div>
+		<?php
+	}
+
+	/* --------------------------------------------------------------------
+	 * List / Grid views
+	 * ------------------------------------------------------------------ */
+
+	private static function render_list_view( $atts, $view ) {
 		// Clamp limit so shortcode input can't trigger an unbounded query.
 		$limit = intval( $atts['limit'] );
 		if ( $limit < 1 || $limit > 100 ) {
@@ -39,23 +145,7 @@ class BLT_Events_Calendar_Shortcode {
 			'orderby'        => 'meta_value',
 			'order'          => 'ASC',
 			'no_found_rows'  => true,
-		);
-
-		// Events marked "Hide from Calendar" stay accessible via direct
-		// link but never appear in calendar listings.
-		$args['meta_query'] = array(
-			array(
-				'relation' => 'OR',
-				array(
-					'key'     => '_blt_hide_from_calendar',
-					'compare' => 'NOT EXISTS',
-				),
-				array(
-					'key'     => '_blt_hide_from_calendar',
-					'value'   => '1',
-					'compare' => '!=',
-				),
-			),
+			'meta_query'     => array( self::visibility_meta_query() ),
 		);
 
 		// Filter out past events by default
@@ -68,23 +158,15 @@ class BLT_Events_Calendar_Shortcode {
 			);
 		}
 
-		// Category filter
-		if ( ! empty( $atts['category'] ) ) {
-			$args['tax_query'] = array(
-				array(
-					'taxonomy' => 'event_category',
-					'field'    => 'slug',
-					'terms'    => array_map( 'trim', explode( ',', $atts['category'] ) ),
-				),
-			);
-		}
+		self::maybe_add_category_filter( $args, $atts );
 
 		$query = new WP_Query( $args );
 
-		wp_enqueue_style( 'blt-events' );
-		wp_enqueue_style( 'blt-events-calendar', BLT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), BLT_EVENTS_VERSION );
-
 		ob_start();
+
+		if ( 'yes' === $atts['switcher'] ) {
+			self::render_switcher( $view );
+		}
 
 		if ( ! $query->have_posts() ) {
 			echo '<div class="blt-events-empty"><p>' . esc_html__( 'No upcoming events found.', 'blt-events' ) . '</p></div>';
@@ -92,7 +174,7 @@ class BLT_Events_Calendar_Shortcode {
 			return ob_get_clean();
 		}
 
-		$view_class = $atts['view'] === 'grid' ? 'blt-events-grid' : 'blt-events-list';
+		$view_class = $view === 'grid' ? 'blt-events-grid' : 'blt-events-list';
 		?>
 		<div class="blt-events-calendar <?php echo esc_attr( $view_class ); ?>">
 			<?php while ( $query->have_posts() ) : $query->the_post(); ?>
@@ -197,6 +279,175 @@ class BLT_Events_Calendar_Shortcode {
 		</div>
 		<?php
 		wp_reset_postdata();
+		return ob_get_clean();
+	}
+
+	/* --------------------------------------------------------------------
+	 * Month calendar view
+	 * ------------------------------------------------------------------ */
+
+	private static function render_month_view( $atts ) {
+		// Requested month via ?blt_month=YYYY-MM, clamped to +/- 10 years so
+		// crawlers can't page into infinity.
+		$month = isset( $_GET['blt_month'] ) ? sanitize_text_field( wp_unslash( $_GET['blt_month'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! preg_match( '/^\d{4}-(0[1-9]|1[0-2])$/', $month ) ) {
+			$month = current_time( 'Y-m' );
+		}
+
+		$current_year = (int) current_time( 'Y' );
+		$year         = (int) substr( $month, 0, 4 );
+		if ( $year < $current_year - 10 || $year > $current_year + 10 ) {
+			$month = current_time( 'Y-m' );
+		}
+
+		$first_ts      = strtotime( $month . '-01' );
+		$days_in_month = (int) gmdate( 't', $first_ts );
+		$first_day     = $month . '-01';
+		$last_day      = $month . '-' . str_pad( (string) $days_in_month, 2, '0', STR_PAD_LEFT );
+		$today         = current_time( 'Y-m-d' );
+
+		$args = array(
+			'post_type'      => 'event',
+			'post_status'    => 'publish',
+			'posts_per_page' => 300,
+			'meta_key'       => '_blt_event_date',
+			'meta_type'      => 'DATE',
+			'orderby'        => 'meta_value',
+			'order'          => 'ASC',
+			'no_found_rows'  => true,
+			'meta_query'     => array(
+				self::visibility_meta_query(),
+				array(
+					'key'     => '_blt_event_date',
+					'value'   => array( $first_day, $last_day ),
+					'compare' => 'BETWEEN',
+					'type'    => 'DATE',
+				),
+			),
+		);
+
+		self::maybe_add_category_filter( $args, $atts );
+
+		$query = new WP_Query( $args );
+
+		// Bucket events by day, sorted by start time within the day.
+		$by_day      = array();
+		$time_format = get_option( 'time_format', 'g:i A' );
+
+		while ( $query->have_posts() ) {
+			$query->the_post();
+			$event_id   = get_the_ID();
+			$event_date = get_post_meta( $event_id, '_blt_event_date', true );
+			$start_time = get_post_meta( $event_id, '_blt_event_start_time', true );
+			$all_day    = get_post_meta( $event_id, '_blt_event_all_day', true ) === '1';
+
+			if ( empty( $event_date ) ) {
+				continue;
+			}
+
+			$time_label = '';
+			if ( $all_day ) {
+				$time_label = __( 'All Day', 'blt-events' );
+			} elseif ( $start_time ) {
+				$time_label = date_i18n( $time_format, strtotime( $event_date . ' ' . $start_time ) );
+			}
+
+			$by_day[ $event_date ][] = array(
+				'title'    => get_the_title(),
+				'url'      => get_permalink(),
+				'time'     => $time_label,
+				'sort_key' => $all_day ? '00:00' : ( $start_time ?: '23:59' ),
+			);
+		}
+		wp_reset_postdata();
+
+		foreach ( $by_day as &$day_events ) {
+			usort( $day_events, function ( $a, $b ) {
+				return strcmp( $a['sort_key'], $b['sort_key'] );
+			} );
+		}
+		unset( $day_events );
+
+		// Month navigation URLs (query-string based so the shortcode works on
+		// any page without extra rewrite rules).
+		$base       = remove_query_arg( 'blt_month' );
+		$prev_month = gmdate( 'Y-m', strtotime( $month . '-01 -1 month' ) );
+		$next_month = gmdate( 'Y-m', strtotime( $month . '-01 +1 month' ) );
+		$is_current = $month === current_time( 'Y-m' );
+
+		// Week layout honours the site's "Week Starts On" setting.
+		global $wp_locale;
+		$start_of_week = (int) get_option( 'start_of_week', 0 );
+		$lead_days     = ( (int) gmdate( 'w', $first_ts ) - $start_of_week + 7 ) % 7;
+
+		ob_start();
+
+		if ( 'yes' === $atts['switcher'] ) {
+			self::render_switcher( 'calendar' );
+		}
+		?>
+		<div class="blt-events-calendar blt-events-month">
+			<div class="blt-cal-header">
+				<div class="blt-cal-nav">
+					<a class="blt-cal-nav-btn" href="<?php echo esc_url( add_query_arg( 'blt_month', $prev_month, $base ) ); ?>" aria-label="<?php esc_attr_e( 'Previous month', 'blt-events' ); ?>">&lsaquo;</a>
+					<a class="blt-cal-nav-btn" href="<?php echo esc_url( add_query_arg( 'blt_month', $next_month, $base ) ); ?>" aria-label="<?php esc_attr_e( 'Next month', 'blt-events' ); ?>">&rsaquo;</a>
+					<?php if ( ! $is_current ) : ?>
+						<a class="blt-cal-today" href="<?php echo esc_url( $base ); ?>"><?php esc_html_e( 'This Month', 'blt-events' ); ?></a>
+					<?php endif; ?>
+				</div>
+				<h2 class="blt-cal-title"><?php echo esc_html( date_i18n( 'F Y', $first_ts ) ); ?></h2>
+			</div>
+
+			<div class="blt-cal-grid" role="grid">
+				<?php for ( $i = 0; $i < 7; $i++ ) : ?>
+					<?php $weekday = $wp_locale->get_weekday( ( $start_of_week + $i ) % 7 ); ?>
+					<div class="blt-cal-dow" role="columnheader" aria-label="<?php echo esc_attr( $weekday ); ?>">
+						<?php echo esc_html( $wp_locale->get_weekday_initial( $weekday ) ); ?>
+					</div>
+				<?php endfor; ?>
+
+				<?php
+				// Leading cells from the previous month (day numbers only).
+				$prev_month_days = (int) gmdate( 't', strtotime( $month . '-01 -1 month' ) );
+				for ( $i = $lead_days - 1; $i >= 0; $i-- ) {
+					printf( '<div class="blt-cal-day is-other-month"><span class="blt-cal-daynum">%d</span></div>', (int) ( $prev_month_days - $i ) );
+				}
+
+				for ( $day = 1; $day <= $days_in_month; $day++ ) {
+					$date       = $month . '-' . str_pad( (string) $day, 2, '0', STR_PAD_LEFT );
+					$is_today   = $date === $today;
+					$day_events = $by_day[ $date ] ?? array();
+					?>
+					<div class="blt-cal-day <?php echo $is_today ? 'is-today' : ''; ?> <?php echo $day_events ? 'has-events' : ''; ?>" role="gridcell">
+						<span class="blt-cal-daynum"><?php echo (int) $day; ?></span>
+						<?php if ( $day_events ) : ?>
+							<ul class="blt-cal-events">
+								<?php foreach ( $day_events as $event ) : ?>
+									<li class="blt-cal-event">
+										<a href="<?php echo esc_url( $event['url'] ); ?>">
+											<?php if ( $event['time'] ) : ?>
+												<span class="blt-cal-event-time"><?php echo esc_html( $event['time'] ); ?></span>
+											<?php endif; ?>
+											<span class="blt-cal-event-title"><?php echo esc_html( $event['title'] ); ?></span>
+										</a>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
+					</div>
+					<?php
+				}
+
+				// Trailing cells to complete the final week.
+				$total_cells = $lead_days + $days_in_month;
+				$trailing    = ( 7 - ( $total_cells % 7 ) ) % 7;
+				for ( $i = 1; $i <= $trailing; $i++ ) {
+					printf( '<div class="blt-cal-day is-other-month"><span class="blt-cal-daynum">%d</span></div>', (int) $i );
+				}
+				?>
+			</div>
+		</div>
+		<?php
 		return ob_get_clean();
 	}
 }

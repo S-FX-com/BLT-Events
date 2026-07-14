@@ -171,7 +171,7 @@ class BLT_Events_Meeting_Providers {
 
 	protected static function redirect_to_settings( $status, $message ) {
 		set_transient( 'blt_events_meeting_notice_' . get_current_user_id(), array( 'status' => $status, 'message' => $message ), 60 );
-		wp_redirect( admin_url( 'edit.php?post_type=event&page=blt-events-settings#integrations' ) );
+		wp_redirect( admin_url( 'edit.php?post_type=event&page=blt-events-settings&tab=integrations' ) );
 		exit;
 	}
 

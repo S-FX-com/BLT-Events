@@ -208,8 +208,202 @@
 	position: relative;
 }
 
+/* --- View Switcher (List | Month) --- */
+.blt-view-switcher {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.25rem;
+	max-width: 960px;
+	margin: 0 auto 1rem;
+}
+
+.blt-view-switch {
+	padding: 0.4rem 1rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: #1f2937;
+	text-decoration: none;
+	border-bottom: 2px solid transparent;
+	transition: color 0.15s;
+}
+
+.blt-view-switch:hover {
+	color: #6366f1;
+}
+
+.blt-view-switch.is-active {
+	color: #1f2937;
+	font-weight: 600;
+	border-bottom-color: #1f2937;
+}
+
+/* --- Month Calendar View --- */
+.blt-events-month {
+	background: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.blt-cal-header {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem 1.25rem;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.blt-cal-nav {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.blt-cal-nav-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	font-size: 1.35rem;
+	line-height: 1;
+	color: #1f2937;
+	text-decoration: none;
+	border-radius: 6px;
+	transition: background 0.15s;
+}
+
+.blt-cal-nav-btn:hover {
+	background: #f3f4f6;
+	color: #6366f1;
+}
+
+.blt-cal-today {
+	padding: 0.3rem 0.75rem;
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: #1f2937;
+	text-decoration: none;
+	border: 1px solid #d1d5db;
+	border-radius: 6px;
+	transition: border-color 0.15s, color 0.15s;
+}
+
+.blt-cal-today:hover {
+	border-color: #6366f1;
+	color: #6366f1;
+}
+
+.blt-cal-title {
+	margin: 0;
+	font-size: 1.4rem;
+	font-weight: 700;
+	color: #1f2937;
+}
+
+.blt-cal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+}
+
+.blt-cal-dow {
+	padding: 0.6rem 0.5rem;
+	text-align: left;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	color: #6b7280;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.blt-cal-day {
+	min-height: 110px;
+	padding: 0.5rem;
+	border-bottom: 1px solid #f0f0f1;
+	border-right: 1px solid #f0f0f1;
+	font-size: 0.85rem;
+}
+
+.blt-cal-day:nth-child(7n) {
+	border-right: none;
+}
+
+.blt-cal-day.is-other-month .blt-cal-daynum {
+	color: #d1d5db;
+}
+
+.blt-cal-daynum {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 26px;
+	height: 26px;
+	font-weight: 600;
+	color: #1f2937;
+	border-radius: 50%;
+}
+
+.blt-cal-day.is-today .blt-cal-daynum {
+	background: #6366f1;
+	color: #ffffff;
+}
+
+.blt-cal-events {
+	margin: 0.35rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-cal-event {
+	margin: 0 0 0.35rem;
+	line-height: 1.35;
+}
+
+.blt-cal-event a {
+	display: block;
+	text-decoration: none;
+}
+
+.blt-cal-event-time {
+	display: block;
+	font-size: 0.7rem;
+	color: #6b7280;
+}
+
+.blt-cal-event-title {
+	display: block;
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: #1f2937;
+}
+
+.blt-cal-event a:hover .blt-cal-event-title {
+	color: #6366f1;
+	text-decoration: underline;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
+	.blt-cal-day {
+		min-height: 64px;
+		padding: 0.3rem;
+	}
+
+	.blt-cal-event-time {
+		display: none;
+	}
+
+	.blt-cal-event-title {
+		font-size: 0.68rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.blt-cal-title {
+		font-size: 1.1rem;
+	}
+
 	.blt-events-list .blt-event-card {
 		flex-direction: column;
 	}
