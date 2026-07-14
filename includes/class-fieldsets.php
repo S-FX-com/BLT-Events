@@ -58,6 +58,88 @@ class BLT_Events_Fieldsets {
 	}
 
 	/**
+	 * Resolve the prefill value for a field for the current logged-in user.
+	 *
+	 * Order of precedence:
+	 *   1. The field's explicit user-profile mapping (map_user: core user
+	 *      property or user meta key).
+	 *   2. The field's ACF mapping (map_acf: ACF field name on the user).
+	 *   3. Built-in fallbacks by field key (first_name, last_name, email,
+	 *      phone) so the common fields work with zero configuration.
+	 *
+	 * @param array $field Field definition array.
+	 * @return string Prefill value ('' when logged out or nothing matches).
+	 */
+	public static function prefill_value( $field ) {
+		if ( ! is_user_logged_in() ) {
+			return '';
+		}
+
+		$user  = wp_get_current_user();
+		$value = '';
+
+		// 1. Explicit user profile / meta mapping.
+		if ( ! empty( $field['map_user'] ) ) {
+			$value = self::get_user_field( $user, $field['map_user'] );
+		}
+
+		// 2. ACF user field mapping.
+		if ( $value === '' && ! empty( $field['map_acf'] ) && function_exists( 'get_field' ) ) {
+			$acf_value = get_field( $field['map_acf'], 'user_' . $user->ID );
+			if ( is_scalar( $acf_value ) ) {
+				$value = (string) $acf_value;
+			}
+		}
+
+		// 3. Zero-config fallbacks for the standard fields.
+		if ( $value === '' ) {
+			switch ( $field['key'] ?? '' ) {
+				case 'first_name':
+					$value = $user->first_name;
+					break;
+				case 'last_name':
+					$value = $user->last_name;
+					break;
+				case 'email':
+					$value = $user->user_email;
+					break;
+				case 'phone':
+				case 'mobile_number':
+					$value = get_user_meta( $user->ID, 'phone', true )
+						?: get_user_meta( $user->ID, 'billing_phone', true );
+					break;
+			}
+		}
+
+		/**
+		 * Filter the prefilled value for a registration field.
+		 *
+		 * @param string  $value The resolved value.
+		 * @param array   $field The field definition.
+		 * @param WP_User $user  The current user.
+		 */
+		return (string) apply_filters( 'blt_events_prefill_value', $value, $field, $user );
+	}
+
+	/**
+	 * Read a core user property or user meta value by key.
+	 *
+	 * @param WP_User $user The user.
+	 * @param string  $key  Core property (user_email, first_name, ...) or meta key.
+	 * @return string
+	 */
+	private static function get_user_field( $user, $key ) {
+		$core = array( 'user_email', 'user_url', 'user_login', 'display_name', 'first_name', 'last_name', 'nickname', 'description' );
+
+		if ( in_array( $key, $core, true ) ) {
+			return (string) $user->$key;
+		}
+
+		$meta = get_user_meta( $user->ID, $key, true );
+		return is_scalar( $meta ) ? (string) $meta : '';
+	}
+
+	/**
 	 * Render a single form field based on its definition array.
 	 * Returns HTML string.
 	 */

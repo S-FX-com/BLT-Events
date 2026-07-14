@@ -150,7 +150,7 @@ class BLT_Events_Registration_Shortcode {
 					<h3><?php esc_html_e( 'Your Details', 'blt-events' ); ?></h3>
 					<div class="blt-fields-grid">
 						<?php foreach ( $fields as $field ) : ?>
-							<?php echo BLT_Events_Fieldsets::render_field( $field ); ?>
+							<?php echo BLT_Events_Fieldsets::render_field( $field, BLT_Events_Fieldsets::prefill_value( $field ) ); ?>
 						<?php endforeach; ?>
 					</div>
 				</div>

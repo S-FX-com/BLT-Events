@@ -431,11 +431,12 @@ class BLT_Events_Registrations {
 		$event_time = get_post_meta( $event->ID, '_blt_event_start_time', true );
 
 		$replacements = array(
-			'{customer_name}' => $reg->customer_name,
-			'{event_name}'    => $event->post_title,
-			'{event_date}'    => $event_date,
-			'{event_time}'    => $event_time,
-			'{event_url}'     => get_permalink( $event->ID ),
+			'{customer_name}'  => $reg->customer_name,
+			'{event_name}'     => $event->post_title,
+			'{event_date}'     => $event_date,
+			'{event_time}'     => $event_time,
+			'{event_location}' => BLT_Events_Helpers::get_event_location_string( $event->ID ),
+			'{event_url}'      => get_permalink( $event->ID ),
 		);
 
 		$subject = str_replace( array_keys( $replacements ), array_values( $replacements ), $subject_template );
@@ -443,7 +444,25 @@ class BLT_Events_Registrations {
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
 
-		wp_mail( $reg->customer_email, $subject, wpautop( $body ), $headers );
+		// Attach a calendar invite (.ics) when enabled in Settings > Emails.
+		$attachments = array();
+		$ics_path    = '';
+		if ( get_option( 'blt_events_calendar_invite_enabled', '1' ) === '1' ) {
+			$ics_content = BLT_Events_Helpers::generate_ics_content( $event );
+			$ics_path    = get_temp_dir() . 'blt-event-' . $event->ID . '-' . wp_generate_password( 8, false ) . '.ics';
+
+			if ( file_put_contents( $ics_path, $ics_content ) !== false ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+				$attachments[] = $ics_path;
+			} else {
+				$ics_path = '';
+			}
+		}
+
+		wp_mail( $reg->customer_email, $subject, wpautop( $body ), $headers, $attachments );
+
+		if ( $ics_path !== '' ) {
+			wp_delete_file( $ics_path );
+		}
 	}
 
 	/**

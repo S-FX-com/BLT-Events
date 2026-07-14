@@ -13,6 +13,15 @@ class BLT_Events_Admin {
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'add_admin_pages' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'remove_duplicate_menu_items' ), 999 );
+	}
+
+	/**
+	 * The "Events" top-level menu item already opens the event list with its
+	 * own Add New button, so the separate "Add New" submenu entry is noise.
+	 */
+	public static function remove_duplicate_menu_items() {
+		remove_submenu_page( 'edit.php?post_type=event', 'post-new.php?post_type=event' );
 	}
 
 	public static function add_admin_pages() {

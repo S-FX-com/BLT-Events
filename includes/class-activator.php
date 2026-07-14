@@ -177,11 +177,29 @@ class BLT_Events_Activator {
 
 	// ----- Default fieldset -----
 
+	/**
+	 * Backfill for existing installs: if no default fieldset row exists
+	 * (deleted, or the plugin was updated without re-activation), seed the
+	 * standard one so users can always see and edit what the default is.
+	 */
+	public static function ensure_default_fieldset() {
+		if ( ! class_exists( 'BLT_Events_Fieldsets_DB' ) ) {
+			return;
+		}
+
+		$db = new BLT_Events_Fieldsets_DB();
+		if ( $db->get_default() ) {
+			return;
+		}
+
+		self::seed_default_fieldset();
+	}
+
 	private static function seed_default_fieldset() {
 		global $wpdb;
 		$table = $wpdb->prefix . 'blt_fieldsets';
 
-		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE slug = 'blt-standard'" );
+		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE slug = 'blt-standard' OR is_default = 1" );
 		if ( $exists ) {
 			return;
 		}

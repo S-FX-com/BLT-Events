@@ -26,6 +26,33 @@ class BLT_Events_Helpers {
     );
 
     /**
+     * The currency code shown to visitors: the custom override when set,
+     * otherwise the selected preset currency.
+     *
+     * @return string
+     */
+    public static function get_currency_code() {
+        $custom = trim( (string) get_option( 'blt_events_currency_code_custom', '' ) );
+        return $custom !== '' ? $custom : get_option( 'blt_events_currency', 'USD' );
+    }
+
+    /**
+     * The currency symbol shown to visitors: the custom override when set,
+     * otherwise the symbol mapped from the selected preset currency.
+     *
+     * @return string
+     */
+    public static function get_currency_symbol() {
+        $custom = trim( (string) get_option( 'blt_events_currency_symbol_custom', '' ) );
+        if ( $custom !== '' ) {
+            return $custom;
+        }
+
+        $currency = get_option( 'blt_events_currency', 'USD' );
+        return self::$currency_symbols[ $currency ] ?? '';
+    }
+
+    /**
      * Format a price amount with currency symbol and/or code based on plugin settings.
      *
      * @param float $amount        The price amount to format.
@@ -33,7 +60,6 @@ class BLT_Events_Helpers {
      * @return string The formatted price string.
      */
     public static function format_price( $amount, $include_total = false ) {
-        $currency      = get_option( 'blt_events_currency', 'USD' );
         $show_currency = get_option( 'blt_events_display_currency', '0' );
         $show_symbol   = get_option( 'blt_events_display_currency_sign', '0' );
 
@@ -48,8 +74,8 @@ class BLT_Events_Helpers {
         }
 
         // Add currency symbol before price if enabled.
-        if ( $show_symbol === '1' && isset( self::$currency_symbols[ $currency ] ) ) {
-            $price_string .= self::$currency_symbols[ $currency ];
+        if ( $show_symbol === '1' ) {
+            $price_string .= self::get_currency_symbol();
         }
 
         // Add the formatted price.
@@ -57,7 +83,7 @@ class BLT_Events_Helpers {
 
         // Add currency code after price if enabled.
         if ( $show_currency === '1' ) {
-            $price_string .= ' ' . $currency;
+            $price_string .= ' ' . self::get_currency_code();
         }
 
         return $price_string;
@@ -69,16 +95,12 @@ class BLT_Events_Helpers {
      * @return array Currency settings including code, symbols, and display flags.
      */
     public static function get_currency_config() {
-        $currency = get_option( 'blt_events_currency', 'USD' );
-
         return array(
-            'currency'       => $currency,
+            'currency'       => self::get_currency_code(),
             'totalLabel'     => __( 'Total:', 'blt-events' ),
             'showCurrency'   => get_option( 'blt_events_display_currency', '0' ),
             'showSymbol'     => get_option( 'blt_events_display_currency_sign', '0' ),
-            'currencySymbol' => isset( self::$currency_symbols[ $currency ] )
-                ? self::$currency_symbols[ $currency ]
-                : '',
+            'currencySymbol' => self::get_currency_symbol(),
             'currencySymbols' => self::$currency_symbols,
         );
     }
@@ -166,6 +188,84 @@ class BLT_Events_Helpers {
     }
 
     /**
+     * Default calendar invite description template (Settings > Emails >
+     * Calendar Invite). Placeholders are replaced per event.
+     */
+    public static function default_calendar_invite_template() {
+        return __(
+            "You are registered for {event_name}.\n\nDate: {event_date}\nTime: {event_time}\nLocation: {event_location}\n\nEvent details: {event_url}",
+            'blt-events'
+        );
+    }
+
+    /**
+     * Human-readable location for an event: the physical venue/address,
+     * the online join link, or both for hybrid events.
+     *
+     * @param int $event_id The event post ID.
+     * @return string
+     */
+    public static function get_event_location_string( $event_id ) {
+        $venue      = get_post_meta( $event_id, '_blt_event_venue', true );
+        $location   = get_post_meta( $event_id, '_blt_event_location', true );
+        $online_url = get_post_meta( $event_id, '_blt_event_online_url', true );
+        $event_type = get_post_meta( $event_id, '_blt_event_type', true ) ?: 'in-person';
+
+        $location_parts = array();
+        if ( in_array( $event_type, array( 'in-person', 'hybrid' ), true ) ) {
+            $location_parts[] = trim( $venue . ( $venue && $location ? ', ' : '' ) . $location );
+        }
+        if ( in_array( $event_type, array( 'online', 'hybrid' ), true ) && $online_url ) {
+            $location_parts[] = $online_url;
+        }
+
+        $location_string = implode( ' / ', array_filter( $location_parts ) );
+        if ( $location_string === '' && $event_type === 'online' ) {
+            $location_string = __( 'Online', 'blt-events' );
+        }
+
+        return $location_string;
+    }
+
+    /**
+     * Build the calendar invite description for an event from the
+     * customizable template, falling back to basic event details.
+     *
+     * @param WP_Post $event The event post object.
+     * @return string Plain-text description for the ICS DESCRIPTION field.
+     */
+    public static function get_calendar_invite_description( $event ) {
+        $template = get_option( 'blt_events_calendar_invite_description', '' );
+        if ( trim( (string) $template ) === '' ) {
+            $template = self::default_calendar_invite_template();
+        }
+
+        $event_date  = get_post_meta( $event->ID, '_blt_event_date', true );
+        $start_time  = get_post_meta( $event->ID, '_blt_event_start_time', true );
+        $all_day     = get_post_meta( $event->ID, '_blt_event_all_day', true ) === '1';
+
+        $date_format = get_option( 'blt_events_date_format', 'F j, Y' );
+        $time_format = get_option( 'time_format', 'g:i A' );
+
+        $formatted_date = $event_date ? date_i18n( $date_format, strtotime( $event_date ) ) : '';
+        $formatted_time = $all_day
+            ? __( 'All Day', 'blt-events' )
+            : ( $start_time && $event_date ? date_i18n( $time_format, strtotime( $event_date . ' ' . $start_time ) ) : '' );
+
+        $location_string = self::get_event_location_string( $event->ID );
+
+        $replacements = array(
+            '{event_name}'     => $event->post_title,
+            '{event_date}'     => $formatted_date,
+            '{event_time}'     => $formatted_time,
+            '{event_location}' => $location_string,
+            '{event_url}'      => get_permalink( $event->ID ),
+        );
+
+        return str_replace( array_keys( $replacements ), array_values( $replacements ), $template );
+    }
+
+    /**
      * Generate iCalendar (.ics) file content for an event.
      *
      * @param WP_Post $event The event post object.
@@ -178,7 +278,7 @@ class BLT_Events_Helpers {
         $event_all_day    = get_post_meta( $event->ID, '_blt_event_all_day', true );
 
         $summary     = $event->post_title;
-        $description = wp_strip_all_tags( $event->post_content );
+        $description = self::get_calendar_invite_description( $event );
         $url         = get_permalink( $event->ID );
         $uid         = $event->ID . '@' . wp_parse_url( home_url(), PHP_URL_HOST );
         $now         = gmdate( 'Ymd\THis\Z' );
@@ -196,12 +296,15 @@ class BLT_Events_Helpers {
         $ics .= "UID:{$uid}\r\n";
         $ics .= "DTSTAMP:{$now}\r\n";
 
+        // Multi-day events end on their last scheduled day.
+        $event_end_date = get_post_meta( $event->ID, '_blt_event_end_date', true ) ?: $event_date;
+
         if ( $event_all_day === '1' || empty( $event_start_time ) ) {
             // All-day event: use DATE value type.
             $dtstart = str_replace( '-', '', $event_date );
             $ics .= "DTSTART;VALUE=DATE:{$dtstart}\r\n";
-            // All-day events end on the next day in iCal spec.
-            $next_day = gmdate( 'Ymd', strtotime( $event_date . ' +1 day' ) );
+            // All-day events end on the day after their last day in iCal spec.
+            $next_day = gmdate( 'Ymd', strtotime( $event_end_date . ' +1 day' ) );
             $ics .= "DTEND;VALUE=DATE:{$next_day}\r\n";
         } else {
             // Timed event.
@@ -209,13 +312,19 @@ class BLT_Events_Helpers {
             $ics .= 'DTSTART:' . gmdate( 'Ymd\THis\Z', strtotime( $start_dt ) ) . "\r\n";
 
             if ( ! empty( $event_end_time ) ) {
-                $end_dt = $event_date . ' ' . $event_end_time;
+                $end_dt = $event_end_date . ' ' . $event_end_time;
                 $ics .= 'DTEND:' . gmdate( 'Ymd\THis\Z', strtotime( $end_dt ) ) . "\r\n";
             }
         }
 
         $ics .= "SUMMARY:{$summary}\r\n";
         $ics .= "DESCRIPTION:{$description}\r\n";
+
+        $ics_location = self::escape_ical_text( self::get_event_location_string( $event->ID ) );
+        if ( $ics_location !== '' ) {
+            $ics .= "LOCATION:{$ics_location}\r\n";
+        }
+
         $ics .= "URL:{$url}\r\n";
         $ics .= "END:VEVENT\r\n";
         $ics .= "END:VCALENDAR\r\n";

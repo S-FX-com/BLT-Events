@@ -345,19 +345,34 @@ class BLT_Events_Calendar_Shortcode {
 				continue;
 			}
 
-			$time_label = '';
-			if ( $all_day ) {
-				$time_label = __( 'All Day', 'blt-events' );
-			} elseif ( $start_time ) {
-				$time_label = date_i18n( $time_format, strtotime( $event_date . ' ' . $start_time ) );
+			// Multi-day events appear on each of their scheduled days.
+			$schedule = array( array( 'date' => $event_date, 'start' => $all_day ? '' : $start_time ) );
+			if ( get_post_meta( $event_id, '_blt_multi_day', true ) === '1' ) {
+				$days_raw = get_post_meta( $event_id, '_blt_event_days', true );
+				$days     = is_string( $days_raw ) ? json_decode( $days_raw, true ) : $days_raw;
+				if ( is_array( $days ) && ! empty( $days ) ) {
+					$schedule = $days;
+				}
 			}
 
-			$by_day[ $event_date ][] = array(
-				'title'    => get_the_title(),
-				'url'      => get_permalink(),
-				'time'     => $time_label,
-				'sort_key' => $all_day ? '00:00' : ( $start_time ?: '23:59' ),
-			);
+			foreach ( $schedule as $day ) {
+				$day_date = $day['date'] ?? '';
+				if ( ! $day_date || $day_date < $first_day || $day_date > $last_day ) {
+					continue;
+				}
+
+				$day_start  = $day['start'] ?? '';
+				$time_label = $day_start === ''
+					? __( 'All Day', 'blt-events' )
+					: date_i18n( $time_format, strtotime( $day_date . ' ' . $day_start ) );
+
+				$by_day[ $day_date ][] = array(
+					'title'    => get_the_title(),
+					'url'      => get_permalink(),
+					'time'     => $time_label,
+					'sort_key' => $day_start === '' ? '00:00' : $day_start,
+				);
+			}
 		}
 		wp_reset_postdata();
 

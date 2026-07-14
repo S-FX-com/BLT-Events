@@ -11,23 +11,30 @@ jQuery(document).ready(function ($) {
 	var i18n = window.bltEventEditor || {};
 
 	/* ----------------------------------------------------------------
-	 * Event details: all day / no end time
+	 * Event details: multi-day / all day / no end time
 	 * ---------------------------------------------------------------- */
 	var $allDay = $("#blt-all-day");
 	var $noEnd = $("#blt-no-end-time");
+	var $multiDay = $("#blt-multi-day");
 
 	var updateDetailFields = function () {
+		var multiDay = $multiDay.is(":checked");
 		var allDay = $allDay.is(":checked");
 		var noEnd = $noEnd.is(":checked");
 
-		$(".blt-field-start-time").toggle(!allDay);
-		$(".blt-field-end-date").toggle(!noEnd);
-		$(".blt-field-end-time").toggle(!noEnd && !allDay);
+		// Multi-day mode swaps the single date/time fields for the day rows.
+		$("#event_date").toggle(!multiDay).prop("required", !multiDay);
+		$(".blt-single-day-times").toggle(!multiDay);
+		$("#blt-multi-day-panel").toggle(multiDay);
+
+		// The inline toggles stay visible; only the time inputs hide.
+		$("#event_start_time").toggle(!allDay);
+		$("#event_end_time").toggle(!allDay && !noEnd);
 
 		var $notice = $("#blt-details-notice");
-		if (allDay) {
+		if (!multiDay && allDay) {
 			$notice.show().find(".blt-notice-text").text(i18n.allDayNotice || "");
-		} else if (noEnd) {
+		} else if (!multiDay && noEnd) {
 			$notice.show().find(".blt-notice-text").text(i18n.noEndNotice || "");
 		} else {
 			$notice.hide();
@@ -48,24 +55,43 @@ jQuery(document).ready(function ($) {
 		updateDetailFields();
 	});
 
-	// The end date can never precede the start date.
-	var syncEndDateMin = function () {
-		var start = $("#event_date").val();
-		var $end = $("#event_end_date");
-		if (!$end.length) {
-			return;
+	$multiDay.on("change", updateDetailFields);
+
+	// Multi-day schedule rows.
+	var $dayRows = $("#blt-day-rows");
+	var dayIndex = $dayRows.children(".blt-day-row").length;
+
+	$("#blt-add-day").on("click", function () {
+		var lastDate = $dayRows.find(".blt-day-row:last input[type=date]").val() || "";
+		var nextDate = "";
+
+		if (lastDate) {
+			var d = new Date(lastDate + "T00:00:00");
+			d.setDate(d.getDate() + 1);
+			nextDate = d.toISOString().slice(0, 10);
 		}
-		if (start) {
-			$end.attr("min", start);
-			if ($end.val() && $end.val() < start) {
-				$end.val("");
-			}
+
+		var $row = $(
+			'<div class="blt-day-row">' +
+				'<input type="date" class="blt-input" name="event_days[' + dayIndex + '][date]" />' +
+				'<input type="time" class="blt-input" name="event_days[' + dayIndex + '][start]" />' +
+				'<input type="time" class="blt-input" name="event_days[' + dayIndex + '][end]" />' +
+				'<button type="button" class="blt-day-remove dashicons dashicons-trash"></button>' +
+			"</div>"
+		);
+		$row.find("input[type=date]").val(nextDate);
+		$dayRows.append($row);
+		dayIndex++;
+	});
+
+	$dayRows.on("click", ".blt-day-remove", function () {
+		// Always keep at least one row so the panel is never empty.
+		if ($dayRows.children(".blt-day-row").length > 1) {
+			$(this).closest(".blt-day-row").remove();
 		} else {
-			$end.removeAttr("min");
+			$(this).closest(".blt-day-row").find("input").val("");
 		}
-	};
-	syncEndDateMin();
-	$("#event_date").on("change", syncEndDateMin);
+	});
 
 	/* ----------------------------------------------------------------
 	 * Event type selector + conditional panels

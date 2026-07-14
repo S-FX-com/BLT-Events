@@ -57,6 +57,12 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_general', 'blt_events_display_currency_sign', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
 		) );
+		register_setting( 'blt_events_settings_general', 'blt_events_currency_code_custom', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_currency_code' ),
+		) );
+		register_setting( 'blt_events_settings_general', 'blt_events_currency_symbol_custom', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_currency_symbol' ),
+		) );
 
 		// --- Payments ---
 		register_setting( 'blt_events_settings_payments', 'blt_events_payment_provider', array(
@@ -107,6 +113,12 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_emails', 'blt_events_email_subject_reminder_1h', array(
 			'sanitize_callback' => 'sanitize_text_field',
 		) );
+		register_setting( 'blt_events_settings_emails', 'blt_events_calendar_invite_enabled', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
+		) );
+		register_setting( 'blt_events_settings_emails', 'blt_events_calendar_invite_description', array(
+			'sanitize_callback' => 'sanitize_textarea_field',
+		) );
 
 		// --- Integrations: FluentCRM add-on ---
 		foreach ( array(
@@ -153,6 +165,24 @@ class BLT_Events_Admin_Settings {
 
 	public static function sanitize_checkbox( $value ) {
 		return $value === '1' ? '1' : '0';
+	}
+
+	/**
+	 * Custom currency code: letters only, uppercased, max 8 chars.
+	 * Empty means "use the selected preset currency's code".
+	 */
+	public static function sanitize_currency_code( $value ) {
+		$value = strtoupper( preg_replace( '/[^A-Za-z]/', '', (string) $value ) );
+		return substr( $value, 0, 8 );
+	}
+
+	/**
+	 * Custom currency symbol: any short text (so ر.س, kr, CHF all work),
+	 * max 8 characters. Empty means "use the preset currency's symbol".
+	 */
+	public static function sanitize_currency_symbol( $value ) {
+		$value = sanitize_text_field( (string) $value );
+		return mb_substr( $value, 0, 8 );
 	}
 
 	/**
@@ -356,6 +386,26 @@ class BLT_Events_Admin_Settings {
 							<?php
 						}
 					);
+
+					self::render_field(
+						__( 'Custom Currency Code', 'blt-events' ),
+						function () {
+							?>
+							<input type="text" name="blt_events_currency_code_custom" value="<?php echo esc_attr( get_option( 'blt_events_currency_code_custom', '' ) ); ?>" class="small-text" maxlength="8" placeholder="<?php echo esc_attr( get_option( 'blt_events_currency', 'USD' ) ); ?>" />
+							<?php
+						},
+						__( 'Overrides the code shown after prices. Leave blank to use the selected currency\'s code.', 'blt-events' )
+					);
+
+					self::render_field(
+						__( 'Custom Currency Symbol', 'blt-events' ),
+						function () {
+							?>
+							<input type="text" name="blt_events_currency_symbol_custom" value="<?php echo esc_attr( get_option( 'blt_events_currency_symbol_custom', '' ) ); ?>" class="small-text" maxlength="8" placeholder="$" />
+							<?php
+						},
+						__( 'Overrides the symbol shown before prices. Leave blank to use the selected currency\'s symbol.', 'blt-events' )
+					);
 					?>
 				</div>
 			</div>
@@ -495,7 +545,7 @@ class BLT_Events_Admin_Settings {
 	 * ------------------------------------------------------------------ */
 
 	private static function render_tab_emails() {
-		$variables = array( '{customer_name}', '{event_name}', '{event_date}', '{event_time}', '{event_url}' );
+		$variables = array( '{customer_name}', '{event_name}', '{event_date}', '{event_time}', '{event_location}', '{event_url}' );
 
 		$emails = array(
 			array(
@@ -564,6 +614,46 @@ class BLT_Events_Admin_Settings {
 					</div>
 				</div>
 			<?php endforeach; ?>
+
+			<!-- Calendar Invite -->
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Calendar Invite', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'The .ics calendar invite attached to confirmation emails and offered on event pages. The description below is what appears inside the invite.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<?php
+					self::render_field(
+						__( 'Attach to Emails', 'blt-events' ),
+						function () {
+							?>
+							<label class="blt-toggle">
+								<input type="checkbox" name="blt_events_calendar_invite_enabled" value="1" <?php checked( get_option( 'blt_events_calendar_invite_enabled', '1' ), '1' ); ?> />
+								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+								<span class="blt-toggle-text">
+									<span class="blt-toggle-label"><?php esc_html_e( 'Attach a calendar invite (.ics) to registration confirmation emails', 'blt-events' ); ?></span>
+								</span>
+							</label>
+							<?php
+						}
+					);
+
+					self::render_field(
+						__( 'Invite Description', 'blt-events' ),
+						function () {
+							$value = get_option( 'blt_events_calendar_invite_description', '' );
+							if ( trim( (string) $value ) === '' ) {
+								$value = BLT_Events_Helpers::default_calendar_invite_template();
+							}
+							?>
+							<textarea name="blt_events_calendar_invite_description" rows="7" class="large-text code"><?php echo esc_textarea( $value ); ?></textarea>
+							<?php
+						},
+						__( 'Plain text shown inside the calendar entry. Variables: {event_name}, {event_date}, {event_time}, {event_location}, {event_url}', 'blt-events' )
+					);
+					?>
+				</div>
+			</div>
 
 			<?php self::render_save_button(); ?>
 		</form>

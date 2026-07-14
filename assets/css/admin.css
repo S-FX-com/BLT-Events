@@ -16,6 +16,126 @@
 	font-weight: 600;
 }
 
+/* --- Coupon Editor --- */
+.blt-coupon-details .blt-coupon-events-panel,
+.blt-coupon-details .blt-coupon-roles-panel {
+	margin-top: 12px;
+}
+
+.blt-coupon-event-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.blt-coupon-event-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px 4px 10px;
+	background: var(--blt-primary-tint, #f6fafd);
+	border: 1px solid #c5d9ed;
+	border-radius: 999px;
+	font-size: 12px;
+	color: var(--blt-fg, #1e1e1e);
+}
+
+.blt-coupon-event-chip em {
+	font-style: normal;
+	color: var(--blt-muted-fg, #646970);
+}
+
+.blt-chip-remove {
+	background: none;
+	border: none;
+	padding: 0 2px;
+	font-size: 14px;
+	line-height: 1;
+	color: var(--blt-muted-fg, #646970);
+	cursor: pointer;
+}
+
+.blt-chip-remove:hover {
+	color: var(--blt-danger-fg, #8a2424);
+}
+
+.blt-role-choices {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.blt-role-choice {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 12px;
+	border: 1px solid var(--blt-border, #dcdcde);
+	border-radius: 999px;
+	background: #fff;
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.blt-role-choice.is-selected {
+	border-color: var(--blt-primary, #2271b1);
+	background: var(--blt-primary-tint, #f6fafd);
+	color: var(--blt-primary, #2271b1);
+}
+
+/* --- Registrations: per-event dashboard --- */
+.blt-dashboard-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 24px;
+}
+
+.blt-dashboard-col h3 {
+	margin: 0 0 12px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--blt-fg, #1e1e1e);
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--blt-surface-muted, #f6f7f7);
+}
+
+.blt-dash-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 0 0 8px;
+	font-size: 13px;
+}
+
+.blt-dash-label {
+	color: var(--blt-muted-fg, #646970);
+	flex-shrink: 0;
+}
+
+.blt-dash-total {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid var(--blt-surface-muted, #f6f7f7);
+}
+
+.blt-dash-links {
+	margin: 12px 0 0;
+	font-size: 13px;
+}
+
+.blt-dash-links span {
+	color: var(--blt-border, #dcdcde);
+	margin: 0 4px;
+}
+
+@media (max-width: 960px) {
+	.blt-dashboard-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
 /* --- General Admin Tweaks --- */
 .widefat td {
 	vertical-align: middle;

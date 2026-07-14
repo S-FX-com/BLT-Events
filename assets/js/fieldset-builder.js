@@ -60,6 +60,12 @@ jQuery(document).ready(function ($) {
 			'    <label>Placeholder: <input type="text" name="fields[' + fieldIndex + '][placeholder]" /></label>' +
 			'    <label>Options (comma-separated): <input type="text" name="fields[' + fieldIndex + '][options_str]" /></label>' +
 			'    <label><input type="checkbox" name="fields[' + fieldIndex + '][allow_other]" value="1" /> Allow "Other" option</label>' +
+			'    <div class="blt-map-group">' +
+			'      <span class="blt-map-heading">Data Mapping</span>' +
+			'      <label>User profile field: <input type="text" name="fields[' + fieldIndex + '][map_user]" list="blt-user-field-suggestions" placeholder="first_name" /></label>' +
+			'      <label>ACF field: <input type="text" name="fields[' + fieldIndex + '][map_acf]" placeholder="ACF field name" /></label>' +
+			'      <label>FluentCRM field: <input type="text" name="fields[' + fieldIndex + '][map_fluentcrm]" placeholder="contact field or custom field slug" /></label>' +
+			'    </div>' +
 			'  </div>' +
 			'</div>';
 

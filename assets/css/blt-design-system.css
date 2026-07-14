@@ -332,8 +332,11 @@
 	line-height: 1.4;
 }
 
-/* --- Badges / status pills --- */
-.blt-ui .blt-badge {
+/* --- Badges / status pills ---
+   Deliberately NOT scoped to .blt-ui: badges also appear inside native
+   WordPress list tables (Events, Coupons) that aren't wrapped in the
+   .blt-ui page shell. The blt- prefix keeps them collision-safe. --- */
+.blt-badge {
 	display: inline-block;
 	padding: 2px 10px;
 	border-radius: 10px;
@@ -345,35 +348,52 @@
 	color: var(--blt-neutral-fg);
 }
 
-.blt-ui .blt-badge-on {
+.blt-badge-on {
 	background: var(--blt-success-bg);
 	color: var(--blt-success-fg);
 }
 
-.blt-ui .blt-badge-off {
+.blt-badge-off {
 	background: var(--blt-neutral-bg);
 	color: var(--blt-neutral-fg);
 }
 
 /* Registration / order style statuses. */
-.blt-ui .blt-badge-confirmed {
+.blt-badge-confirmed {
 	background: var(--blt-success-bg);
 	color: var(--blt-success-fg);
 }
 
-.blt-ui .blt-badge-pending {
+.blt-badge-pending {
 	background: var(--blt-warning-bg);
 	color: var(--blt-warning-fg);
 }
 
-.blt-ui .blt-badge-cancelled {
+.blt-badge-cancelled {
 	background: var(--blt-danger-bg);
 	color: var(--blt-danger-fg);
 }
 
-.blt-ui .blt-badge-refunded {
+.blt-badge-refunded {
 	background: var(--blt-neutral-bg);
 	color: var(--blt-neutral-fg);
+}
+
+/* Event type badges (Events list table). */
+.blt-badge-type-online {
+	background: var(--blt-primary-tint);
+	color: var(--blt-primary);
+	border: 1px solid #c5d9ed;
+}
+
+.blt-badge-type-in-person {
+	background: var(--blt-success-bg);
+	color: var(--blt-success-fg);
+}
+
+.blt-badge-type-hybrid {
+	background: var(--blt-warning-bg);
+	color: var(--blt-warning-fg);
 }
 
 /* --- Callout --- */
@@ -461,13 +481,24 @@
 	color: #0a4b78;
 }
 
-/* --- Utilities --- */
-.blt-ui .blt-text-danger {
+/* --- Utilities (unscoped: also used in native list tables) --- */
+.blt-text-danger {
 	color: var(--blt-danger-fg);
 	font-weight: 600;
 }
 
-.blt-ui .blt-text-muted {
+.blt-text-muted {
+	color: var(--blt-muted-fg);
+}
+
+/* Events list: attendee count cell. */
+.blt-attendee-count {
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.blt-attendee-capacity {
+	font-size: 11px;
 	color: var(--blt-muted-fg);
 }
 

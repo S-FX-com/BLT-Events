@@ -81,6 +81,8 @@ spl_autoload_register( function ( $class ) {
 		// Shortcodes
 		'registration-shortcode' => 'includes/shortcodes/class-registration-shortcode.php',
 		'calendar-shortcode'     => 'includes/shortcodes/class-calendar-shortcode.php',
+		// Front end
+		'single-event'           => 'includes/frontend/class-single-event.php',
 		// REST API
 		'rest-registrations'     => 'includes/api/class-rest-registrations.php',
 		'rest-fieldsets'         => 'includes/api/class-rest-fieldsets.php',
@@ -141,6 +143,9 @@ function blt_events_init() {
 	// Shortcodes
 	BLT_Events_Registration_Shortcode::init();
 	BLT_Events_Calendar_Shortcode::init();
+
+	// Front-end single event view
+	BLT_Events_Single_Event::init();
 
 	// REST API
 	BLT_Events_REST_Registrations::init();

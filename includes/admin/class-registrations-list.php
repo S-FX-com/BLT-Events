@@ -219,16 +219,40 @@ class BLT_Events_Registrations_List {
 	public static function render_page() {
 		$table = new BLT_Events_Registrations_List_Table();
 		$table->prepare_items();
+
+		$event_id = absint( $_GET['event_id'] ?? 0 );
+		$event    = $event_id ? get_post( $event_id ) : null;
+		if ( $event && $event->post_type !== 'event' ) {
+			$event = null;
+		}
 		?>
 		<div class="wrap blt-ui blt-events-registrations">
 			<div class="blt-admin-page-header">
-				<h1><?php esc_html_e( 'Event Registrations', 'blt-events' ); ?></h1>
+				<h1>
+					<?php
+					if ( $event ) {
+						/* translators: %s: event title. */
+						printf( esc_html__( 'Attendees for: %s', 'blt-events' ), esc_html( $event->post_title ) );
+					} else {
+						esc_html_e( 'Event Registrations', 'blt-events' );
+					}
+					?>
+				</h1>
 				<div class="blt-admin-page-actions">
-					<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=blt_export_registrations&event_id=' . absint( $_GET['event_id'] ?? 0 ) . '&_wpnonce=' . wp_create_nonce( 'blt_export' ) ) ); ?>" class="button button-primary">
+					<?php if ( $event ) : ?>
+						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-registrations' ) ); ?>" class="button"><?php esc_html_e( 'All Registrations', 'blt-events' ); ?></a>
+					<?php endif; ?>
+					<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=blt_export_registrations&event_id=' . $event_id . '&_wpnonce=' . wp_create_nonce( 'blt_export' ) ) ); ?>" class="button button-primary">
 						<?php esc_html_e( 'Export CSV', 'blt-events' ); ?>
 					</a>
 				</div>
 			</div>
+
+			<?php
+			if ( $event ) {
+				self::render_event_dashboard( $event );
+			}
+			?>
 
 			<div class="blt-card">
 				<div class="blt-card-body">
@@ -238,6 +262,154 @@ class BLT_Events_Registrations_List {
 						<?php $table->search_box( __( 'Search', 'blt-events' ), 'search_registration' ); ?>
 						<?php $table->display(); ?>
 					</form>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Dashboard card shown when the list is filtered to one event: basic
+	 * event details, a ticket type breakdown with registration counts, and
+	 * an attendance overview.
+	 *
+	 * @param WP_Post $event The event being viewed.
+	 */
+	private static function render_event_dashboard( $event ) {
+		$reg_db = new BLT_Events_Registrations_DB();
+		$att_db = new BLT_Events_Attendees_DB();
+
+		$event_date  = get_post_meta( $event->ID, '_blt_event_date', true );
+		$start_time  = get_post_meta( $event->ID, '_blt_event_start_time', true );
+		$event_type  = get_post_meta( $event->ID, '_blt_event_type', true ) ?: 'in-person';
+		$capacity    = (int) get_post_meta( $event->ID, '_blt_capacity', true );
+		$venue       = BLT_Events_Helpers::get_event_location_string( $event->ID );
+		$date_format = get_option( 'blt_events_date_format', 'F j, Y' );
+		$time_format = get_option( 'time_format', 'g:i A' );
+
+		$type_labels = array(
+			'online'    => __( 'Online', 'blt-events' ),
+			'in-person' => __( 'In-Person', 'blt-events' ),
+			'hybrid'    => __( 'Hybrid', 'blt-events' ),
+		);
+
+		$ticket_types  = BLT_Events_Helpers::get_ticket_types( $event->ID );
+		$ticket_counts = $att_db->count_by_ticket_type( $event->ID );
+		$status_counts = $reg_db->count_by_status( $event->ID );
+
+		$total_attendees = $att_db->count_for_event( $event->ID );
+		$checked_in      = $att_db->count_checked_in( $event->ID );
+		$checked_in_pct  = $total_attendees > 0 ? round( ( $checked_in / $total_attendees ) * 100 ) : 0;
+
+		// Ticket rows: every configured ticket type (even with 0 sold), plus
+		// any ticket names present in the data but no longer configured.
+		$ticket_rows = array();
+		foreach ( $ticket_types as $ticket ) {
+			$name                 = $ticket['name'] ?? __( 'Ticket', 'blt-events' );
+			$ticket_rows[ $name ] = array(
+				'count' => $ticket_counts[ $name ] ?? 0,
+				'price' => isset( $ticket['price'] ) ? (float) $ticket['price'] : null,
+			);
+			unset( $ticket_counts[ $name ] );
+		}
+		foreach ( $ticket_counts as $name => $count ) {
+			$ticket_rows[ $name ] = array(
+				'count' => $count,
+				'price' => null,
+			);
+		}
+		?>
+		<div class="blt-card blt-event-dashboard">
+			<div class="blt-card-body">
+				<div class="blt-dashboard-grid">
+					<div class="blt-dashboard-col">
+						<h3><?php esc_html_e( 'Event Details', 'blt-events' ); ?></h3>
+						<p class="blt-dash-row">
+							<span class="blt-dash-label"><?php esc_html_e( 'Date', 'blt-events' ); ?></span>
+							<span>
+								<?php echo $event_date ? esc_html( date_i18n( $date_format, strtotime( $event_date ) ) ) : '&mdash;'; ?>
+								<?php if ( $start_time && $event_date ) : ?>
+									<span class="blt-text-muted"><?php echo esc_html( date_i18n( $time_format, strtotime( $event_date . ' ' . $start_time ) ) ); ?></span>
+								<?php endif; ?>
+							</span>
+						</p>
+						<p class="blt-dash-row">
+							<span class="blt-dash-label"><?php esc_html_e( 'Type', 'blt-events' ); ?></span>
+							<span class="blt-badge blt-badge-type-<?php echo esc_attr( $event_type ); ?>"><?php echo esc_html( $type_labels[ $event_type ] ?? $type_labels['in-person'] ); ?></span>
+						</p>
+						<?php if ( $venue ) : ?>
+							<p class="blt-dash-row">
+								<span class="blt-dash-label"><?php esc_html_e( 'Location', 'blt-events' ); ?></span>
+								<span><?php echo esc_html( $venue ); ?></span>
+							</p>
+						<?php endif; ?>
+						<p class="blt-dash-links">
+							<a href="<?php echo esc_url( (string) get_edit_post_link( $event->ID ) ); ?>"><?php esc_html_e( 'Edit Event', 'blt-events' ); ?></a>
+							<span aria-hidden="true">|</span>
+							<a href="<?php echo esc_url( get_permalink( $event->ID ) ); ?>"><?php esc_html_e( 'View Event', 'blt-events' ); ?></a>
+						</p>
+					</div>
+
+					<div class="blt-dashboard-col">
+						<h3><?php esc_html_e( 'Ticket Overview', 'blt-events' ); ?></h3>
+						<?php if ( empty( $ticket_rows ) ) : ?>
+							<p class="blt-text-muted"><?php esc_html_e( 'No ticket types configured.', 'blt-events' ); ?></p>
+						<?php else : ?>
+							<?php foreach ( $ticket_rows as $name => $row ) : ?>
+								<p class="blt-dash-row">
+									<span>
+										<?php echo esc_html( $name ); ?>
+										<?php if ( $row['price'] !== null ) : ?>
+											<span class="blt-text-muted"><?php echo $row['price'] > 0 ? esc_html( BLT_Events_Helpers::format_price( $row['price'] ) ) : esc_html__( 'Free', 'blt-events' ); ?></span>
+										<?php endif; ?>
+									</span>
+									<strong><?php echo esc_html( number_format_i18n( $row['count'] ) ); ?></strong>
+								</p>
+							<?php endforeach; ?>
+							<p class="blt-dash-row blt-dash-total">
+								<span><?php esc_html_e( 'Total', 'blt-events' ); ?></span>
+								<strong>
+									<?php
+									echo esc_html( number_format_i18n( $total_attendees ) );
+									if ( $capacity > 0 ) {
+										echo ' / ' . esc_html( number_format_i18n( $capacity ) );
+									} else {
+										echo ' ' . esc_html__( '(Unlimited)', 'blt-events' );
+									}
+									?>
+								</strong>
+							</p>
+						<?php endif; ?>
+					</div>
+
+					<div class="blt-dashboard-col">
+						<h3><?php esc_html_e( 'Attendance Overview', 'blt-events' ); ?></h3>
+						<?php
+						$status_labels = array(
+							'confirmed' => __( 'Confirmed', 'blt-events' ),
+							'pending'   => __( 'Pending', 'blt-events' ),
+							'cancelled' => __( 'Cancelled', 'blt-events' ),
+							'refunded'  => __( 'Refunded', 'blt-events' ),
+						);
+						foreach ( $status_labels as $status => $label ) :
+							if ( empty( $status_counts[ $status ] ) ) {
+								continue;
+							}
+							?>
+							<p class="blt-dash-row">
+								<span><?php echo esc_html( $label ); ?></span>
+								<strong><?php echo esc_html( number_format_i18n( $status_counts[ $status ] ) ); ?></strong>
+							</p>
+						<?php endforeach; ?>
+						<p class="blt-dash-row">
+							<span><?php esc_html_e( 'Attendees', 'blt-events' ); ?></span>
+							<strong><?php echo esc_html( number_format_i18n( $total_attendees ) ); ?></strong>
+						</p>
+						<p class="blt-dash-row blt-dash-total">
+							<span><?php esc_html_e( 'Checked in', 'blt-events' ); ?></span>
+							<strong><?php echo esc_html( sprintf( '%1$s (%2$s%%)', number_format_i18n( $checked_in ), number_format_i18n( $checked_in_pct ) ) ); ?></strong>
+						</p>
+					</div>
 				</div>
 			</div>
 		</div>

@@ -46,6 +46,12 @@ class BLT_Events_Fieldset_Builder {
 	}
 
 	public static function render_page() {
+		// Make sure the default fieldset exists so users can see what the
+		// default registration fields actually are.
+		if ( class_exists( 'BLT_Events_Activator' ) ) {
+			BLT_Events_Activator::ensure_default_fieldset();
+		}
+
 		$editing_id = isset( $_GET['edit'] ) ? absint( $_GET['edit'] ) : 0;
 		$fieldset   = null;
 		$fields     = array();
@@ -162,10 +168,37 @@ class BLT_Events_Fieldset_Builder {
 										<label><?php esc_html_e( 'Placeholder:', 'blt-events' ); ?> <input type="text" name="fields[<?php echo (int) $i; ?>][placeholder]" value="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>" /></label>
 										<label><?php esc_html_e( 'Options (comma-separated):', 'blt-events' ); ?> <input type="text" name="fields[<?php echo (int) $i; ?>][options_str]" value="<?php echo esc_attr( implode( ', ', $field['options'] ?? array() ) ); ?>" /></label>
 										<label><input type="checkbox" name="fields[<?php echo (int) $i; ?>][allow_other]" value="1" <?php checked( ! empty( $field['allow_other'] ) ); ?> /> <?php esc_html_e( 'Allow "Other" option', 'blt-events' ); ?></label>
+
+										<div class="blt-map-group">
+											<span class="blt-map-heading"><?php esc_html_e( 'Data Mapping', 'blt-events' ); ?></span>
+											<label><?php esc_html_e( 'User profile field:', 'blt-events' ); ?>
+												<input type="text" name="fields[<?php echo (int) $i; ?>][map_user]" value="<?php echo esc_attr( $field['map_user'] ?? '' ); ?>" list="blt-user-field-suggestions" placeholder="first_name" />
+											</label>
+											<label><?php esc_html_e( 'ACF field:', 'blt-events' ); ?>
+												<input type="text" name="fields[<?php echo (int) $i; ?>][map_acf]" value="<?php echo esc_attr( $field['map_acf'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'ACF field name', 'blt-events' ); ?>" />
+											</label>
+											<label><?php esc_html_e( 'FluentCRM field:', 'blt-events' ); ?>
+												<input type="text" name="fields[<?php echo (int) $i; ?>][map_fluentcrm]" value="<?php echo esc_attr( $field['map_fluentcrm'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'contact field or custom field slug', 'blt-events' ); ?>" />
+											</label>
+											<span class="blt-map-help"><?php esc_html_e( 'Prefills from the logged-in user\'s profile (WP user field/meta or ACF user field) and pushes the submitted value to the mapped FluentCRM contact field after registration.', 'blt-events' ); ?></span>
+										</div>
 									</div>
 								</div>
 							<?php endforeach; ?>
 						</div>
+
+						<datalist id="blt-user-field-suggestions">
+							<option value="first_name"></option>
+							<option value="last_name"></option>
+							<option value="user_email"></option>
+							<option value="display_name"></option>
+							<option value="nickname"></option>
+							<option value="description"></option>
+							<option value="user_url"></option>
+							<option value="phone"></option>
+							<option value="billing_phone"></option>
+							<option value="billing_company"></option>
+						</datalist>
 
 						<p><button type="button" class="button" id="blt-add-field">+ <?php esc_html_e( 'Add Field', 'blt-events' ); ?></button></p>
 
@@ -193,6 +226,14 @@ class BLT_Events_Fieldset_Builder {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Sanitize a data-mapping key (user meta key, ACF field name, or
+	 * FluentCRM field slug): letters, digits, underscores, and dashes.
+	 */
+	private static function sanitize_mapping_key( $value ) {
+		return substr( preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) $value ), 0, 64 );
 	}
 
 	public static function ajax_save_fieldset() {
@@ -227,17 +268,20 @@ class BLT_Events_Fieldset_Builder {
 				}
 
 				$fields[] = array(
-					'key'         => sanitize_key( $f['key'] ?? sanitize_title( $f['label'] ?? 'field_' . $order ) ),
-					'type'        => sanitize_text_field( $f['type'] ?? 'text' ),
-					'label'       => sanitize_text_field( $f['label'] ?? '' ),
-					'required'    => ! empty( $f['required'] ),
-					'width'       => sanitize_text_field( $f['width'] ?? 'full' ),
-					'order'       => $order,
-					'options'     => $options,
-					'allow_other' => ! empty( $f['allow_other'] ),
-					'placeholder' => sanitize_text_field( $f['placeholder'] ?? '' ),
-					'validation'  => array(),
-					'conditional' => array(),
+					'key'           => sanitize_key( $f['key'] ?? sanitize_title( $f['label'] ?? 'field_' . $order ) ),
+					'type'          => sanitize_text_field( $f['type'] ?? 'text' ),
+					'label'         => sanitize_text_field( $f['label'] ?? '' ),
+					'required'      => ! empty( $f['required'] ),
+					'width'         => sanitize_text_field( $f['width'] ?? 'full' ),
+					'order'         => $order,
+					'options'       => $options,
+					'allow_other'   => ! empty( $f['allow_other'] ),
+					'placeholder'   => sanitize_text_field( $f['placeholder'] ?? '' ),
+					'map_user'      => self::sanitize_mapping_key( $f['map_user'] ?? '' ),
+					'map_acf'       => self::sanitize_mapping_key( $f['map_acf'] ?? '' ),
+					'map_fluentcrm' => self::sanitize_mapping_key( $f['map_fluentcrm'] ?? '' ),
+					'validation'    => array(),
+					'conditional'   => array(),
 				);
 				$order++;
 			}

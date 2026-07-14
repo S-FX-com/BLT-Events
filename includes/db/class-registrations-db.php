@@ -140,6 +140,33 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 	}
 
 	/**
+	 * Registration counts per status for an event.
+	 *
+	 * @param int $event_id The event post ID.
+	 * @return array Map of status => registration count.
+	 */
+	public function count_by_status( $event_id ) {
+		global $wpdb;
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT status, COUNT(*) AS total
+				 FROM {$this->table_name}
+				 WHERE event_id = %d
+				 GROUP BY status",
+				absint( $event_id )
+			)
+		);
+
+		$counts = array();
+		foreach ( $rows as $row ) {
+			$counts[ $row->status ] = (int) $row->total;
+		}
+
+		return $counts;
+	}
+
+	/**
 	 * Get the total number of attendees registered for an event.
 	 *
 	 * Sums the attendee_count column for all non-cancelled registrations.
