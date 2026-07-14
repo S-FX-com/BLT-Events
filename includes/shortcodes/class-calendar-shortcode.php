@@ -104,19 +104,20 @@ class BLT_Events_Calendar_Shortcode {
 	}
 
 	/**
-	 * View switcher (List | Month) shown when switcher="yes".
+	 * View switcher (List | Grid | Month) shown when switcher="yes".
 	 */
 	private static function render_switcher( $active ) {
 		$base = remove_query_arg( array( 'blt_view', 'blt_month' ) );
 
 		$views = array(
 			'list'     => __( 'List', 'blt-events' ),
+			'grid'     => __( 'Grid', 'blt-events' ),
 			'calendar' => __( 'Month', 'blt-events' ),
 		);
 		?>
 		<div class="blt-view-switcher" role="group" aria-label="<?php esc_attr_e( 'Change events view', 'blt-events' ); ?>">
 			<?php foreach ( $views as $view => $label ) : ?>
-				<a href="<?php echo esc_url( add_query_arg( 'blt_view', $view, $base ) ); ?>" class="blt-view-switch <?php echo ( $active === $view || ( 'list' === $view && 'grid' === $active ) ) ? 'is-active' : ''; ?>">
+				<a href="<?php echo esc_url( add_query_arg( 'blt_view', $view, $base ) ); ?>" class="blt-view-switch <?php echo $active === $view ? 'is-active' : ''; ?>">
 					<?php echo esc_html( $label ); ?>
 				</a>
 			<?php endforeach; ?>

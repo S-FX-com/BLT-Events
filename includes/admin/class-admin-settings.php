@@ -725,7 +725,7 @@ class BLT_Events_Admin_Settings {
 					array( 'category', '—', __( 'Limit to one or more event category slugs, comma-separated (e.g. category="webinars,meetups").', 'blt-events' ) ),
 					array( 'limit', '12', __( 'Maximum number of events to show in list/grid views (1–100). The calendar view always shows the whole month.', 'blt-events' ) ),
 					array( 'past', 'no', __( 'Set to "yes" to include past events in list/grid views.', 'blt-events' ) ),
-					array( 'switcher', 'no', __( 'Set to "yes" to show a List / Month view switcher above the events, letting visitors flip between layouts.', 'blt-events' ) ),
+					array( 'switcher', 'no', __( 'Set to "yes" to show a List / Grid / Month view switcher above the events, letting visitors flip between layouts.', 'blt-events' ) ),
 				),
 			),
 			array(
