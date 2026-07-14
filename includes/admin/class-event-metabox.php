@@ -137,63 +137,95 @@ class BLT_Events_Event_Metabox {
 	 * Event Details: dates, times, all day / no end time
 	 * ---------------------------------------------------------------- */
 
+	/**
+	 * Small toggle switch rendered inline next to a field label.
+	 */
+	private static function render_inline_toggle( $name, $id, $checked, $label ) {
+		?>
+		<label class="blt-inline-toggle">
+			<span><?php echo esc_html( $label ); ?></span>
+			<span class="blt-toggle">
+				<input type="checkbox" name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $id ); ?>" value="1" <?php checked( $checked ); ?> />
+				<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+			</span>
+		</label>
+		<?php
+	}
+
 	public static function render_details_box( $post ) {
 		wp_nonce_field( 'blt_event_details', 'blt_event_details_nonce' );
 		$prefix = BLT_EVENTS_PREFIX;
 
 		$event_date       = get_post_meta( $post->ID, $prefix . 'event_date', true );
-		$event_end_date   = get_post_meta( $post->ID, $prefix . 'event_end_date', true );
 		$event_start_time = get_post_meta( $post->ID, $prefix . 'event_start_time', true );
 		$event_end_time   = get_post_meta( $post->ID, $prefix . 'event_end_time', true );
 		$all_day          = get_post_meta( $post->ID, $prefix . 'event_all_day', true ) === '1';
 		$no_end           = get_post_meta( $post->ID, $prefix . 'event_no_end_time', true ) === '1';
+		$multi_day        = get_post_meta( $post->ID, $prefix . 'multi_day', true ) === '1';
+
+		$days_raw = get_post_meta( $post->ID, $prefix . 'event_days', true );
+		$days     = is_string( $days_raw ) ? json_decode( $days_raw, true ) : $days_raw;
+		$days     = is_array( $days ) ? array_values( $days ) : array();
+
+		// Seed the multi-day editor with something sensible when empty.
+		if ( empty( $days ) ) {
+			$days = array( array(
+				'date'  => $event_date,
+				'start' => $event_start_time,
+				'end'   => $event_end_time,
+			) );
+		}
 		?>
 		<div class="blt-editor">
-			<div class="blt-grid-2">
-				<div class="blt-field">
-					<label class="blt-label" for="event_date"><?php esc_html_e( 'Start Date', 'blt-events' ); ?></label>
-					<input type="date" class="blt-input" id="event_date" name="event_date" value="<?php echo esc_attr( $event_date ); ?>" required />
+			<div class="blt-field blt-field-event-date">
+				<div class="blt-label-row">
+					<label class="blt-label" for="event_date"><?php esc_html_e( 'Event Date', 'blt-events' ); ?></label>
+					<?php self::render_inline_toggle( 'event_multi_day', 'blt-multi-day', $multi_day, __( 'Multi-day Event', 'blt-events' ) ); ?>
 				</div>
-				<div class="blt-field blt-field-start-time" <?php echo $all_day ? 'style="display:none;"' : ''; ?>>
-					<label class="blt-label" for="event_start_time"><?php esc_html_e( 'Start Time', 'blt-events' ); ?></label>
-					<input type="time" class="blt-input" id="event_start_time" name="event_start_time" value="<?php echo esc_attr( $event_start_time ); ?>" />
+				<input type="date" class="blt-input" id="event_date" name="event_date" value="<?php echo esc_attr( $event_date ); ?>" <?php echo $multi_day ? 'style="display:none;"' : 'required'; ?> />
+			</div>
+
+			<div class="blt-grid-2 blt-single-day-times" <?php echo $multi_day ? 'style="display:none;"' : ''; ?>>
+				<div class="blt-field blt-field-start-time">
+					<div class="blt-label-row">
+						<label class="blt-label" for="event_start_time"><?php esc_html_e( 'Start Time', 'blt-events' ); ?></label>
+						<?php self::render_inline_toggle( 'event_all_day', 'blt-all-day', $all_day, __( 'All Day', 'blt-events' ) ); ?>
+					</div>
+					<input type="time" class="blt-input" id="event_start_time" name="event_start_time" value="<?php echo esc_attr( $event_start_time ); ?>" <?php echo $all_day ? 'style="display:none;"' : ''; ?> />
 				</div>
-				<div class="blt-field blt-field-end-date" <?php echo $no_end ? 'style="display:none;"' : ''; ?>>
-					<label class="blt-label" for="event_end_date"><?php esc_html_e( 'End Date', 'blt-events' ); ?></label>
-					<input type="date" class="blt-input" id="event_end_date" name="event_end_date" value="<?php echo esc_attr( $event_end_date ); ?>" />
-					<p class="blt-help"><?php esc_html_e( 'Leave blank for single-day events.', 'blt-events' ); ?></p>
-				</div>
-				<div class="blt-field blt-field-end-time" <?php echo ( $no_end || $all_day ) ? 'style="display:none;"' : ''; ?>>
-					<label class="blt-label" for="event_end_time"><?php esc_html_e( 'End Time', 'blt-events' ); ?></label>
-					<input type="time" class="blt-input" id="event_end_time" name="event_end_time" value="<?php echo esc_attr( $event_end_time ); ?>" />
+				<div class="blt-field blt-field-end-time">
+					<div class="blt-label-row">
+						<label class="blt-label" for="event_end_time"><?php esc_html_e( 'End Time', 'blt-events' ); ?></label>
+						<?php self::render_inline_toggle( 'event_no_end_time', 'blt-no-end-time', $no_end, __( 'No End Time', 'blt-events' ) ); ?>
+					</div>
+					<input type="time" class="blt-input" id="event_end_time" name="event_end_time" value="<?php echo esc_attr( $event_end_time ); ?>" <?php echo ( $no_end || $all_day ) ? 'style="display:none;"' : ''; ?> />
 				</div>
 			</div>
 
-			<div class="blt-toggle-split">
-				<?php
-				self::render_toggle_row( array(
-					'name'    => 'event_all_day',
-					'id'      => 'blt-all-day',
-					'checked' => $all_day,
-					'title'   => __( 'All Day Event', 'blt-events' ),
-					'desc'    => __( 'Hides start and end times', 'blt-events' ),
-				) );
-				?>
-				<span class="blt-toggle-divider" aria-hidden="true"></span>
-				<?php
-				self::render_toggle_row( array(
-					'name'    => 'event_no_end_time',
-					'id'      => 'blt-no-end-time',
-					'checked' => $no_end,
-					'title'   => __( 'No End Time', 'blt-events' ),
-					'desc'    => __( 'Hides end date and time', 'blt-events' ),
-				) );
-				?>
+			<div class="blt-multi-day-panel" id="blt-multi-day-panel" <?php echo $multi_day ? '' : 'style="display:none;"'; ?>>
+				<div class="blt-day-rows-header" aria-hidden="true">
+					<span><?php esc_html_e( 'Date', 'blt-events' ); ?></span>
+					<span><?php esc_html_e( 'Start Time', 'blt-events' ); ?></span>
+					<span><?php esc_html_e( 'End Time', 'blt-events' ); ?></span>
+					<span></span>
+				</div>
+				<div id="blt-day-rows">
+					<?php foreach ( $days as $i => $day ) : ?>
+						<div class="blt-day-row">
+							<input type="date" class="blt-input" name="event_days[<?php echo (int) $i; ?>][date]" value="<?php echo esc_attr( $day['date'] ?? '' ); ?>" />
+							<input type="time" class="blt-input" name="event_days[<?php echo (int) $i; ?>][start]" value="<?php echo esc_attr( $day['start'] ?? '' ); ?>" />
+							<input type="time" class="blt-input" name="event_days[<?php echo (int) $i; ?>][end]" value="<?php echo esc_attr( $day['end'] ?? '' ); ?>" />
+							<button type="button" class="blt-day-remove dashicons dashicons-trash" aria-label="<?php esc_attr_e( 'Remove day', 'blt-events' ); ?>"></button>
+						</div>
+					<?php endforeach; ?>
+				</div>
+				<button type="button" class="blt-btn-dashed" id="blt-add-day">+ <?php esc_html_e( 'Add Day', 'blt-events' ); ?></button>
+				<p class="blt-help"><?php esc_html_e( 'Each day gets its own start and end time. Leave a day\'s start time blank to make that day all-day. Days are sorted by date automatically on save.', 'blt-events' ); ?></p>
 			</div>
 
-			<div id="blt-details-notice" class="blt-notice" <?php echo ( $all_day || $no_end ) ? '' : 'style="display:none;"'; ?>>
+			<div id="blt-details-notice" class="blt-notice" <?php echo ( ! $multi_day && ( $all_day || $no_end ) ) ? '' : 'style="display:none;"'; ?>>
 				<span class="dashicons dashicons-info-outline"></span>
-				<span class="blt-notice-text"><?php echo $all_day ? esc_html__( 'Time fields are hidden because this is an all-day event.', 'blt-events' ) : esc_html__( 'End date and end time are hidden because no end time is set.', 'blt-events' ); ?></span>
+				<span class="blt-notice-text"><?php echo $all_day ? esc_html__( 'Time fields are hidden because this is an all-day event.', 'blt-events' ) : esc_html__( 'The end time is hidden because no end time is set.', 'blt-events' ); ?></span>
 			</div>
 		</div>
 		<?php
@@ -719,28 +751,62 @@ class BLT_Events_Event_Metabox {
 
 		$prefix = BLT_EVENTS_PREFIX;
 
-		// Event details
-		$event_date     = self::sanitize_date( $_POST['event_date'] ?? '' );
-		$event_end_date = self::sanitize_date( $_POST['event_end_date'] ?? '' );
-		if ( $event_date && $event_end_date && $event_end_date < $event_date ) {
-			// An end date before the start date is invalid; treat as single-day.
-			$event_end_date = '';
+		// Event details. Multi-day events store a per-day schedule and keep
+		// the single date/time metas in sync (first day start, last day end)
+		// so calendars, sorting, ICS, and emails keep working unchanged.
+		$multi_day = isset( $_POST['event_multi_day'] );
+		$days      = array();
+
+		if ( $multi_day && ! empty( $_POST['event_days'] ) && is_array( $_POST['event_days'] ) ) {
+			foreach ( $_POST['event_days'] as $row ) {
+				if ( ! is_array( $row ) ) {
+					continue;
+				}
+				$day_date = self::sanitize_date( $row['date'] ?? '' );
+				if ( ! $day_date ) {
+					continue;
+				}
+				$days[] = array(
+					'date'  => $day_date,
+					'start' => self::sanitize_time( $row['start'] ?? '' ),
+					'end'   => self::sanitize_time( $row['end'] ?? '' ),
+				);
+			}
+
+			usort( $days, function ( $a, $b ) {
+				return strcmp( $a['date'] . ' ' . $a['start'], $b['date'] . ' ' . $b['start'] );
+			} );
+			$days = array_slice( $days, 0, 30 );
 		}
 
-		$all_day    = isset( $_POST['event_all_day'] );
-		$no_end     = isset( $_POST['event_no_end_time'] );
-		$start_time = $all_day ? '' : self::sanitize_time( $_POST['event_start_time'] ?? '' );
-		$end_time   = ( $all_day || $no_end ) ? '' : self::sanitize_time( $_POST['event_end_time'] ?? '' );
-		if ( $no_end ) {
-			$event_end_date = '';
-		}
+		if ( $multi_day && ! empty( $days ) ) {
+			$first = $days[0];
+			$last  = $days[ count( $days ) - 1 ];
 
-		update_post_meta( $post_id, $prefix . 'event_date', $event_date );
-		update_post_meta( $post_id, $prefix . 'event_end_date', $event_end_date );
-		update_post_meta( $post_id, $prefix . 'event_start_time', $start_time );
-		update_post_meta( $post_id, $prefix . 'event_end_time', $end_time );
-		update_post_meta( $post_id, $prefix . 'event_all_day', $all_day ? '1' : '0' );
-		update_post_meta( $post_id, $prefix . 'event_no_end_time', $no_end ? '1' : '0' );
+			update_post_meta( $post_id, $prefix . 'multi_day', '1' );
+			update_post_meta( $post_id, $prefix . 'event_days', wp_json_encode( $days ) );
+			update_post_meta( $post_id, $prefix . 'event_date', $first['date'] );
+			update_post_meta( $post_id, $prefix . 'event_end_date', $last['date'] !== $first['date'] ? $last['date'] : '' );
+			update_post_meta( $post_id, $prefix . 'event_start_time', $first['start'] );
+			update_post_meta( $post_id, $prefix . 'event_end_time', $last['end'] );
+			update_post_meta( $post_id, $prefix . 'event_all_day', $first['start'] === '' ? '1' : '0' );
+			update_post_meta( $post_id, $prefix . 'event_no_end_time', '0' );
+		} else {
+			$event_date = self::sanitize_date( $_POST['event_date'] ?? '' );
+			$all_day    = isset( $_POST['event_all_day'] );
+			$no_end     = isset( $_POST['event_no_end_time'] );
+			$start_time = $all_day ? '' : self::sanitize_time( $_POST['event_start_time'] ?? '' );
+			$end_time   = ( $all_day || $no_end ) ? '' : self::sanitize_time( $_POST['event_end_time'] ?? '' );
+
+			update_post_meta( $post_id, $prefix . 'multi_day', '0' );
+			update_post_meta( $post_id, $prefix . 'event_days', '' );
+			update_post_meta( $post_id, $prefix . 'event_date', $event_date );
+			update_post_meta( $post_id, $prefix . 'event_end_date', '' );
+			update_post_meta( $post_id, $prefix . 'event_start_time', $start_time );
+			update_post_meta( $post_id, $prefix . 'event_end_time', $end_time );
+			update_post_meta( $post_id, $prefix . 'event_all_day', $all_day ? '1' : '0' );
+			update_post_meta( $post_id, $prefix . 'event_no_end_time', $no_end ? '1' : '0' );
+		}
 
 		$event_type = in_array( $_POST['event_type'] ?? '', array( 'in-person', 'online', 'hybrid' ), true ) ? $_POST['event_type'] : 'in-person';
 		update_post_meta( $post_id, $prefix . 'event_type', $event_type );

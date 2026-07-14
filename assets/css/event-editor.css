@@ -91,6 +91,80 @@ body.post-type-event {
 	margin: 0 0 4px;
 }
 
+/* Label with an inline toggle on the right (All Day, No End Time, Multi-day). */
+.blt-label-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 4px;
+	min-height: 22px;
+}
+
+.blt-label-row .blt-label {
+	margin: 0;
+}
+
+/* --- Multi-day schedule rows --- */
+.blt-multi-day-panel {
+	margin-top: 4px;
+}
+
+.blt-day-rows-header,
+.blt-day-row {
+	display: grid;
+	grid-template-columns: 1fr 130px 130px 28px;
+	gap: 8px;
+	align-items: center;
+}
+
+.blt-day-rows-header {
+	margin-bottom: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--blt-muted-fg);
+}
+
+.blt-day-row {
+	margin-bottom: 8px;
+}
+
+.blt-day-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--blt-muted-fg);
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.blt-day-remove:hover {
+	background: rgba(212, 24, 61, 0.08);
+	color: var(--blt-destructive);
+}
+
+#blt-add-day {
+	margin-top: 4px;
+}
+
+@media screen and (max-width: 600px) {
+	.blt-day-rows-header {
+		display: none;
+	}
+
+	.blt-day-row {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
 .blt-editor .blt-input {
 	display: block;
 	width: 100%;

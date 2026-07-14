@@ -75,6 +75,19 @@ class BLT_Events_Coupons {
 			}
 		}
 
+		// Check role restrictions
+		$allowed_roles = get_post_meta( $coupon->ID, $prefix . 'allowed_roles', true );
+		if ( is_array( $allowed_roles ) && ! empty( $allowed_roles ) ) {
+			if ( ! is_user_logged_in() ) {
+				return new WP_Error( 'role_restricted', __( 'This coupon is only available to logged-in members.', 'blt-events' ) );
+			}
+
+			$user = wp_get_current_user();
+			if ( ! array_intersect( $allowed_roles, (array) $user->roles ) ) {
+				return new WP_Error( 'role_restricted', __( 'This coupon is not available for your account.', 'blt-events' ) );
+			}
+		}
+
 		return $coupon;
 	}
 

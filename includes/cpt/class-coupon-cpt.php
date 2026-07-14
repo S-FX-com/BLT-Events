@@ -30,6 +30,59 @@ class BLT_Events_Coupon_CPT {
         add_action( 'manage_' . self::$slug . '_posts_columns', array( __CLASS__, 'set_custom_columns' ) );
         add_action( 'manage_' . self::$slug . '_posts_custom_column', array( __CLASS__, 'custom_column' ), 10, 2 );
         add_filter( 'manage_edit-' . self::$slug . '_sortable_columns', array( __CLASS__, 'sortable_columns' ) );
+
+        // AJAX search over active (published, upcoming) events for the
+        // Event Restrictions picker.
+        add_action( 'wp_ajax_blt_search_events', array( __CLASS__, 'ajax_search_events' ) );
+    }
+
+    /**
+     * AJAX: search active events by title for the Event Restrictions picker.
+     * Active = published and not in the past (or with no date set yet).
+     */
+    public static function ajax_search_events() {
+        check_ajax_referer( 'blt_event_search', 'nonce' );
+
+        if ( ! BLT_Events_Helpers::user_can_manage() ) {
+            wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'blt-events' ) ) );
+        }
+
+        $term = sanitize_text_field( wp_unslash( $_POST['term'] ?? '' ) );
+
+        $query = new WP_Query( array(
+            'post_type'      => BLT_Events_Event_CPT::$slug,
+            'post_status'    => 'publish',
+            's'              => $term,
+            'posts_per_page' => 20,
+            'no_found_rows'  => true,
+            'meta_query'     => array(
+                'relation' => 'OR',
+                array(
+                    'key'     => '_blt_event_date',
+                    'value'   => current_time( 'Y-m-d' ),
+                    'compare' => '>=',
+                    'type'    => 'DATE',
+                ),
+                array(
+                    'key'     => '_blt_event_date',
+                    'compare' => 'NOT EXISTS',
+                ),
+            ),
+        ) );
+
+        $date_format = get_option( 'blt_events_date_format', 'F j, Y' );
+        $results     = array();
+
+        foreach ( $query->posts as $event ) {
+            $event_date = get_post_meta( $event->ID, '_blt_event_date', true );
+            $results[]  = array(
+                'id'    => $event->ID,
+                'title' => $event->post_title,
+                'date'  => $event_date ? date_i18n( $date_format, strtotime( $event_date ) ) : '',
+            );
+        }
+
+        wp_send_json_success( array( 'events' => $results ) );
     }
 
     /**
@@ -92,6 +145,24 @@ class BLT_Events_Coupon_CPT {
     }
 
     /**
+     * Render a labelled toggle switch (shared design system markup).
+     */
+    private static function render_toggle( $name, $checked, $label, $desc = '' ) {
+        ?>
+        <label class="blt-toggle">
+            <input type="checkbox" name="<?php echo esc_attr( $name ); ?>" value="1" <?php checked( $checked ); ?> />
+            <span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+            <span class="blt-toggle-text">
+                <span class="blt-toggle-label"><?php echo esc_html( $label ); ?></span>
+                <?php if ( $desc ) : ?>
+                    <span class="blt-toggle-desc"><?php echo esc_html( $desc ); ?></span>
+                <?php endif; ?>
+            </span>
+        </label>
+        <?php
+    }
+
+    /**
      * Render the Coupon Details meta box.
      *
      * @param WP_Post $post The current post object.
@@ -106,81 +177,111 @@ class BLT_Events_Coupon_CPT {
         $usage_limit       = get_post_meta( $post->ID, '_blt_usage_limit', true ) ?: '';
         $status            = get_post_meta( $post->ID, '_blt_status', true ) ?: 'active';
         $applicable_events = get_post_meta( $post->ID, '_blt_applicable_events', true ) ?: array( 'all' );
+        $allowed_roles     = get_post_meta( $post->ID, '_blt_allowed_roles', true );
+        $allowed_roles     = is_array( $allowed_roles ) ? $allowed_roles : array();
 
+        $restrict_events = is_array( $applicable_events ) && ! in_array( 'all', $applicable_events, true ) && ! empty( $applicable_events );
+        $selected_events = $restrict_events ? array_filter( array_map( 'absint', $applicable_events ) ) : array();
+
+        $currency_symbol = class_exists( 'BLT_Events_Helpers' ) ? ( BLT_Events_Helpers::get_currency_symbol() ?: '$' ) : '$';
+        $date_format     = get_option( 'blt_events_date_format', 'F j, Y' );
         ?>
-        <table class="form-table">
-            <tr>
-                <th><label for="coupon_code"><?php esc_html_e( 'Coupon Code', 'blt-events' ); ?></label></th>
-                <td>
+        <div class="blt-ui blt-coupon-details" data-search-nonce="<?php echo esc_attr( wp_create_nonce( 'blt_event_search' ) ); ?>">
+            <div class="blt-field">
+                <div class="blt-field-label"><label for="coupon_code"><?php esc_html_e( 'Coupon Code', 'blt-events' ); ?></label></div>
+                <div>
                     <input type="text" id="coupon_code" name="coupon_code" value="<?php echo esc_attr( $code ); ?>" class="regular-text" required>
-                    <button type="button" class="button button-secondary" id="generate_coupon_code"><?php esc_html_e( 'Generate Code', 'blt-events' ); ?></button>
-                </td>
-            </tr>
-            <tr>
-                <th><label for="discount_type"><?php esc_html_e( 'Discount Type', 'blt-events' ); ?></label></th>
-                <td>
+                    <button type="button" class="button" id="generate_coupon_code"><?php esc_html_e( 'Generate Code', 'blt-events' ); ?></button>
+                </div>
+            </div>
+
+            <div class="blt-field">
+                <div class="blt-field-label"><label for="discount_type"><?php esc_html_e( 'Discount', 'blt-events' ); ?></label></div>
+                <div>
                     <select id="discount_type" name="discount_type">
-                        <option value="fixed" <?php selected( $discount_type, 'fixed' ); ?>><?php esc_html_e( 'Fixed Amount ($)', 'blt-events' ); ?></option>
+                        <option value="fixed" <?php selected( $discount_type, 'fixed' ); ?>><?php echo esc_html( sprintf( /* translators: %s: currency symbol. */ __( 'Fixed Amount (%s)', 'blt-events' ), $currency_symbol ) ); ?></option>
                         <option value="percentage" <?php selected( $discount_type, 'percentage' ); ?>><?php esc_html_e( 'Percentage (%)', 'blt-events' ); ?></option>
                     </select>
-                </td>
-            </tr>
-            <tr>
-                <th><label for="amount"><?php esc_html_e( 'Amount', 'blt-events' ); ?></label></th>
-                <td>
-                    <input type="number" id="amount" name="amount" value="<?php echo esc_attr( $amount ); ?>" step="0.01" min="0" class="regular-text" required>
-                    <span id="amount_symbol"><?php echo $discount_type === 'percentage' ? '%' : '$'; ?></span>
-                </td>
-            </tr>
-            <tr>
-                <th><label for="expiration_date"><?php esc_html_e( 'Expiration Date', 'blt-events' ); ?></label></th>
-                <td>
-                    <input type="date" id="expiration_date" name="expiration_date" value="<?php echo esc_attr( $expiration_date ); ?>" class="regular-text">
-                    <p class="description"><?php esc_html_e( 'Leave blank for no expiration', 'blt-events' ); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th><label for="usage_limit"><?php esc_html_e( 'Usage Limit', 'blt-events' ); ?></label></th>
-                <td>
-                    <input type="number" id="usage_limit" name="usage_limit" value="<?php echo esc_attr( $usage_limit ); ?>" min="0" class="regular-text">
-                    <p class="description"><?php esc_html_e( 'Maximum number of times this coupon can be used. Leave blank for unlimited.', 'blt-events' ); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th><label for="status"><?php esc_html_e( 'Status', 'blt-events' ); ?></label></th>
-                <td>
-                    <select id="status" name="status">
-                        <option value="active" <?php selected( $status, 'active' ); ?>><?php esc_html_e( 'Active', 'blt-events' ); ?></option>
-                        <option value="inactive" <?php selected( $status, 'inactive' ); ?>><?php esc_html_e( 'Inactive', 'blt-events' ); ?></option>
-                    </select>
-                </td>
-            </tr>
-            <?php
-            $event_ids = get_posts( array(
-                'post_type'      => BLT_Events_Event_CPT::$slug,
-                'posts_per_page' => 500,
-                'post_status'    => 'publish',
-                'fields'         => 'ids',
-                'orderby'        => 'title',
-                'order'          => 'ASC',
-                'no_found_rows'  => true,
-            ) );
-            ?>
-            <tr>
-                <th><label for="applicable_events"><?php esc_html_e( 'Applicable Events', 'blt-events' ); ?></label></th>
-                <td>
-                    <select id="applicable_events" name="applicable_events[]" multiple style="width: 100%; min-height: 120px;">
-                        <option value="all" <?php selected( in_array( 'all', $applicable_events ) || empty( $applicable_events ) ); ?>><?php esc_html_e( 'All Events', 'blt-events' ); ?></option>
-                        <?php foreach ( $event_ids as $ev_id ) : ?>
-                            <option value="<?php echo esc_attr( $ev_id ); ?>" <?php selected( in_array( $ev_id, array_map( 'intval', $applicable_events ), true ) ); ?>>
-                                <?php echo esc_html( get_the_title( $ev_id ) ); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <p class="description"><?php esc_html_e( 'Select which events this coupon can be applied to. Select "All Events" for no restrictions.', 'blt-events' ); ?></p>
-                </td>
-            </tr>
-        </table>
+                    <input type="number" id="amount" name="amount" value="<?php echo esc_attr( $amount ); ?>" step="0.01" min="0" class="small-text" required>
+                    <span id="amount_symbol" data-currency-symbol="<?php echo esc_attr( $currency_symbol ); ?>"><?php echo esc_html( $discount_type === 'percentage' ? '%' : $currency_symbol ); ?></span>
+                </div>
+            </div>
+
+            <div class="blt-field">
+                <div class="blt-field-label"><label for="expiration_date"><?php esc_html_e( 'Expiration Date', 'blt-events' ); ?></label></div>
+                <div>
+                    <input type="date" id="expiration_date" name="expiration_date" value="<?php echo esc_attr( $expiration_date ); ?>">
+                    <p class="blt-field-desc"><?php esc_html_e( 'Leave blank for no expiration.', 'blt-events' ); ?></p>
+                </div>
+            </div>
+
+            <div class="blt-field">
+                <div class="blt-field-label"><label for="usage_limit"><?php esc_html_e( 'Usage Limit', 'blt-events' ); ?></label></div>
+                <div>
+                    <input type="number" id="usage_limit" name="usage_limit" value="<?php echo esc_attr( $usage_limit ); ?>" min="0" class="small-text">
+                    <p class="blt-field-desc"><?php esc_html_e( 'Maximum number of times this coupon can be used. Leave blank for unlimited.', 'blt-events' ); ?></p>
+                </div>
+            </div>
+
+            <div class="blt-field">
+                <div class="blt-field-label"><?php esc_html_e( 'Status', 'blt-events' ); ?></div>
+                <div>
+                    <?php self::render_toggle( 'status_active', $status !== 'inactive', __( 'Active', 'blt-events' ), __( 'Inactive coupons are rejected at checkout even before their expiration date.', 'blt-events' ) ); ?>
+                </div>
+            </div>
+
+            <div class="blt-field">
+                <div class="blt-field-label"><?php esc_html_e( 'Event Restrictions', 'blt-events' ); ?></div>
+                <div>
+                    <?php self::render_toggle( 'restrict_events', $restrict_events, __( 'Restrict to specific events', 'blt-events' ), __( 'Off = valid for all events.', 'blt-events' ) ); ?>
+
+                    <div class="blt-coupon-events-panel" <?php echo $restrict_events ? '' : 'style="display:none;"'; ?>>
+                        <div class="blt-address-autocomplete">
+                            <input type="text" id="blt-coupon-event-search" class="regular-text" placeholder="<?php esc_attr_e( 'Search active events…', 'blt-events' ); ?>" autocomplete="off" />
+                            <ul class="blt-address-suggestions" id="blt-coupon-event-suggestions" style="display:none;"></ul>
+                        </div>
+                        <div class="blt-coupon-event-chips" id="blt-coupon-event-chips">
+                            <?php foreach ( $selected_events as $ev_id ) : ?>
+                                <?php
+                                if ( get_post_type( $ev_id ) !== BLT_Events_Event_CPT::$slug ) {
+                                    continue;
+                                }
+                                $ev_date = get_post_meta( $ev_id, '_blt_event_date', true );
+                                ?>
+                                <span class="blt-coupon-event-chip" data-id="<?php echo esc_attr( $ev_id ); ?>">
+                                    <input type="hidden" name="applicable_events[]" value="<?php echo esc_attr( $ev_id ); ?>" />
+                                    <?php echo esc_html( get_the_title( $ev_id ) ); ?>
+                                    <?php if ( $ev_date ) : ?>
+                                        <em><?php echo esc_html( date_i18n( $date_format, strtotime( $ev_date ) ) ); ?></em>
+                                    <?php endif; ?>
+                                    <button type="button" class="blt-chip-remove" aria-label="<?php esc_attr_e( 'Remove event', 'blt-events' ); ?>">&times;</button>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="blt-field-desc"><?php esc_html_e( 'Search shows published events that have not already happened. With no events selected, the coupon stays valid for all events.', 'blt-events' ); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blt-field">
+                <div class="blt-field-label"><?php esc_html_e( 'Role Restrictions', 'blt-events' ); ?></div>
+                <div>
+                    <?php self::render_toggle( 'restrict_roles', ! empty( $allowed_roles ), __( 'Restrict to specific user roles', 'blt-events' ), __( 'Off = anyone can use this coupon.', 'blt-events' ) ); ?>
+
+                    <div class="blt-coupon-roles-panel" <?php echo ! empty( $allowed_roles ) ? '' : 'style="display:none;"'; ?>>
+                        <div class="blt-role-choices">
+                            <?php foreach ( get_editable_roles() as $role_key => $role ) : ?>
+                                <label class="blt-role-choice <?php echo in_array( $role_key, $allowed_roles, true ) ? 'is-selected' : ''; ?>">
+                                    <input type="checkbox" name="allowed_roles[]" value="<?php echo esc_attr( $role_key ); ?>" <?php checked( in_array( $role_key, $allowed_roles, true ) ); ?> />
+                                    <?php echo esc_html( translate_user_role( $role['name'] ) ); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="blt-field-desc"><?php esc_html_e( 'Only logged-in users with one of the selected roles can apply this coupon.', 'blt-events' ); ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
         <?php
     }
 
@@ -324,9 +425,12 @@ class BLT_Events_Coupon_CPT {
                 break;
 
             case 'status':
-                $status       = get_post_meta( $post_id, '_blt_status', true ) ?: 'active';
-                $status_class = 'status-' . $status;
-                echo '<span class="' . esc_attr( $status_class ) . '">' . esc_html( ucfirst( $status ) ) . '</span>';
+                $status = get_post_meta( $post_id, '_blt_status', true ) ?: 'active';
+                printf(
+                    '<span class="blt-badge %1$s">%2$s</span>',
+                    $status === 'active' ? 'blt-badge-on' : 'blt-badge-off',
+                    esc_html( $status === 'active' ? __( 'Active', 'blt-events' ) : __( 'Inactive', 'blt-events' ) )
+                );
                 break;
         }
     }
@@ -398,22 +502,34 @@ class BLT_Events_Coupon_CPT {
             update_post_meta( $post_id, '_blt_usage_limit', (int) $_POST['usage_limit'] );
         }
 
-        if ( isset( $_POST['status'] ) ) {
-            $status = in_array( $_POST['status'], array( 'active', 'inactive' ), true ) ? $_POST['status'] : 'active';
-            update_post_meta( $post_id, '_blt_status', $status );
-        }
+        // Status toggle: checked = active, unchecked = inactive.
+        update_post_meta( $post_id, '_blt_status', empty( $_POST['status_active'] ) ? 'inactive' : 'active' );
 
-        if ( isset( $_POST['applicable_events'] ) ) {
-            // Only the literal 'all' sentinel or event post IDs are allowed.
-            $applicable_events = array();
+        // Event restrictions: toggle off (or nothing selected) = all events.
+        $applicable_events = array( 'all' );
+        if ( ! empty( $_POST['restrict_events'] ) && ! empty( $_POST['applicable_events'] ) ) {
+            $selected = array();
             foreach ( (array) $_POST['applicable_events'] as $value ) {
-                if ( $value === 'all' ) {
-                    $applicable_events[] = 'all';
-                } elseif ( absint( $value ) > 0 ) {
-                    $applicable_events[] = absint( $value );
+                $event_id = absint( $value );
+                if ( $event_id > 0 && get_post_type( $event_id ) === BLT_Events_Event_CPT::$slug ) {
+                    $selected[] = $event_id;
                 }
             }
-            update_post_meta( $post_id, '_blt_applicable_events', $applicable_events );
+            if ( ! empty( $selected ) ) {
+                $applicable_events = array_values( array_unique( $selected ) );
+            }
         }
+        update_post_meta( $post_id, '_blt_applicable_events', $applicable_events );
+
+        // Role restrictions: toggle off (or nothing selected) = everyone.
+        $allowed_roles = array();
+        if ( ! empty( $_POST['restrict_roles'] ) && ! empty( $_POST['allowed_roles'] ) ) {
+            $valid_roles   = array_keys( get_editable_roles() );
+            $allowed_roles = array_values( array_intersect(
+                array_map( 'sanitize_key', (array) $_POST['allowed_roles'] ),
+                $valid_roles
+            ) );
+        }
+        update_post_meta( $post_id, '_blt_allowed_roles', $allowed_roles );
     }
 }
