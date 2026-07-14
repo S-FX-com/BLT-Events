@@ -3,23 +3,29 @@
    Card-based Add/Edit Event screen styles.
    Loaded only on the event editor; boxes are
    tagged with .blt-card via postbox_classes.
+
+   Uses the same color language as the shared design system
+   (assets/css/blt-design-system.css) — WP admin blue accent, WP admin
+   neutrals — but keeps its own component set because it lives inside
+   WordPress's native postbox chrome rather than the .blt-ui page shell
+   used by Settings/Registrations/Fieldsets. See DESIGN-SYSTEM.md.
    ======================================== */
 
 body.post-type-event {
-	--blt-fg: #101014;
-	--blt-muted: #ececf0;
-	--blt-muted-fg: #717182;
-	--blt-secondary: #eef0f5;
-	--blt-border: rgba(0, 0, 0, 0.1);
-	--blt-input-bg: #f3f3f5;
+	--blt-fg: #1e1e1e;
+	--blt-muted: #f0f0f1;
+	--blt-muted-fg: #646970;
+	--blt-secondary: #f6fafd;
+	--blt-border: #dcdcde;
+	--blt-input-bg: #f6f7f7;
 	--blt-switch-bg: #cbced4;
-	--blt-primary: #030213;
+	--blt-primary: #2271b1;
 	--blt-primary-fg: #ffffff;
-	--blt-primary-tint: rgba(3, 2, 19, 0.06);
-	--blt-destructive: #d4183d;
-	--blt-paid-bg: #dcfce7;
-	--blt-paid-fg: #15803d;
-	--blt-lock: #f59e0b;
+	--blt-primary-tint: #f6fafd;
+	--blt-destructive: #8a2424;
+	--blt-paid-bg: #edfaef;
+	--blt-paid-fg: #005c12;
+	--blt-lock: #dba617;
 	--blt-radius: 8px;
 	--blt-radius-sm: 6px;
 }
@@ -408,7 +414,7 @@ body.post-type-event {
 	position: relative;
 }
 
-/* Suggestion list styles live in admin.css (shared with other screens). */
+/* Suggestion list styles live in blt-design-system.css (shared with other screens). */
 
 /* --- Map preview --- */
 .blt-map-preview {

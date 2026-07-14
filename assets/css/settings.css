@@ -1,37 +1,16 @@
 /* ========================================
    BLT Events - Settings Screen
-   Styled after the WordPress design system:
-   accent #2271b1, text #1e1e1e, muted #646970,
-   borders #dcdcde, 2px control radii, card surfaces.
+   Page-specific layout on top of the shared design system
+   (assets/css/blt-design-system.css): tabs, the payment-provider grid
+   sizing, and the shortcodes reference table.
    ======================================== */
-
-.blt-events-settings {
-	max-width: 920px;
-}
-
-/* --- Header --- */
-.blt-settings-header h1 {
-	display: flex;
-	align-items: baseline;
-	gap: 8px;
-	font-size: 23px;
-	font-weight: 600;
-	color: #1e1e1e;
-	padding: 9px 0 4px;
-}
-
-.blt-settings-header-sub {
-	font-size: 14px;
-	font-weight: 400;
-	color: #646970;
-}
 
 /* --- Tabs --- */
 .blt-settings-tabs {
 	display: flex;
 	gap: 4px;
 	margin: 12px 0 24px;
-	border-bottom: 1px solid #dcdcde;
+	border-bottom: 1px solid var(--blt-border);
 }
 
 .blt-settings-tab {
@@ -39,24 +18,24 @@
 	padding: 10px 16px;
 	font-size: 14px;
 	font-weight: 500;
-	color: #1e1e1e;
+	color: var(--blt-fg);
 	text-decoration: none;
 	border-radius: 4px 4px 0 0;
 	transition: background 0.1s ease, color 0.1s ease;
 }
 
 .blt-settings-tab:hover {
-	background: #f0f0f1;
-	color: #2271b1;
+	background: var(--blt-surface-muted);
+	color: var(--blt-primary);
 }
 
 .blt-settings-tab:focus {
-	box-shadow: 0 0 0 2px #2271b1;
+	box-shadow: 0 0 0 2px var(--blt-primary);
 	outline: none;
 }
 
 .blt-settings-tab.is-active {
-	color: #2271b1;
+	color: var(--blt-primary);
 	font-weight: 600;
 }
 
@@ -67,388 +46,8 @@
 	right: 0;
 	bottom: -1px;
 	height: 3px;
-	background: #2271b1;
+	background: var(--blt-primary);
 	border-radius: 3px 3px 0 0;
-}
-
-/* --- Cards --- */
-.blt-card {
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 8px;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-	margin-bottom: 20px;
-	overflow: hidden;
-}
-
-.blt-card-header {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 6px 12px;
-	padding: 16px 24px;
-	border-bottom: 1px solid #f0f0f1;
-}
-
-.blt-card-header h2 {
-	margin: 0;
-	font-size: 16px;
-	font-weight: 600;
-	color: #1e1e1e;
-	flex: 1 1 auto;
-}
-
-.blt-card-header p {
-	flex-basis: 100%;
-	margin: 0;
-	font-size: 13px;
-	color: #646970;
-	order: 3;
-}
-
-.blt-card-header-badges {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-left: auto;
-}
-
-.blt-badge-labelled {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	font-size: 12px;
-	color: #646970;
-}
-
-.blt-card-body {
-	padding: 20px 24px;
-}
-
-/* --- Field rows --- */
-.blt-field {
-	display: grid;
-	grid-template-columns: 200px 1fr;
-	gap: 8px 24px;
-	padding: 10px 0;
-}
-
-.blt-field + .blt-field {
-	border-top: 1px solid #f0f0f1;
-}
-
-.blt-field-label {
-	font-size: 13px;
-	font-weight: 600;
-	color: #1e1e1e;
-	padding-top: 6px;
-}
-
-.blt-field-desc {
-	margin: 6px 0 0;
-	font-size: 12px;
-	color: #646970;
-}
-
-.blt-events-settings input[type="text"],
-.blt-events-settings input[type="url"],
-.blt-events-settings input[type="password"],
-.blt-events-settings input[type="number"],
-.blt-events-settings select {
-	border-color: #8c8f94;
-	border-radius: 2px;
-	min-height: 32px;
-}
-
-.blt-events-settings input:focus,
-.blt-events-settings select:focus {
-	border-color: #2271b1;
-	box-shadow: 0 0 0 1px #2271b1;
-}
-
-/* --- Toggle switches --- */
-.blt-toggle-stack {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-}
-
-.blt-toggle {
-	display: inline-flex;
-	align-items: flex-start;
-	gap: 10px;
-	cursor: pointer;
-}
-
-.blt-toggle input[type="checkbox"] {
-	position: absolute;
-	opacity: 0;
-	width: 0;
-	height: 0;
-}
-
-.blt-toggle-track {
-	flex-shrink: 0;
-	position: relative;
-	width: 36px;
-	height: 18px;
-	margin-top: 1px;
-	background: #fff;
-	border: 1px solid #1e1e1e;
-	border-radius: 9px;
-	transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.blt-toggle-thumb {
-	position: absolute;
-	top: 2px;
-	left: 2px;
-	width: 12px;
-	height: 12px;
-	background: #1e1e1e;
-	border-radius: 50%;
-	transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.blt-toggle input:checked + .blt-toggle-track {
-	background: #2271b1;
-	border-color: #2271b1;
-}
-
-.blt-toggle input:checked + .blt-toggle-track .blt-toggle-thumb {
-	background: #fff;
-	transform: translateX(18px);
-}
-
-.blt-toggle input:focus-visible + .blt-toggle-track {
-	box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2271b1;
-}
-
-.blt-toggle-text {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.blt-toggle-label {
-	font-size: 13px;
-	font-weight: 500;
-	color: #1e1e1e;
-}
-
-.blt-toggle-desc {
-	font-size: 12px;
-	color: #646970;
-}
-
-/* --- Payment provider cards --- */
-.blt-provider-cards {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-	gap: 12px;
-}
-
-.blt-provider-card {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	padding: 14px 16px;
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 6px;
-	cursor: pointer;
-	transition: border-color 0.1s ease, box-shadow 0.1s ease;
-}
-
-.blt-provider-card:hover {
-	border-color: #2271b1;
-}
-
-.blt-provider-card input[type="radio"] {
-	position: absolute;
-	opacity: 0;
-	width: 0;
-	height: 0;
-}
-
-.blt-provider-card.is-selected {
-	border-color: #2271b1;
-	box-shadow: 0 0 0 1px #2271b1;
-	background: #f6fafd;
-}
-
-.blt-provider-card-check {
-	position: absolute;
-	top: 12px;
-	right: 12px;
-	width: 16px;
-	height: 16px;
-	border: 1px solid #8c8f94;
-	border-radius: 50%;
-	background: #fff;
-}
-
-.blt-provider-card.is-selected .blt-provider-card-check {
-	border-color: #2271b1;
-	background: #2271b1;
-	box-shadow: inset 0 0 0 3px #fff;
-}
-
-.blt-provider-card input:focus-visible ~ .blt-provider-card-name {
-	text-decoration: underline;
-}
-
-.blt-provider-card-name {
-	font-size: 14px;
-	font-weight: 600;
-	color: #1e1e1e;
-	padding-right: 24px;
-}
-
-.blt-provider-card-desc {
-	font-size: 12px;
-	color: #646970;
-	line-height: 1.4;
-}
-
-/* --- Status badges --- */
-.blt-badge {
-	display: inline-block;
-	padding: 2px 10px;
-	border-radius: 10px;
-	font-size: 11px;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
-}
-
-.blt-badge-on {
-	background: #edfaef;
-	color: #005c12;
-}
-
-.blt-badge-off {
-	background: #f0f0f1;
-	color: #646970;
-}
-
-/* --- Callout --- */
-.blt-callout {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	padding: 14px 20px;
-	margin-bottom: 20px;
-	background: #f6fafd;
-	border: 1px solid #c5d9ed;
-	border-left: 4px solid #2271b1;
-	border-radius: 4px;
-	font-size: 13px;
-	color: #1e1e1e;
-}
-
-.blt-var-chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	margin-top: 4px;
-}
-
-.blt-var-chip {
-	padding: 2px 8px;
-	background: #fff;
-	border: 1px solid #c5d9ed;
-	border-radius: 3px;
-	font-size: 12px;
-}
-
-/* --- Redirect URI --- */
-.blt-redirect-uri {
-	display: inline-block;
-	padding: 5px 10px;
-	background: #f6f7f7;
-	border: 1px solid #dcdcde;
-	border-radius: 4px;
-	word-break: break-all;
-	font-size: 12px;
-}
-
-/* --- Shortcodes tab --- */
-.blt-shortcode-tag {
-	margin: 0 0 8px;
-}
-
-.blt-shortcode-tag code {
-	font-size: 14px;
-	padding: 4px 10px;
-	background: #f0f0f1;
-	border-radius: 4px;
-}
-
-.blt-atts-table {
-	width: 100%;
-	margin-top: 14px;
-	border-collapse: collapse;
-	font-size: 13px;
-}
-
-.blt-atts-table th,
-.blt-atts-table td {
-	padding: 8px 12px;
-	text-align: left;
-	vertical-align: top;
-	border-bottom: 1px solid #f0f0f1;
-}
-
-.blt-atts-table th {
-	font-weight: 600;
-	color: #646970;
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
-}
-
-.blt-atts-table td code {
-	background: #f0f0f1;
-	border-radius: 3px;
-	padding: 1px 6px;
-	font-size: 12px;
-}
-
-.blt-shortcode-example {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin-top: 14px;
-	padding: 10px 14px;
-	background: #f6f7f7;
-	border: 1px solid #dcdcde;
-	border-radius: 4px;
-}
-
-.blt-shortcode-example-label {
-	font-size: 11px;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
-	color: #646970;
-}
-
-.blt-shortcode-example code {
-	background: none;
-	padding: 0;
-	font-size: 13px;
-}
-
-.blt-shortcode-example .blt-copy-shortcode {
-	margin-left: auto;
-}
-
-.blt-copy-shortcode.is-copied,
-.blt-copy-shortcode.is-copied:hover {
-	color: #005c12;
-	border-color: #005c12;
 }
 
 /* --- Save bar --- */
@@ -464,20 +63,86 @@
 	border-radius: 3px;
 }
 
+/* --- Shortcodes tab --- */
+.blt-shortcode-tag {
+	margin: 0 0 8px;
+}
+
+.blt-shortcode-tag code {
+	font-size: 14px;
+	padding: 4px 10px;
+	background: var(--blt-surface-muted);
+	border-radius: 4px;
+}
+
+.blt-atts-table {
+	width: 100%;
+	margin-top: 14px;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+.blt-atts-table th,
+.blt-atts-table td {
+	padding: 8px 12px;
+	text-align: left;
+	vertical-align: top;
+	border-bottom: 1px solid var(--blt-surface-muted);
+}
+
+.blt-atts-table th {
+	font-weight: 600;
+	color: var(--blt-muted-fg);
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.blt-atts-table td code {
+	background: var(--blt-surface-muted);
+	border-radius: 3px;
+	padding: 1px 6px;
+	font-size: 12px;
+}
+
+.blt-shortcode-example {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 14px;
+	padding: 10px 14px;
+	background: var(--blt-surface-muted);
+	border: 1px solid var(--blt-border);
+	border-radius: 4px;
+}
+
+.blt-shortcode-example-label {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: var(--blt-muted-fg);
+}
+
+.blt-shortcode-example code {
+	background: none;
+	padding: 0;
+	font-size: 13px;
+}
+
+.blt-shortcode-example .blt-copy-shortcode {
+	margin-left: auto;
+}
+
+.blt-copy-shortcode.is-copied,
+.blt-copy-shortcode.is-copied:hover {
+	color: var(--blt-success-fg);
+	border-color: var(--blt-success-fg);
+}
+
 /* --- Responsive --- */
 @media (max-width: 782px) {
-	.blt-field {
-		grid-template-columns: 1fr;
-		gap: 4px;
-	}
-
 	.blt-settings-tabs {
 		flex-wrap: wrap;
-	}
-
-	.blt-card-header,
-	.blt-card-body {
-		padding-left: 16px;
-		padding-right: 16px;
 	}
 }

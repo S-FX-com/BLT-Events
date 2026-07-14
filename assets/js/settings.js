@@ -9,11 +9,12 @@
 	'use strict';
 
 	$(function () {
-		// --- Payment provider cards ---
-		var $cards = $('.blt-provider-card');
+		// --- Payment provider selection cards ---
+		var $providerRadios = $('input[name="blt_events_payment_provider"]');
+		var $cards = $providerRadios.closest('.blt-select-card');
 
 		function syncProviderPanels() {
-			var provider = $('input[name="blt_events_payment_provider"]:checked').val();
+			var provider = $providerRadios.filter(':checked').val();
 
 			$cards.each(function () {
 				var $card = $(this);
@@ -27,7 +28,7 @@
 		}
 
 		if ($cards.length) {
-			$('input[name="blt_events_payment_provider"]').on('change', syncProviderPanels);
+			$providerRadios.on('change', syncProviderPanels);
 			syncProviderPanels();
 		}
 

@@ -39,7 +39,7 @@ jQuery(document).ready(function ($) {
 			'<div class="blt-field-item" data-index="' + fieldIndex + '">' +
 			'  <div class="blt-field-header">' +
 			'    <span class="blt-field-drag dashicons dashicons-move"></span>' +
-			'    <span class="blt-field-label">New Field</span>' +
+			'    <span class="blt-fitem-label">New Field</span>' +
 			'    <span class="blt-field-type">text</span>' +
 			'    <button type="button" class="blt-field-toggle dashicons dashicons-arrow-down-alt2"></button>' +
 			'    <button type="button" class="blt-field-remove dashicons dashicons-trash"></button>' +
@@ -69,7 +69,7 @@ jQuery(document).ready(function ($) {
 
 	// Update label text in header when label input changes
 	$(document).on("input", ".blt-field-settings input[name$='[label]']", function () {
-		$(this).closest(".blt-field-item").find(".blt-field-label").text($(this).val());
+		$(this).closest(".blt-field-item").find(".blt-fitem-label").text($(this).val());
 	});
 
 	// Update type badge when type changes

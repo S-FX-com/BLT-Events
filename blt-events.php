@@ -221,10 +221,19 @@ function blt_events_enqueue_admin_assets( $hook ) {
 		return;
 	}
 
+	// Shared component library (cards, fields, toggles, badges) used by
+	// every custom admin screen the plugin adds; see DESIGN-SYSTEM.md.
+	wp_enqueue_style(
+		'blt-events-design-system',
+		BLT_EVENTS_PLUGIN_URL . 'assets/css/blt-design-system.css',
+		array(),
+		BLT_EVENTS_VERSION
+	);
+
 	wp_enqueue_style(
 		'blt-events-admin',
 		BLT_EVENTS_PLUGIN_URL . 'assets/css/admin.css',
-		array(),
+		array( 'blt-events-design-system' ),
 		BLT_EVENTS_VERSION
 	);
 
@@ -259,7 +268,7 @@ function blt_events_enqueue_admin_assets( $hook ) {
 		wp_enqueue_style(
 			'blt-events-event-editor',
 			BLT_EVENTS_PLUGIN_URL . 'assets/css/event-editor.css',
-			array( 'dashicons' ),
+			array( 'dashicons', 'blt-events-admin' ),
 			BLT_EVENTS_VERSION
 		);
 

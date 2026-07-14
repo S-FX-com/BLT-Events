@@ -1,9 +1,10 @@
 /**
  * BLT Events - Admin JavaScript
  *
- * Handles general admin UI interactions: coupon code generation and
- * settings-page toggles. Event editor interactions live in
- * event-editor.js, loaded only on the event edit screen.
+ * Handles general admin UI interactions: coupon code generation and the
+ * discount amount symbol. Event editor interactions live in
+ * event-editor.js, and settings-page interactions live in settings.js,
+ * each loaded only on their own screen.
  */
 jQuery(document).ready(function ($) {
 	"use strict";
@@ -20,15 +21,6 @@ jQuery(document).ready(function ($) {
 			$("#amount_symbol").text("%");
 		} else {
 			$("#amount_symbol").text("$");
-		}
-	});
-
-	// Payment provider toggle on settings page
-	$('input[name="blt_events_payment_provider"]').on("change", function () {
-		var provider = $(this).val();
-		$(".blt-provider-stripe, .blt-provider-surecart").hide();
-		if (provider !== "none") {
-			$(".blt-provider-" + provider).show();
 		}
 	});
 });
