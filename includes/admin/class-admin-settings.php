@@ -66,6 +66,15 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_general', 'blt_events_single_styles', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
 		) );
+		register_setting( 'blt_events_settings_general', 'blt_events_events_page_id', array(
+			'sanitize_callback' => 'absint',
+		) );
+		register_setting( 'blt_events_settings_general', 'blt_events_map_provider', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_map_provider' ),
+		) );
+		register_setting( 'blt_events_settings_general', 'blt_events_google_maps_api_key', array(
+			'sanitize_callback' => 'sanitize_text_field',
+		) );
 
 		// --- Payments ---
 		register_setting( 'blt_events_settings_payments', 'blt_events_payment_provider', array(
@@ -168,6 +177,11 @@ class BLT_Events_Admin_Settings {
 
 	public static function sanitize_checkbox( $value ) {
 		return $value === '1' ? '1' : '0';
+	}
+
+	public static function sanitize_map_provider( $value ) {
+		$allowed = array( 'none', 'osm', 'google' );
+		return in_array( $value, $allowed, true ) ? $value : 'osm';
 	}
 
 	/**
@@ -332,6 +346,30 @@ class BLT_Events_Admin_Settings {
 
 			<div class="blt-card">
 				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Events Page', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'The page that lists your events (usually one holding the [blt_events_calendar] shortcode). Used for "back to events" links.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<?php
+					self::render_field(
+						__( 'Events Page', 'blt-events' ),
+						function () {
+							wp_dropdown_pages( array(
+								'name'              => 'blt_events_events_page_id',
+								'id'                => 'blt_events_events_page_id',
+								'selected'          => (int) get_option( 'blt_events_events_page_id', 0 ),
+								'show_option_none'  => __( '— None —', 'blt-events' ),
+								'option_none_value' => 0,
+							) );
+						},
+						__( 'Leave as “None” to use the default event archive.', 'blt-events' )
+					);
+					?>
+				</div>
+			</div>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Date & Time', 'blt-events' ); ?></h2>
 					<p><?php esc_html_e( 'How event dates are displayed across calendars, event pages, and emails.', 'blt-events' ); ?></p>
 				</div>
@@ -408,6 +446,43 @@ class BLT_Events_Admin_Settings {
 							<?php
 						},
 						__( 'Overrides the symbol shown before prices. Leave blank to use the selected currency\'s symbol.', 'blt-events' )
+					);
+					?>
+				</div>
+			</div>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Maps', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'The map shown on in-person event pages. With maps off (or no coordinates), the venue name and address still display.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<?php
+					self::render_field(
+						__( 'Map Provider', 'blt-events' ),
+						function () {
+							$providers = array(
+								'osm'    => __( 'OpenStreetMap (no key required)', 'blt-events' ),
+								'google' => __( 'Google Maps', 'blt-events' ),
+								'none'   => __( 'No map (address only)', 'blt-events' ),
+							);
+							$selected = get_option( 'blt_events_map_provider', 'osm' );
+							echo '<select name="blt_events_map_provider">';
+							foreach ( $providers as $value => $label ) {
+								printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $selected, $value, false ), esc_html( $label ) );
+							}
+							echo '</select>';
+						}
+					);
+
+					self::render_field(
+						__( 'Google Maps API Key', 'blt-events' ),
+						function () {
+							?>
+							<input type="text" name="blt_events_google_maps_api_key" value="<?php echo esc_attr( get_option( 'blt_events_google_maps_api_key', '' ) ); ?>" class="regular-text" autocomplete="off" />
+							<?php
+						},
+						__( 'Required only for the Google Maps provider. Needs the "Maps Embed API" enabled on the key.', 'blt-events' )
 					);
 					?>
 				</div>

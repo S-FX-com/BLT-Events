@@ -37,6 +37,20 @@
 	align-items: start;
 }
 
+/* --- Back link --- */
+.blt-event__back {
+	display: inline-block;
+	margin-bottom: 1rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--blt-event-muted);
+	text-decoration: none;
+}
+
+.blt-event__back:hover {
+	color: var(--blt-event-accent);
+}
+
 /* --- Categories --- */
 .blt-event__categories {
 	display: flex;

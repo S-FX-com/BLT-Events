@@ -153,6 +153,13 @@ class BLT_Events_Single_Event {
 
 			<div class="blt-event__layout">
 				<div class="blt-event__main">
+					<?php
+					$events_url = BLT_Events_Helpers::events_page_url();
+					if ( $events_url ) :
+						?>
+						<a class="blt-event__back" href="<?php echo esc_url( $events_url ); ?>"><span aria-hidden="true">&larr;</span> <?php esc_html_e( 'All events', 'blt-events' ); ?></a>
+					<?php endif; ?>
+
 					<?php self::render_categories( $event_id ); ?>
 
 					<h1 class="blt-event__title"><?php echo esc_html( get_the_title( $event_id ) ); ?></h1>
@@ -363,26 +370,77 @@ class BLT_Events_Single_Event {
 	}
 
 	/**
-	 * A keyless OpenStreetMap embed centred on the event coordinates, when
-	 * latitude/longitude are set on the event.
+	 * Render the venue map using the provider chosen in Settings. When maps
+	 * are off, or the chosen provider's requirements aren't met, nothing is
+	 * output — the venue name and address above it still show.
 	 */
 	private static function render_map( $event_id ) {
+		$provider = get_option( 'blt_events_map_provider', 'osm' );
+		if ( 'none' === $provider ) {
+			return;
+		}
+
+		$src = '';
+
+		if ( 'google' === $provider ) {
+			$src = self::google_map_src( $event_id );
+		} elseif ( 'osm' === $provider ) {
+			$src = self::osm_map_src( $event_id );
+		}
+
+		if ( '' === $src ) {
+			return;
+		}
+		?>
+		<div class="blt-event__map">
+			<iframe title="<?php esc_attr_e( 'Event location map', 'blt-events' ); ?>" src="<?php echo esc_url( $src ); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+		</div>
+		<?php
+	}
+
+	/**
+	 * OpenStreetMap embed src (needs coordinates).
+	 */
+	private static function osm_map_src( $event_id ) {
 		$lat = get_post_meta( $event_id, '_blt_event_latitude', true );
 		$lng = get_post_meta( $event_id, '_blt_event_longitude', true );
 
 		if ( ! is_numeric( $lat ) || ! is_numeric( $lng ) ) {
-			return;
+			return '';
 		}
 
-		$lat = (float) $lat;
-		$lng = (float) $lng;
-		$d   = 0.01; // Bounding-box padding (~1km).
+		$lat  = (float) $lat;
+		$lng  = (float) $lng;
+		$d    = 0.01; // Bounding-box padding (~1km).
 		$bbox = sprintf( '%f,%f,%f,%f', $lng - $d, $lat - $d, $lng + $d, $lat + $d );
-		$src  = 'https://www.openstreetmap.org/export/embed.html?bbox=' . rawurlencode( $bbox ) . '&layer=mapnik&marker=' . rawurlencode( $lat . ',' . $lng );
-		?>
-		<div class="blt-event__map">
-			<iframe title="<?php esc_attr_e( 'Event location map', 'blt-events' ); ?>" src="<?php echo esc_url( $src ); ?>" loading="lazy"></iframe>
-		</div>
-		<?php
+
+		return 'https://www.openstreetmap.org/export/embed.html?bbox=' . rawurlencode( $bbox ) . '&layer=mapnik&marker=' . rawurlencode( $lat . ',' . $lng );
+	}
+
+	/**
+	 * Google Maps Embed API src. Uses coordinates when present, otherwise
+	 * the venue/address string, so it works even without geocoding. Returns
+	 * '' when no API key is configured.
+	 */
+	private static function google_map_src( $event_id ) {
+		$key = trim( (string) get_option( 'blt_events_google_maps_api_key', '' ) );
+		if ( '' === $key ) {
+			return '';
+		}
+
+		$lat = get_post_meta( $event_id, '_blt_event_latitude', true );
+		$lng = get_post_meta( $event_id, '_blt_event_longitude', true );
+
+		if ( is_numeric( $lat ) && is_numeric( $lng ) ) {
+			$query = $lat . ',' . $lng;
+		} else {
+			$query = BLT_Events_Helpers::get_event_location_string( $event_id );
+		}
+
+		if ( '' === trim( (string) $query ) ) {
+			return '';
+		}
+
+		return 'https://www.google.com/maps/embed/v1/place?key=' . rawurlencode( $key ) . '&q=' . rawurlencode( $query );
 	}
 }
