@@ -30,6 +30,7 @@ class BLT_Events_Coupon_CPT {
         add_action( 'manage_' . self::$slug . '_posts_columns', array( __CLASS__, 'set_custom_columns' ) );
         add_action( 'manage_' . self::$slug . '_posts_custom_column', array( __CLASS__, 'custom_column' ), 10, 2 );
         add_filter( 'manage_edit-' . self::$slug . '_sortable_columns', array( __CLASS__, 'sortable_columns' ) );
+        add_action( 'pre_get_posts', array( __CLASS__, 'handle_column_sorting' ) );
 
         // AJAX search over active (published, upcoming) events for the
         // Event Restrictions picker.
@@ -368,9 +369,11 @@ class BLT_Events_Coupon_CPT {
         $new_columns['code']       = __( 'Code', 'blt-events' );
         $new_columns['discount']   = __( 'Discount', 'blt-events' );
         $new_columns['usage']      = __( 'Usage', 'blt-events' );
-        $new_columns['expiration'] = __( 'Expiration', 'blt-events' );
         $new_columns['status']     = __( 'Status', 'blt-events' );
-        $new_columns['date']       = $columns['date'];
+        $new_columns['created']    = __( 'Coupon Created', 'blt-events' );
+        $new_columns['expiration'] = __( 'Coupon Expiration', 'blt-events' );
+        // Note: the default WP "date" (published) column is intentionally
+        // dropped in favour of the explicit Created/Expiration columns.
         return $new_columns;
     }
 
@@ -409,10 +412,19 @@ class BLT_Events_Coupon_CPT {
                 }
                 break;
 
+            case 'created':
+                $created = get_post_datetime( $post_id );
+                if ( $created ) {
+                    echo esc_html( date_i18n( get_option( 'blt_events_date_format', 'F j, Y' ), $created->getTimestamp() ) );
+                } else {
+                    echo '&mdash;';
+                }
+                break;
+
             case 'expiration':
                 $expiration_date = get_post_meta( $post_id, '_blt_expiration_date', true );
                 if ( ! empty( $expiration_date ) ) {
-                    echo esc_html( $expiration_date );
+                    echo esc_html( date_i18n( get_option( 'blt_events_date_format', 'F j, Y' ), strtotime( $expiration_date ) ) );
 
                     // Check if expired (site timezone, matching validate_coupon).
                     $today = current_time( 'Y-m-d' );
@@ -445,9 +457,52 @@ class BLT_Events_Coupon_CPT {
         $columns['code']       = 'code';
         $columns['discount']   = 'discount';
         $columns['usage']      = 'usage';
+        $columns['created']    = 'date'; // Native post date ordering.
         $columns['expiration'] = 'expiration';
         $columns['status']     = 'status';
         return $columns;
+    }
+
+    /**
+     * Back the custom sortable columns with the right meta ordering on the
+     * coupon list screen. ("created" maps to the native post-date orderby,
+     * which WordPress already understands, so it is intentionally absent.)
+     *
+     * @param WP_Query $query
+     */
+    public static function handle_column_sorting( $query ) {
+        if ( ! is_admin() || ! $query->is_main_query() ) {
+            return;
+        }
+
+        if ( $query->get( 'post_type' ) !== self::$slug ) {
+            return;
+        }
+
+        $orderby = $query->get( 'orderby' );
+
+        $meta_map = array(
+            'code'       => array( '_blt_coupon_code', 'meta_value' ),
+            'discount'   => array( '_blt_amount', 'meta_value_num' ),
+            'usage'      => array( '_blt_total_uses', 'meta_value_num' ),
+            'status'     => array( '_blt_status', 'meta_value' ),
+            'expiration' => array( '_blt_expiration_date', 'meta_value' ),
+        );
+
+        if ( ! isset( $meta_map[ $orderby ] ) ) {
+            return;
+        }
+
+        list( $meta_key, $orderby_type ) = $meta_map[ $orderby ];
+
+        // Include coupons missing the meta key so sorting never hides rows.
+        $query->set( 'meta_query', array(
+            'relation' => 'OR',
+            array( 'key' => $meta_key, 'compare' => 'EXISTS' ),
+            array( 'key' => $meta_key, 'compare' => 'NOT EXISTS' ),
+        ) );
+        $query->set( 'orderby', $orderby_type );
+        $query->set( 'meta_key', $meta_key );
     }
 
     /**

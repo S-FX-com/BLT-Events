@@ -501,6 +501,28 @@ class BLT_Events_Helpers {
     }
 
     /**
+     * URL of the events listing page: the page selected in Settings, or the
+     * event post type archive as a fallback. Empty string when neither
+     * resolves.
+     *
+     * @return string
+     */
+    public static function events_page_url() {
+        $page_id = (int) get_option( 'blt_events_events_page_id', 0 );
+
+        if ( $page_id > 0 ) {
+            $url = get_permalink( $page_id );
+            if ( $url ) {
+                return $url;
+            }
+        }
+
+        $archive = get_post_type_archive_link( 'event' );
+
+        return $archive ? $archive : '';
+    }
+
+    /**
      * Escape text for iCalendar format.
      *
      * @param string $text The text to escape.

@@ -20,6 +20,109 @@
 	font-weight: 600;
 }
 
+/* --- Stepped registration wizard --- */
+.blt-reg--js .blt-reg__step {
+	display: none;
+}
+
+.blt-reg__progress {
+	display: flex;
+	gap: 0.5rem;
+	list-style: none;
+	margin: 0 0 1.5rem;
+	padding: 0;
+	counter-reset: blt-step;
+}
+
+.blt-reg__progress-step {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding-top: 0.6rem;
+	border-top: 3px solid #e5e7eb;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #9ca3af;
+	counter-increment: blt-step;
+}
+
+.blt-reg__progress-step::before {
+	content: counter(blt-step);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #e5e7eb;
+	color: #6b7280;
+	font-size: 0.72rem;
+}
+
+.blt-reg__progress-step.is-current {
+	border-top-color: #6366f1;
+	color: #1f2937;
+}
+
+.blt-reg__progress-step.is-current::before {
+	background: #6366f1;
+	color: #fff;
+}
+
+.blt-reg__progress-step.is-done {
+	border-top-color: #6366f1;
+	color: #4b5563;
+}
+
+.blt-reg__progress-step.is-done::before {
+	content: "\2713";
+	background: #6366f1;
+	color: #fff;
+}
+
+.blt-reg__step:focus {
+	outline: none;
+}
+
+.blt-reg__nav {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 1.5rem;
+}
+
+.blt-reg__nav .blt-reg__next {
+	margin-left: auto;
+}
+
+.blt-reg__back,
+.blt-reg__next {
+	padding: 0.7rem 1.5rem;
+	border-radius: 6px;
+	font-size: 0.95rem;
+	font-weight: 600;
+	cursor: pointer;
+	border: 1px solid #d1d5db;
+	background: #fff;
+	color: #1f2937;
+}
+
+.blt-reg__next {
+	border-color: #6366f1;
+	background: #6366f1;
+	color: #fff;
+}
+
+.blt-reg__next:hover {
+	background: #4f46e5;
+}
+
+.blt-reg__back:hover {
+	border-color: #9ca3af;
+}
+
 /* --- Ticket Selection --- */
 .blt-ticket-selection {
 	margin-bottom: 1.5rem;

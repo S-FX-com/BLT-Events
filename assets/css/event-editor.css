@@ -105,6 +105,185 @@ body.post-type-event {
 	margin: 0;
 }
 
+/* --- Agenda / schedule rows --- */
+.blt-agenda-panel {
+	margin-top: 12px;
+}
+
+.blt-agenda-header,
+.blt-agenda-row {
+	display: grid;
+	grid-template-columns: 120px 120px 1fr 28px;
+	gap: 8px;
+	align-items: center;
+}
+
+.blt-agenda-header {
+	margin-bottom: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--blt-muted-fg);
+}
+
+.blt-agenda-row {
+	margin-bottom: 8px;
+}
+
+.blt-agenda-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--blt-muted-fg);
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.blt-agenda-remove:hover {
+	background: rgba(212, 24, 61, 0.08);
+	color: var(--blt-destructive);
+}
+
+#blt-add-agenda {
+	margin-top: 4px;
+}
+
+@media screen and (max-width: 600px) {
+	.blt-agenda-header {
+		display: none;
+	}
+
+	.blt-agenda-row {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.blt-agenda-row input[type="text"] {
+		grid-column: 1 / -1;
+	}
+}
+
+/* --- Presenters --- */
+.blt-presenters-panel {
+	margin-top: 12px;
+}
+
+.blt-presenter-row {
+	display: grid;
+	grid-template-columns: auto 1fr 28px;
+	gap: 12px;
+	align-items: start;
+	padding: 12px 0;
+	border-top: 1px solid var(--blt-border);
+}
+
+.blt-presenter-row:first-child {
+	border-top: none;
+}
+
+.blt-presenter-photo {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 72px;
+}
+
+.blt-presenter-photo-preview {
+	width: 72px;
+	height: 72px;
+	border: 1px dashed var(--blt-border);
+	border-radius: var(--blt-radius-sm);
+	background: var(--blt-input-bg);
+	overflow: hidden;
+}
+
+.blt-presenter-photo-preview.has-image {
+	border-style: solid;
+}
+
+.blt-presenter-photo-preview img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.blt-presenter-photo .button-link {
+	font-size: 11px;
+	color: var(--blt-destructive);
+}
+
+.blt-presenter-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.blt-presenter-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--blt-muted-fg);
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.blt-presenter-remove:hover {
+	background: rgba(212, 24, 61, 0.08);
+	color: var(--blt-destructive);
+}
+
+#blt-add-presenter {
+	margin-top: 8px;
+}
+
+/* Connected-mode chips */
+.blt-presenter-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.blt-presenter-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px 4px 10px;
+	background: var(--blt-primary-tint);
+	border: 1px solid var(--blt-border);
+	border-radius: 999px;
+	font-size: 12px;
+}
+
+.blt-presenter-chip .blt-chip-remove {
+	background: none;
+	border: none;
+	padding: 0 2px;
+	font-size: 14px;
+	line-height: 1;
+	color: var(--blt-muted-fg);
+	cursor: pointer;
+}
+
+.blt-presenter-chip .blt-chip-remove:hover {
+	color: var(--blt-destructive);
+}
+
 /* --- Multi-day schedule rows --- */
 .blt-multi-day-panel {
 	margin-top: 4px;

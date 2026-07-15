@@ -109,7 +109,19 @@ class BLT_Events_Registration_Shortcode {
 			'eventId'  => $event_id,
 			'currency' => BLT_Events_Helpers::get_currency_config(),
 			'provider' => $provider,
+			'i18n'     => array(
+				'next'          => __( 'Next', 'blt-events' ),
+				'back'          => __( 'Back', 'blt-events' ),
+				'selectTickets' => __( 'Please select at least one ticket to continue.', 'blt-events' ),
+				'stepOf'        => __( 'Step %1$d of %2$d', 'blt-events' ),
+			),
 		) );
+
+		// Stepped wizard (tickets -> details) only when there are tickets to pick.
+		$stepped = ! empty( $ticket_types );
+		if ( $stepped ) {
+			wp_enqueue_script( 'blt-events-registration-steps', BLT_EVENTS_PLUGIN_URL . 'assets/js/registration-steps.js', array( 'jquery', 'blt-events-registration' ), BLT_EVENTS_VERSION, true );
+		}
 
 		if ( $provider === 'stripe' && $has_paid_tickets ) {
 			wp_enqueue_script( 'stripe-js', 'https://js.stripe.com/v3/', array(), null, true );
@@ -119,14 +131,21 @@ class BLT_Events_Registration_Shortcode {
 		ob_start();
 		?>
 		<div class="blt-registration-form" data-event-id="<?php echo esc_attr( $event_id ); ?>">
-			<form id="blt-registration-form" method="post" novalidate>
+			<form id="blt-registration-form" class="blt-reg<?php echo $stepped ? ' blt-reg--stepped' : ''; ?>" method="post" novalidate <?php echo $stepped ? 'data-stepped="1"' : ''; ?>>
 				<input type="hidden" name="event_id" value="<?php echo esc_attr( $event_id ); ?>" />
 				<input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( 'blt_registration_nonce' ) ); ?>" />
 
-				<!-- Ticket Selection -->
+				<?php if ( $stepped ) : ?>
+				<ol class="blt-reg__progress" aria-hidden="true">
+					<li class="blt-reg__progress-step is-current" data-step-label="1"><?php esc_html_e( 'Tickets', 'blt-events' ); ?></li>
+					<li class="blt-reg__progress-step" data-step-label="2"><?php esc_html_e( 'Your details', 'blt-events' ); ?></li>
+				</ol>
+				<?php endif; ?>
+
+				<!-- Step 1: Ticket Selection -->
 				<?php if ( ! empty( $ticket_types ) ) : ?>
-				<div class="blt-ticket-selection">
-					<h3><?php esc_html_e( 'Select Tickets', 'blt-events' ); ?></h3>
+				<div class="blt-reg__step blt-ticket-selection" data-step="tickets">
+					<h3 class="blt-reg__step-title"><?php esc_html_e( 'Select Tickets', 'blt-events' ); ?></h3>
 					<?php foreach ( $ticket_types as $i => $ticket ) : ?>
 					<div class="blt-ticket-type">
 						<span class="blt-ticket-name"><?php echo esc_html( $ticket['name'] ); ?></span>
@@ -145,61 +164,70 @@ class BLT_Events_Registration_Shortcode {
 				</div>
 				<?php endif; ?>
 
-				<!-- Registration Fields -->
-				<div class="blt-fields-section">
-					<h3><?php esc_html_e( 'Your Details', 'blt-events' ); ?></h3>
-					<div class="blt-fields-grid">
-						<?php foreach ( $fields as $field ) : ?>
-							<?php echo BLT_Events_Fieldsets::render_field( $field, BLT_Events_Fieldsets::prefill_value( $field ) ); ?>
+				<!-- Step 2: Details, coupon, consent, payment, submit -->
+				<div class="blt-reg__step" data-step="details">
+					<div class="blt-fields-section">
+						<h3 class="blt-reg__step-title"><?php esc_html_e( 'Your Details', 'blt-events' ); ?></h3>
+						<div class="blt-fields-grid">
+							<?php foreach ( $fields as $field ) : ?>
+								<?php echo BLT_Events_Fieldsets::render_field( $field, BLT_Events_Fieldsets::prefill_value( $field ) ); ?>
+							<?php endforeach; ?>
+						</div>
+					</div>
+
+					<!-- Coupon Code -->
+					<?php if ( $has_paid_tickets ) : ?>
+					<div class="blt-coupon-section">
+						<label for="coupon_code"><?php esc_html_e( 'Coupon Code', 'blt-events' ); ?></label>
+						<div class="blt-coupon-input">
+							<input type="text" id="coupon_code" name="coupon_code" placeholder="<?php echo esc_attr__( 'Enter coupon code', 'blt-events' ); ?>" />
+							<button type="button" id="blt-apply-coupon" class="blt-btn-secondary"><?php esc_html_e( 'Apply', 'blt-events' ); ?></button>
+						</div>
+						<div id="blt-coupon-message" style="display:none;"></div>
+					</div>
+					<?php endif; ?>
+
+					<!-- Consent Fields -->
+					<?php if ( ! empty( $consent_fields ) ) : ?>
+					<div class="blt-consent-section">
+						<?php foreach ( $consent_fields as $cf ) : ?>
+						<div class="blt-consent-field">
+							<label>
+								<input type="checkbox" name="consent_<?php echo esc_attr( $cf['key'] ); ?>" value="1" <?php echo ! empty( $cf['required'] ) ? 'required' : ''; ?> />
+								<?php echo wp_kses_post( $cf['label'] ); ?>
+								<?php if ( ! empty( $cf['required'] ) ) : ?><span class="blt-required">*</span><?php endif; ?>
+							</label>
+						</div>
 						<?php endforeach; ?>
 					</div>
-				</div>
+					<?php endif; ?>
 
-				<!-- Coupon Code -->
-				<?php if ( $has_paid_tickets ) : ?>
-				<div class="blt-coupon-section">
-					<label for="coupon_code"><?php esc_html_e( 'Coupon Code', 'blt-events' ); ?></label>
-					<div class="blt-coupon-input">
-						<input type="text" id="coupon_code" name="coupon_code" placeholder="<?php echo esc_attr__( 'Enter coupon code', 'blt-events' ); ?>" />
-						<button type="button" id="blt-apply-coupon" class="blt-btn-secondary"><?php esc_html_e( 'Apply', 'blt-events' ); ?></button>
+					<!-- Stripe Card Element (for paid events with Stripe) -->
+					<?php if ( $provider === 'stripe' && $has_paid_tickets ) : ?>
+					<div class="blt-payment-section" id="blt-payment-section" style="display:none;">
+						<h3><?php esc_html_e( 'Payment', 'blt-events' ); ?></h3>
+						<div id="blt-card-element"></div>
+						<div id="blt-card-errors" role="alert"></div>
 					</div>
-					<div id="blt-coupon-message" style="display:none;"></div>
-				</div>
-				<?php endif; ?>
+					<?php endif; ?>
 
-				<!-- Consent Fields -->
-				<?php if ( ! empty( $consent_fields ) ) : ?>
-				<div class="blt-consent-section">
-					<?php foreach ( $consent_fields as $cf ) : ?>
-					<div class="blt-consent-field">
-						<label>
-							<input type="checkbox" name="consent_<?php echo esc_attr( $cf['key'] ); ?>" value="1" <?php echo ! empty( $cf['required'] ) ? 'required' : ''; ?> />
-							<?php echo wp_kses_post( $cf['label'] ); ?>
-							<?php if ( ! empty( $cf['required'] ) ) : ?><span class="blt-required">*</span><?php endif; ?>
-						</label>
+					<!-- Messages -->
+					<div id="blt-form-messages" style="display:none;"></div>
+
+					<!-- Submit -->
+					<div class="blt-form-actions">
+						<button type="submit" class="blt-submit-btn" id="blt-submit-btn" disabled>
+							<?php esc_html_e( 'Select tickets to continue', 'blt-events' ); ?>
+						</button>
 					</div>
-					<?php endforeach; ?>
+				</div>
+
+				<?php if ( $stepped ) : ?>
+				<div class="blt-reg__nav">
+					<button type="button" class="blt-reg__back" hidden><?php esc_html_e( 'Back', 'blt-events' ); ?></button>
+					<button type="button" class="blt-reg__next"><?php esc_html_e( 'Next', 'blt-events' ); ?></button>
 				</div>
 				<?php endif; ?>
-
-				<!-- Stripe Card Element (for paid events with Stripe) -->
-				<?php if ( $provider === 'stripe' && $has_paid_tickets ) : ?>
-				<div class="blt-payment-section" id="blt-payment-section" style="display:none;">
-					<h3><?php esc_html_e( 'Payment', 'blt-events' ); ?></h3>
-					<div id="blt-card-element"></div>
-					<div id="blt-card-errors" role="alert"></div>
-				</div>
-				<?php endif; ?>
-
-				<!-- Messages -->
-				<div id="blt-form-messages" style="display:none;"></div>
-
-				<!-- Submit -->
-				<div class="blt-form-actions">
-					<button type="submit" class="blt-submit-btn" id="blt-submit-btn" disabled>
-						<?php esc_html_e( 'Select tickets to continue', 'blt-events' ); ?>
-					</button>
-				</div>
 			</form>
 		</div>
 		<?php

@@ -226,7 +226,7 @@ class BLT_Events_Registrations_List {
 			$event = null;
 		}
 		?>
-		<div class="wrap blt-ui blt-events-registrations">
+		<div class="wrap blt-ui blt-ui-wide blt-events-registrations">
 			<div class="blt-admin-page-header">
 				<h1>
 					<?php
