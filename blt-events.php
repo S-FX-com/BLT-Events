@@ -4,7 +4,7 @@
  * Plugin URI:  https://s-fx.com
  * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
  * Version:     2.2.2
- * Author:      S-FX.COM
+ * Author:      S-FX.com Small Business Solutions
  * Author URI:  https://s-fx.com
  * License:     GPL2
  * Text Domain: blt-events
