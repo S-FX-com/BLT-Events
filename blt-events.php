@@ -83,6 +83,7 @@ spl_autoload_register( function ( $class ) {
 		'calendar-shortcode'     => 'includes/shortcodes/class-calendar-shortcode.php',
 		// Front end
 		'single-event'           => 'includes/frontend/class-single-event.php',
+		'presenters'             => 'includes/frontend/class-presenters.php',
 		// REST API
 		'rest-registrations'     => 'includes/api/class-rest-registrations.php',
 		'rest-fieldsets'         => 'includes/api/class-rest-fieldsets.php',
@@ -146,6 +147,7 @@ function blt_events_init() {
 
 	// Front-end single event view
 	BLT_Events_Single_Event::init();
+	BLT_Events_Presenters::init();
 
 	// REST API
 	BLT_Events_REST_Registrations::init();
@@ -270,6 +272,9 @@ function blt_events_enqueue_admin_assets( $hook ) {
 
 	// The Add/Edit Event screen gets its own card-based editor UI.
 	if ( $screen && 'post' === $screen->base && 'event' === $post_type ) {
+		// Presenter repeater photos use the WordPress media library.
+		wp_enqueue_media();
+
 		wp_enqueue_style(
 			'blt-events-event-editor',
 			BLT_EVENTS_PLUGIN_URL . 'assets/css/event-editor.css',

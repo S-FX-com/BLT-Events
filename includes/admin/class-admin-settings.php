@@ -144,6 +144,20 @@ class BLT_Events_Admin_Settings {
 			) );
 		}
 
+		// --- Integrations: presenter CPT connection ---
+		register_setting( 'blt_events_settings_integrations', 'blt_events_presenter_post_type', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_presenter_post_type' ),
+		) );
+		foreach ( array(
+			'blt_events_presenter_map_role',
+			'blt_events_presenter_map_bio',
+			'blt_events_presenter_map_photo',
+		) as $presenter_option ) {
+			register_setting( 'blt_events_settings_integrations', $presenter_option, array(
+				'sanitize_callback' => 'sanitize_key',
+			) );
+		}
+
 		// --- Integrations: meeting provider credentials (one option per field) ---
 		if ( class_exists( 'BLT_Events_Meeting_Providers' ) ) {
 			foreach ( BLT_Events_Meeting_Providers::all() as $provider ) {
@@ -182,6 +196,20 @@ class BLT_Events_Admin_Settings {
 	public static function sanitize_map_provider( $value ) {
 		$allowed = array( 'none', 'osm', 'google' );
 		return in_array( $value, $allowed, true ) ? $value : 'osm';
+	}
+
+	/**
+	 * Only allow connecting to a real, registered public post type (and
+	 * never the plugin's own event/coupon types).
+	 */
+	public static function sanitize_presenter_post_type( $value ) {
+		$value = sanitize_key( $value );
+
+		if ( $value === '' || in_array( $value, array( 'event', 'blt_coupon' ), true ) ) {
+			return '';
+		}
+
+		return post_type_exists( $value ) ? $value : '';
 	}
 
 	/**
@@ -779,6 +807,7 @@ class BLT_Events_Admin_Settings {
 			</div>
 
 			<?php self::render_meeting_provider_cards(); ?>
+			<?php self::render_presenters_card(); ?>
 			<?php self::render_fluentcrm_card(); ?>
 
 			<?php self::render_save_button(); ?>
@@ -866,6 +895,68 @@ class BLT_Events_Admin_Settings {
 			</div>
 			<?php
 		}
+	}
+
+	private static function render_presenters_card() {
+		$connected = get_option( 'blt_events_presenter_post_type', '' );
+
+		// Public, UI-enabled custom post types the site could connect to.
+		$post_types = get_post_types( array( 'public' => true ), 'objects' );
+		unset( $post_types['event'], $post_types['blt_coupon'], $post_types['attachment'] );
+		?>
+		<div class="blt-card">
+			<div class="blt-card-header">
+				<h2><?php esc_html_e( 'Presenters', 'blt-events' ); ?></h2>
+				<p><?php esc_html_e( 'Optionally connect an existing "presenter" post type (e.g. an ACF-driven Speakers CPT). When connected, events pick presenters from it instead of re-entering them. Leave unset to use the built-in presenter fields on each event.', 'blt-events' ); ?></p>
+			</div>
+			<div class="blt-card-body">
+				<?php
+				self::render_field(
+					__( 'Presenter Post Type', 'blt-events' ),
+					function () use ( $post_types, $connected ) {
+						echo '<select name="blt_events_presenter_post_type">';
+						printf( '<option value="">%s</option>', esc_html__( '— Use built-in presenter fields —', 'blt-events' ) );
+						foreach ( $post_types as $slug => $obj ) {
+							printf( '<option value="%s" %s>%s</option>', esc_attr( $slug ), selected( $connected, $slug, false ), esc_html( $obj->labels->singular_name . ' (' . $slug . ')' ) );
+						}
+						echo '</select>';
+					},
+					__( 'Choose the post type that stores your presenters/speakers.', 'blt-events' )
+				);
+
+				self::render_field(
+					__( 'Role / Title Field', 'blt-events' ),
+					function () {
+						?>
+						<input type="text" name="blt_events_presenter_map_role" value="<?php echo esc_attr( get_option( 'blt_events_presenter_map_role', '' ) ); ?>" class="regular-text" placeholder="job_title" />
+						<?php
+					},
+					__( 'ACF/meta field key on the presenter for their role or title. Optional.', 'blt-events' )
+				);
+
+				self::render_field(
+					__( 'Bio Field', 'blt-events' ),
+					function () {
+						?>
+						<input type="text" name="blt_events_presenter_map_bio" value="<?php echo esc_attr( get_option( 'blt_events_presenter_map_bio', '' ) ); ?>" class="regular-text" placeholder="bio" />
+						<?php
+					},
+					__( 'ACF/meta field key for the bio. Optional — falls back to the excerpt.', 'blt-events' )
+				);
+
+				self::render_field(
+					__( 'Photo Field', 'blt-events' ),
+					function () {
+						?>
+						<input type="text" name="blt_events_presenter_map_photo" value="<?php echo esc_attr( get_option( 'blt_events_presenter_map_photo', '' ) ); ?>" class="regular-text" placeholder="headshot" />
+						<?php
+					},
+					__( 'ACF image field key for the photo. Optional — falls back to the featured image.', 'blt-events' )
+				);
+				?>
+			</div>
+		</div>
+		<?php
 	}
 
 	private static function render_fluentcrm_card() {

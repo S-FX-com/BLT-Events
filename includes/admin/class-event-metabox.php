@@ -23,6 +23,7 @@ class BLT_Events_Event_Metabox {
 			'blt_event_type',
 			'blt_event_tickets',
 			'blt_event_agenda',
+			'blt_event_presenters',
 			'blt_event_registration_config',
 			'blt_event_options',
 			'blt_event_registrations_summary',
@@ -73,6 +74,15 @@ class BLT_Events_Event_Metabox {
 			'blt_event_agenda',
 			__( 'Event Schedule', 'blt-events' ),
 			array( __CLASS__, 'render_agenda_box' ),
+			'event',
+			'normal',
+			'default'
+		);
+
+		add_meta_box(
+			'blt_event_presenters',
+			__( 'Presenters', 'blt-events' ),
+			array( __CLASS__, 'render_presenters_box' ),
 			'event',
 			'normal',
 			'default'
@@ -587,6 +597,121 @@ class BLT_Events_Event_Metabox {
 	}
 
 	/* ----------------------------------------------------------------
+	 * Presenters
+	 * ---------------------------------------------------------------- */
+
+	public static function render_presenters_box( $post ) {
+		$prefix    = BLT_EVENTS_PREFIX;
+		$enabled   = get_post_meta( $post->ID, $prefix . 'presenters_enabled', true ) === '1';
+		$connected = class_exists( 'BLT_Events_Presenters' ) && BLT_Events_Presenters::is_connected();
+		?>
+		<div class="blt-editor blt-presenters" data-connected="<?php echo $connected ? '1' : '0'; ?>" data-search-nonce="<?php echo esc_attr( wp_create_nonce( 'blt_presenter_search' ) ); ?>">
+			<div class="blt-toggle-row">
+				<span class="blt-toggle-text">
+					<span>
+						<span class="blt-toggle-title"><?php esc_html_e( 'Show presenters on the event page', 'blt-events' ); ?></span>
+						<span class="blt-toggle-desc">
+							<?php
+							echo $connected
+								? esc_html__( 'Pick presenters from your connected presenter post type.', 'blt-events' )
+								: esc_html__( 'Add presenters below. Connect a presenter post type in Settings to reuse existing profiles instead.', 'blt-events' );
+							?>
+						</span>
+					</span>
+				</span>
+				<span class="blt-toggle">
+					<input type="checkbox" name="presenters_enabled" id="blt-presenters-enabled" value="1" <?php checked( $enabled ); ?> />
+					<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+				</span>
+			</div>
+
+			<div class="blt-presenters-panel" id="blt-presenters-panel" <?php echo $enabled ? '' : 'style="display:none;"'; ?>>
+				<?php if ( $connected ) : ?>
+					<?php self::render_presenter_picker( $post ); ?>
+				<?php else : ?>
+					<?php self::render_presenter_repeater( $post ); ?>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Connected mode: an AJAX search over the presenter CPT with removable chips.
+	 */
+	private static function render_presenter_picker( $post ) {
+		$ids   = get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'presenter_ids', true );
+		$ids   = is_array( $ids ) ? array_map( 'absint', $ids ) : array();
+		$chips = BLT_Events_Presenters::chips_for( $ids );
+		?>
+		<div class="blt-address-autocomplete">
+			<input type="text" id="blt-presenter-search" class="blt-input" placeholder="<?php esc_attr_e( 'Search presenters…', 'blt-events' ); ?>" autocomplete="off" />
+			<ul class="blt-address-suggestions" id="blt-presenter-suggestions" style="display:none;"></ul>
+		</div>
+		<div class="blt-presenter-chips" id="blt-presenter-chips">
+			<?php foreach ( $chips as $chip ) : ?>
+				<span class="blt-presenter-chip" data-id="<?php echo esc_attr( $chip['id'] ); ?>">
+					<input type="hidden" name="presenter_ids[]" value="<?php echo esc_attr( $chip['id'] ); ?>" />
+					<?php echo esc_html( $chip['title'] ); ?>
+					<button type="button" class="blt-chip-remove" aria-label="<?php esc_attr_e( 'Remove presenter', 'blt-events' ); ?>">&times;</button>
+				</span>
+			<?php endforeach; ?>
+		</div>
+		<p class="blt-help"><?php esc_html_e( 'Presenters are pulled live from the connected post type, so edits there update everywhere.', 'blt-events' ); ?></p>
+		<?php
+	}
+
+	/**
+	 * Built-in mode: repeatable presenter rows stored on the event.
+	 */
+	private static function render_presenter_repeater( $post ) {
+		$raw  = get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'presenters', true );
+		$rows = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+		$rows = is_array( $rows ) ? array_values( $rows ) : array();
+
+		if ( empty( $rows ) ) {
+			$rows = array( array( 'name' => '', 'role' => '', 'bio' => '', 'image_id' => 0 ) );
+		}
+		?>
+		<div id="blt-presenter-rows">
+			<?php foreach ( $rows as $i => $row ) : ?>
+				<?php self::render_presenter_row( $i, $row ); ?>
+			<?php endforeach; ?>
+		</div>
+		<button type="button" class="blt-btn-dashed" id="blt-add-presenter">+ <?php esc_html_e( 'Add Presenter', 'blt-events' ); ?></button>
+
+		<script type="text/html" id="tmpl-blt-presenter">
+			<?php self::render_presenter_row( '__i__', array( 'name' => '', 'role' => '', 'bio' => '', 'image_id' => 0 ) ); ?>
+		</script>
+		<?php
+	}
+
+	private static function render_presenter_row( $i, $row ) {
+		$image_id  = absint( $row['image_id'] ?? 0 );
+		$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
+		?>
+		<div class="blt-presenter-row">
+			<div class="blt-presenter-photo">
+				<div class="blt-presenter-photo-preview <?php echo $image_url ? 'has-image' : ''; ?>">
+					<?php if ( $image_url ) : ?>
+						<img src="<?php echo esc_url( $image_url ); ?>" alt="" />
+					<?php endif; ?>
+				</div>
+				<input type="hidden" class="blt-presenter-image-id" name="presenters[<?php echo esc_attr( $i ); ?>][image_id]" value="<?php echo esc_attr( $image_id ); ?>" />
+				<button type="button" class="button blt-presenter-photo-select"><?php esc_html_e( 'Photo', 'blt-events' ); ?></button>
+				<button type="button" class="button-link blt-presenter-photo-remove" <?php echo $image_url ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove', 'blt-events' ); ?></button>
+			</div>
+			<div class="blt-presenter-fields">
+				<input type="text" class="blt-input" name="presenters[<?php echo esc_attr( $i ); ?>][name]" value="<?php echo esc_attr( $row['name'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Name', 'blt-events' ); ?>" />
+				<input type="text" class="blt-input" name="presenters[<?php echo esc_attr( $i ); ?>][role]" value="<?php echo esc_attr( $row['role'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Role / title', 'blt-events' ); ?>" />
+				<textarea class="blt-input" name="presenters[<?php echo esc_attr( $i ); ?>][bio]" rows="2" placeholder="<?php esc_attr_e( 'Short bio (optional)', 'blt-events' ); ?>"><?php echo esc_textarea( $row['bio'] ?? '' ); ?></textarea>
+			</div>
+			<button type="button" class="blt-presenter-remove dashicons dashicons-trash" aria-label="<?php esc_attr_e( 'Remove presenter', 'blt-events' ); ?>"></button>
+		</div>
+		<?php
+	}
+
+	/* ----------------------------------------------------------------
 	 * Registration Configuration
 	 * ---------------------------------------------------------------- */
 
@@ -971,6 +1096,34 @@ class BLT_Events_Event_Metabox {
 			}
 		}
 		update_post_meta( $post_id, $prefix . 'agenda', wp_json_encode( $agenda ) );
+
+		// Presenters
+		update_post_meta( $post_id, $prefix . 'presenters_enabled', isset( $_POST['presenters_enabled'] ) ? '1' : '0' );
+
+		if ( isset( $_POST['presenter_ids'] ) ) {
+			$presenter_ids = array_values( array_filter( array_map( 'absint', (array) $_POST['presenter_ids'] ) ) );
+			update_post_meta( $post_id, $prefix . 'presenter_ids', $presenter_ids );
+		}
+
+		if ( isset( $_POST['presenters'] ) && is_array( $_POST['presenters'] ) ) {
+			$presenters = array();
+			foreach ( $_POST['presenters'] as $row ) {
+				if ( ! is_array( $row ) ) {
+					continue;
+				}
+				$name = sanitize_text_field( wp_unslash( $row['name'] ?? '' ) );
+				if ( $name === '' ) {
+					continue;
+				}
+				$presenters[] = array(
+					'name'     => $name,
+					'role'     => sanitize_text_field( wp_unslash( $row['role'] ?? '' ) ),
+					'bio'      => sanitize_textarea_field( wp_unslash( $row['bio'] ?? '' ) ),
+					'image_id' => absint( $row['image_id'] ?? 0 ),
+				);
+			}
+			update_post_meta( $post_id, $prefix . 'presenters', wp_json_encode( $presenters ) );
+		}
 
 		// Registration config
 		update_post_meta( $post_id, $prefix . 'registration_open', isset( $_POST['registration_open'] ) ? '1' : '0' );

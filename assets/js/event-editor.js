@@ -460,6 +460,141 @@ jQuery(document).ready(function ($) {
 	});
 
 	/* ----------------------------------------------------------------
+	 * Presenters
+	 * ---------------------------------------------------------------- */
+	$("#blt-presenters-enabled").on("change", function () {
+		$("#blt-presenters-panel").toggle(this.checked);
+	});
+
+	// Built-in repeater: add / remove rows.
+	var $presenterRows = $("#blt-presenter-rows");
+	var presenterIndex = $presenterRows.children(".blt-presenter-row").length;
+
+	$("#blt-add-presenter").on("click", function () {
+		var html = $("#tmpl-blt-presenter").html();
+		if (!html) {
+			return;
+		}
+		$presenterRows.append(html.replace(/__i__/g, presenterIndex++));
+	});
+
+	$presenterRows.on("click", ".blt-presenter-remove", function () {
+		if ($presenterRows.children(".blt-presenter-row").length > 1) {
+			$(this).closest(".blt-presenter-row").remove();
+		} else {
+			$(this).closest(".blt-presenter-row").find("input, textarea").val("");
+			$(this).closest(".blt-presenter-row").find(".blt-presenter-photo-preview").removeClass("has-image").empty();
+			$(this).closest(".blt-presenter-row").find(".blt-presenter-photo-remove").hide();
+		}
+	});
+
+	// Built-in repeater: photo picker via the media library.
+	$presenterRows.on("click", ".blt-presenter-photo-select", function () {
+		var $row = $(this).closest(".blt-presenter-row");
+
+		if (typeof wp === "undefined" || !wp.media) {
+			return;
+		}
+
+		var frame = wp.media({
+			title: "Select presenter photo",
+			multiple: false,
+			library: { type: "image" },
+		});
+
+		frame.on("select", function () {
+			var att = frame.state().get("selection").first().toJSON();
+			var url = ( att.sizes && att.sizes.thumbnail ) ? att.sizes.thumbnail.url : att.url;
+			$row.find(".blt-presenter-image-id").val(att.id);
+			$row.find(".blt-presenter-photo-preview")
+				.addClass("has-image")
+				.html($("<img>").attr("src", url));
+			$row.find(".blt-presenter-photo-remove").show();
+		});
+
+		frame.open();
+	});
+
+	$presenterRows.on("click", ".blt-presenter-photo-remove", function () {
+		var $row = $(this).closest(".blt-presenter-row");
+		$row.find(".blt-presenter-image-id").val("");
+		$row.find(".blt-presenter-photo-preview").removeClass("has-image").empty();
+		$(this).hide();
+	});
+
+	// Connected mode: AJAX search over the presenter CPT with chips.
+	var $presenterBox = $(".blt-presenters[data-connected='1']");
+	if ($presenterBox.length) {
+		var $psearch = $("#blt-presenter-search");
+		var $psuggest = $("#blt-presenter-suggestions");
+		var $pchips = $("#blt-presenter-chips");
+		var pTimer = null;
+
+		var chipExists = function (id) {
+			return $pchips.find('.blt-presenter-chip[data-id="' + id + '"]').length > 0;
+		};
+
+		var addPresenterChip = function (p) {
+			if (chipExists(p.id)) {
+				return;
+			}
+			var $chip = $('<span class="blt-presenter-chip"></span>').attr("data-id", p.id);
+			$chip.append($('<input type="hidden" name="presenter_ids[]">').val(p.id));
+			$chip.append(document.createTextNode(p.title + " "));
+			$chip.append('<button type="button" class="blt-chip-remove" aria-label="Remove">&times;</button>');
+			$pchips.append($chip);
+		};
+
+		$psearch.on("input", function () {
+			var term = $(this).val();
+			window.clearTimeout(pTimer);
+			if (term.length < 2) {
+				$psuggest.hide().empty();
+				return;
+			}
+			pTimer = window.setTimeout(function () {
+				$.post(ajaxurl, {
+					action: "blt_search_presenters",
+					nonce: $presenterBox.data("searchNonce"),
+					term: term,
+				}).done(function (res) {
+					$psuggest.empty();
+					if (!res || !res.success || !res.data.presenters.length) {
+						$psuggest.hide();
+						return;
+					}
+					res.data.presenters.forEach(function (p) {
+						if (chipExists(p.id)) {
+							return;
+						}
+						$('<li class="blt-address-suggestion"></li>')
+							.text(p.title)
+							.data("presenter", p)
+							.appendTo($psuggest);
+					});
+					$psuggest.toggle($psuggest.children().length > 0);
+				});
+			}, 300);
+		});
+
+		$psuggest.on("click", ".blt-address-suggestion", function () {
+			addPresenterChip($(this).data("presenter"));
+			$psuggest.hide().empty();
+			$psearch.val("").trigger("focus");
+		});
+
+		$pchips.on("click", ".blt-chip-remove", function () {
+			$(this).closest(".blt-presenter-chip").remove();
+		});
+
+		$(document).on("mousedown", function (e) {
+			if (!$(e.target).closest(".blt-address-autocomplete").length) {
+				$psuggest.hide();
+			}
+		});
+	}
+
+	/* ----------------------------------------------------------------
 	 * Registration configuration
 	 * ---------------------------------------------------------------- */
 	$("#blt-registration-open").on("change", function () {
