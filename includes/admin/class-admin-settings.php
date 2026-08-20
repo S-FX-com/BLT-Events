@@ -317,6 +317,43 @@ class BLT_Events_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * The "Check for Updates" action shown in the page header.
+	 *
+	 * BLT Events updates from its own GitHub releases. Under the shared family
+	 * policy the automatic check runs once a day, anchored to 00:00 site time;
+	 * this link is the manual path and runs immediately, bypassing that floor.
+	 * plugin-update-checker's own handler verifies the nonce and the user's
+	 * capability, then redirects to the Plugins screen with the result notice.
+	 */
+	private static function render_update_action() {
+		if ( ! class_exists( 'BLT_Family_Updates' ) ) {
+			return;
+		}
+
+		// The checker instance is the global the main plugin file builds.
+		$checker    = isset( $GLOBALS['blt_events_update_checker'] ) ? $GLOBALS['blt_events_update_checker'] : null;
+		$last_check = $checker ? BLT_Family_Updates::last_check_time( $checker ) : 0;
+		?>
+		<div class="blt-admin-page-actions">
+			<?php if ( $last_check > 0 ) : ?>
+				<span class="blt-admin-page-header-meta">
+					<?php
+					printf(
+						/* translators: %s: human-readable time difference, e.g. "3 hours". */
+						esc_html__( 'Last checked %s ago', 'blt-events' ),
+						esc_html( human_time_diff( $last_check ) )
+					);
+					?>
+				</span>
+			<?php endif; ?>
+			<a class="button" href="<?php echo esc_url( BLT_Family_Updates::check_now_url( 'blt-events' ) ); ?>">
+				<?php esc_html_e( 'Check for Updates', 'blt-events' ); ?>
+			</a>
+		</div>
+		<?php
+	}
+
 	/* --------------------------------------------------------------------
 	 * Page shell
 	 * ------------------------------------------------------------------ */
@@ -327,6 +364,7 @@ class BLT_Events_Admin_Settings {
 		<div class="wrap blt-ui blt-events-settings">
 			<div class="blt-admin-page-header">
 				<h1><?php esc_html_e( 'BLT Events', 'blt-events' ); ?> <span class="blt-admin-page-header-sub"><?php esc_html_e( 'Settings', 'blt-events' ); ?></span></h1>
+				<?php self::render_update_action(); ?>
 			</div>
 
 			<?php settings_errors(); ?>

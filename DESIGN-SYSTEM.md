@@ -1,5 +1,19 @@
 # BLT Events — Admin Design System
 
+> **Read `DESIGN.md` first.** The `.blt-ui` component library is no longer
+> this plugin's own: `assets/css/blt-design-system.css` is the family-wide
+> stylesheet, vendored byte-identical into every BLT plugin, and **DESIGN.md
+> is its canonical documentation** (it also covers the BLT mark, the "BLT"
+> all-caps rule, the shared settings layer and the update policy). Do not
+> edit that stylesheet here — change it in one repo and port the identical
+> change to the rest.
+>
+> What this file is still for: the **Events-specific** system — the
+> postbox-based Event/Coupon editor design (`assets/css/event-editor.css`),
+> how the two systems relate, and the worked examples from this plugin's own
+> screens. The `.blt-ui` catalog below is kept as a local reference and
+> matches DESIGN.md; where the two ever disagree, DESIGN.md wins.
+
 This is the template for every admin screen the plugin adds. When building a
 new admin page or extending an existing one, reuse the components below
 instead of inventing new markup/CSS. It follows the WordPress admin design

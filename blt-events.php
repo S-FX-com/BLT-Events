@@ -3,9 +3,9 @@
  * Plugin Name: BLT Events
  * Plugin URI:  https://s-fx.com
  * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
- * Version:     2.2.6
- * Author:      S-FX.COM
- * Author URI:  https://s-fx.com
+ * Version:     2.3.0
+ * Author:      S-FX.com
+ * Author URI:  https://www.s-fx.com
  * License:     GPL2
  * Text Domain: blt-events
  */
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.2.6' );
+define( 'BLT_EVENTS_VERSION', '2.3.0' );
 define( 'BLT_EVENTS_DB_VERSION', '1.0' );
 define( 'BLT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -23,16 +23,50 @@ define( 'BLT_EVENTS_PLUGIN_FILE', __FILE__ );
 define( 'BLT_EVENTS_PREFIX', '_blt_' );
 define( 'BLT_EVENTS_TEXT_DOMAIN', 'blt-events' );
 
+// ---------- BLT family layer ----------
+// Shared connection settings, the BLT mark, and the family update policy.
+// Registered during load (not on a hook) so the registry is complete before
+// the library boots on plugins_loaded, and before the update policy below
+// needs BLT_Family_Updates.
+require_once BLT_EVENTS_PLUGIN_DIR . 'includes/blt-family/bootstrap.php';
+
+blt_family_register(
+	BLT_EVENTS_PLUGIN_FILE,
+	array(
+		'name'    => 'BLT Events',
+		'slug'    => 'blt-events',
+		'version' => BLT_EVENTS_VERSION,
+		// The Settings screen is a submenu of the Events CPT menu; WordPress
+		// also registers it under admin.php?page=..., which is the form the
+		// family overview links with.
+		'menu'    => 'blt-events-settings',
+		'groups'  => array( 'stripe', 'surecart', 'microsoft', 'google' ),
+	)
+);
+
 // ---------- Update checker ----------
 // Serves updates from GitHub releases (zip asset built by .github/workflows/release.yml).
 require_once BLT_EVENTS_PLUGIN_DIR . 'includes/lib/plugin-update-checker/plugin-update-checker.php';
 
+// The 24 is required: a checker built with a 0 check period registers no
+// scheduler hooks at all and cannot be revived afterwards.
 $blt_events_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
 	'https://github.com/S-FX-com/BLT-Events/',
 	__FILE__,
-	'blt-events'
+	'blt-events',
+	24
 );
 $blt_events_update_checker->getVcsApi()->enableReleaseAssets();
+
+// Family update policy: at most one automatic check per day, anchored to
+// 00:00 site time, with manual checks always allowed immediately.
+BLT_Family_Updates::apply(
+	$blt_events_update_checker,
+	array(
+		'basename'  => plugin_basename( __FILE__ ),
+		'icons_url' => BLT_EVENTS_PLUGIN_URL . 'assets/img/',
+	)
+);
 
 // ---------- Autoloader ----------
 spl_autoload_register( function ( $class ) {
@@ -223,6 +257,16 @@ function blt_events_enqueue_admin_assets( $hook ) {
 	// list tables, plus the blt-* submenu pages.
 	$screen    = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 	$post_type = $screen->post_type ?? '';
+
+	// The shared "BLT" screen is owned by the family library, not by this
+	// plugin, but its hook (toplevel_page_blt-family) matches the blt- prefix
+	// below. Without this exclusion, opening it on a site with two or more BLT
+	// plugins would load this plugin's admin.css over it — and admin.css's
+	// unscoped `.widefat td { vertical-align: middle }` would restyle another
+	// plugin's table.
+	if ( 'toplevel_page_blt-family' === $hook ) {
+		return;
+	}
 
 	if ( ! in_array( $post_type, array( 'event', 'blt_coupon' ), true ) && strpos( $hook, 'blt-' ) === false ) {
 		return;

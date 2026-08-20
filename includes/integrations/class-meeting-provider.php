@@ -235,13 +235,62 @@ abstract class BLT_Events_Meeting_Provider {
 	}
 
 	/**
+	 * Integration option keys that may fall back to the shared BLT family
+	 * store, mapped to the shared group and field they resolve to.
+	 *
+	 * This is deliberately an explicit whitelist rather than a pattern. Only
+	 * the Microsoft Entra app registration is plausibly one credential per
+	 * site (shared with BLT M365 WP SSO); every other integration credential
+	 * this class serves has a single consumer and must never resolve through
+	 * the shared store:
+	 *
+	 *   - zoom_*, goto_*, clickmeeting_*  — single consumer, nothing to share.
+	 *   - teams_organizer                 — this plugin's own choice of which
+	 *                                       mailbox hosts the meeting, not an
+	 *                                       account-level credential.
+	 *
+	 * Caveat worth knowing before an admin ticks the microsoft group on: a
+	 * delegated sign-in app registration has no OnlineMeetings.ReadWrite.All,
+	 * and an app-only meetings registration has no sign-in redirect URI, so
+	 * one app pair only covers both plugins when it was registered for both.
+	 * tenant_id is the field that is unambiguously one value per site.
+	 *
+	 * @return array<string,string[]> Option key => array( group, field ).
+	 */
+	private static function shared_credential_map() {
+		return array(
+			'teams_tenant_id'     => array( 'microsoft', 'tenant_id' ),
+			'teams_client_id'     => array( 'microsoft', 'client_id' ),
+			'teams_client_secret' => array( 'microsoft', 'client_secret' ),
+		);
+	}
+
+	/**
 	 * Read a stored option scoped to this integration.
+	 *
+	 * The single chokepoint every integration credential is read through, so
+	 * the shared-store fallback lives here — but only for the whitelisted keys
+	 * above, and only after this plugin's own option has come back empty.
 	 *
 	 * @param string $key
 	 * @param mixed  $default
 	 * @return mixed
 	 */
 	protected function get_option( $key, $default = '' ) {
-		return get_option( 'blt_events_' . $key, $default );
+		$value = get_option( 'blt_events_' . $key, $default );
+
+		if ( '' !== $value && false !== $value && null !== $value ) {
+			return $value;
+		}
+
+		$map = self::shared_credential_map();
+
+		if ( ! isset( $map[ $key ] ) || ! class_exists( 'BLT_Family' ) ) {
+			return $value;
+		}
+
+		$shared = BLT_Family::get( 'blt-events', $map[ $key ][0], $map[ $key ][1] );
+
+		return '' === $shared ? $value : $shared;
 	}
 }

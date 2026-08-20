@@ -19,7 +19,7 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 			return;
 		}
 
-		self::$secret_key = get_option( 'blt_events_stripe_secret_key', '' );
+		self::$secret_key = self::secret_key();
 
 		// AJAX endpoints
 		add_action( 'wp_ajax_blt_create_payment_intent', array( __CLASS__, 'ajax_create_payment_intent' ) );
@@ -36,8 +36,47 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 	}
 
 	public static function is_configured() {
-		return ! empty( get_option( 'blt_events_stripe_secret_key', '' ) )
-			&& ! empty( get_option( 'blt_events_stripe_publishable_key', '' ) );
+		return '' !== self::secret_key()
+			&& '' !== self::publishable_key();
+	}
+
+	/**
+	 * The Stripe secret key.
+	 *
+	 * Every read of the secret goes through here — init() (which caches it for
+	 * api_request()) and is_configured() alike. If the two resolved it
+	 * differently the settings screen could report "Not configured" on a site
+	 * whose payments actually work, or the reverse.
+	 *
+	 * Precedence: this plugin's own option, then the shared BLT family store.
+	 *
+	 * @return string
+	 */
+	private static function secret_key() {
+		$key = trim( (string) get_option( 'blt_events_stripe_secret_key', '' ) );
+
+		if ( '' === $key && class_exists( 'BLT_Family' ) ) {
+			$key = BLT_Family::get( 'blt-events', 'stripe', 'secret_key' );
+		}
+
+		return (string) $key;
+	}
+
+	/**
+	 * The Stripe publishable key — the one that is safe to send to the browser.
+	 *
+	 * Precedence: this plugin's own option, then the shared BLT family store.
+	 *
+	 * @return string
+	 */
+	private static function publishable_key() {
+		$key = trim( (string) get_option( 'blt_events_stripe_publishable_key', '' ) );
+
+		if ( '' === $key && class_exists( 'BLT_Family' ) ) {
+			$key = BLT_Family::get( 'blt-events', 'stripe', 'publishable_key' );
+		}
+
+		return (string) $key;
 	}
 
 	public static function enqueue_scripts() {
@@ -55,7 +94,7 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 		);
 
 		wp_localize_script( 'blt-events-payment', 'bltStripeData', array(
-			'publishableKey' => get_option( 'blt_events_stripe_publishable_key', '' ),
+			'publishableKey' => self::publishable_key(),
 			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
 			'nonce'          => wp_create_nonce( 'blt_stripe_nonce' ),
 		) );

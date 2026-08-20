@@ -1,67 +1,14 @@
 /* ========================================
    BLT Events - Settings Screen
    Page-specific layout on top of the shared design system
-   (assets/css/blt-design-system.css): tabs, the payment-provider grid
-   sizing, and the shortcodes reference table.
+   (assets/css/blt-design-system.css): the shortcodes reference table and
+   the copy-to-clipboard button state.
+
+   The tab strip and the save bar are NOT here: `.blt-settings-tabs` /
+   `.blt-settings-tab` and `.blt-settings-footer` / `.blt-save-button` are
+   family-wide components in the shared design system, scoped under
+   `.blt-ui` (which this screen's `.wrap` carries). See DESIGN.md.
    ======================================== */
-
-/* --- Tabs --- */
-.blt-settings-tabs {
-	display: flex;
-	gap: 4px;
-	margin: 12px 0 24px;
-	border-bottom: 1px solid var(--blt-border);
-}
-
-.blt-settings-tab {
-	position: relative;
-	padding: 10px 16px;
-	font-size: 14px;
-	font-weight: 500;
-	color: var(--blt-fg);
-	text-decoration: none;
-	border-radius: 4px 4px 0 0;
-	transition: background 0.1s ease, color 0.1s ease;
-}
-
-.blt-settings-tab:hover {
-	background: var(--blt-surface-muted);
-	color: var(--blt-primary);
-}
-
-.blt-settings-tab:focus {
-	box-shadow: 0 0 0 2px var(--blt-primary);
-	outline: none;
-}
-
-.blt-settings-tab.is-active {
-	color: var(--blt-primary);
-	font-weight: 600;
-}
-
-.blt-settings-tab.is-active::after {
-	content: "";
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: -1px;
-	height: 3px;
-	background: var(--blt-primary);
-	border-radius: 3px 3px 0 0;
-}
-
-/* --- Save bar --- */
-.blt-settings-footer {
-	display: flex;
-	justify-content: flex-end;
-	padding: 4px 0 24px;
-}
-
-.blt-settings-footer .blt-save-button {
-	min-height: 36px;
-	padding: 0 20px;
-	border-radius: 3px;
-}
 
 /* --- Shortcodes tab --- */
 .blt-shortcode-tag {
@@ -138,11 +85,4 @@
 .blt-copy-shortcode.is-copied:hover {
 	color: var(--blt-success-fg);
 	border-color: var(--blt-success-fg);
-}
-
-/* --- Responsive --- */
-@media (max-width: 782px) {
-	.blt-settings-tabs {
-		flex-wrap: wrap;
-	}
 }

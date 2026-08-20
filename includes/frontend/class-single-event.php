@@ -424,6 +424,17 @@ class BLT_Events_Single_Event {
 	 */
 	private static function google_map_src( $event_id ) {
 		$key = trim( (string) get_option( 'blt_events_google_maps_api_key', '' ) );
+
+		// Shared BLT family store (opt-in, off by default). This is a
+		// referrer-restricted BROWSER key for the Maps Embed API — it ends up
+		// in front-end HTML, which is what its HTTP-referrer restriction is
+		// there for. It is deliberately NOT interchangeable with
+		// google.youtube_api_key, which is an IP-restricted server key for the
+		// YouTube Data API; never cross-feed the two.
+		if ( '' === $key && class_exists( 'BLT_Family' ) ) {
+			$key = trim( (string) BLT_Family::get( 'blt-events', 'google', 'maps_api_key' ) );
+		}
+
 		if ( '' === $key ) {
 			return '';
 		}

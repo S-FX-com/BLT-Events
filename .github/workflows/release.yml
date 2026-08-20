@@ -88,7 +88,8 @@ jobs:
             --exclude '.github' \
             --exclude 'build' \
             --exclude '.gitignore' \
-            --exclude '*.md'
+            --exclude '*.md' \
+            --exclude 'blt-family-smoke.php'
           cd build
           zip -rq blt-events.zip blt-events
           echo "Zip contents (top level):"
