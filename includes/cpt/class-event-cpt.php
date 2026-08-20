@@ -26,6 +26,7 @@ class BLT_Events_Event_CPT {
     public static function init() {
         add_action( 'init', array( __CLASS__, 'register_post_type' ) );
         add_action( 'init', array( __CLASS__, 'register_taxonomies' ) );
+        add_action( 'admin_head', array( __CLASS__, 'print_menu_icon_style' ) );
         add_filter( 'use_block_editor_for_post_type', array( __CLASS__, 'disable_block_editor' ), 10, 2 );
 
         // Admin list table columns.
@@ -33,6 +34,25 @@ class BLT_Events_Event_CPT {
         add_action( 'manage_' . self::$slug . '_posts_custom_column', array( __CLASS__, 'render_admin_column' ), 10, 2 );
         add_filter( 'manage_edit-' . self::$slug . '_sortable_columns', array( __CLASS__, 'sortable_admin_columns' ) );
         add_action( 'pre_get_posts', array( __CLASS__, 'handle_admin_column_sorting' ) );
+    }
+
+    /**
+     * Light the BLT mark up on hover and while the Events section is open, the
+     * way core does for a dashicon menu item.
+     *
+     * This plugin's top-level menu is the CPT's own, so WordPress builds its id
+     * as `menu-posts-event` rather than the `toplevel_page_<slug>` that
+     * add_menu_page() produces — hence the _for_id() variant of the shared
+     * helper.
+     *
+     * @return void
+     */
+    public static function print_menu_icon_style() {
+        if ( ! class_exists( 'BLT_Family_Brand' ) ) {
+            return;
+        }
+
+        BLT_Family_Brand::print_menu_icon_style_for_id( 'menu-posts-' . self::$slug );
     }
 
     /**
@@ -65,7 +85,13 @@ class BLT_Events_Event_CPT {
             'has_archive'        => true,
             'hierarchical'       => false,
             'menu_position'      => null,
-            'menu_icon'          => 'dashicons-calendar-alt',
+            // The BLT mark, so every plugin in the family carries the same icon
+            // in the admin menu. Admin-only: the icon is a data URI built by
+            // reading a bundled file, and nothing on the front end renders it.
+            // Falls back to the dashicon when the family library is absent.
+            'menu_icon'          => ( is_admin() && class_exists( 'BLT_Family_Brand' ) )
+                ? BLT_Family_Brand::menu_icon( BLT_EVENTS_PLUGIN_DIR, 'dashicons-calendar-alt' )
+                : 'dashicons-calendar-alt',
             'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
             // Expose to the block editor, core REST API, and Query Loop blocks.
             'show_in_rest'       => true,

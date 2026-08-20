@@ -278,6 +278,20 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 
 	/**
 	 * Get the SureCart API token.
+	 *
+	 * Resolution order, each rung only consulted once the previous one comes
+	 * back empty: this plugin's own option, the SureCart plugin's own stored
+	 * token, then the shared BLT family store. Nothing here ever writes a
+	 * resolved value back into an option.
+	 *
+	 * The shared store is deliberately LAST, below SureCart's own token. The
+	 * Payments tab tells admins they can leave this plugin's field blank when
+	 * the SureCart plugin is installed and connected, so "own option empty,
+	 * SureCart's token in use" is a supported, working configuration. Putting
+	 * the shared rung above it would silently switch such a site onto a
+	 * different token the moment the owner opted this plugin into the shared
+	 * group — with no visible change, because the Connected badge resolves
+	 * through the same method.
 	 */
 	private static function get_api_token() {
 		$token = get_option( 'blt_events_surecart_api_token', '' );
@@ -285,6 +299,11 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		// Fallback: try getting token from SureCart plugin if installed
 		if ( empty( $token ) && self::is_surecart_plugin_active() ) {
 			$token = get_option( 'surecart_api_token', '' );
+		}
+
+		// Shared BLT family store (opt-in, off by default).
+		if ( empty( $token ) && class_exists( 'BLT_Family' ) ) {
+			$token = BLT_Family::get( 'blt-events', 'surecart', 'api_token' );
 		}
 
 		return $token;

@@ -12,7 +12,7 @@
 
 /* --- Coupon List: expiration column --- */
 .expired {
-	color: #8a2424;
+	color: var(--blt-danger-fg, #8a2424);
 	font-weight: 600;
 }
 
@@ -35,7 +35,7 @@
 	gap: 6px;
 	padding: 4px 8px 4px 10px;
 	background: var(--blt-primary-tint, #f6fafd);
-	border: 1px solid #c5d9ed;
+	border: 1px solid var(--blt-primary-border, #c5d9ed);
 	border-radius: 999px;
 	font-size: 12px;
 	color: var(--blt-fg, #1e1e1e);
@@ -73,7 +73,7 @@
 	padding: 4px 12px;
 	border: 1px solid var(--blt-border, #dcdcde);
 	border-radius: 999px;
-	background: #fff;
+	background: var(--blt-surface, #fff);
 	font-size: 12px;
 	cursor: pointer;
 }

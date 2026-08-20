@@ -233,12 +233,25 @@ class BLT_Events_Admin_Settings {
 	/**
 	 * Keep the previously stored secret when the field is submitted blank,
 	 * so secrets never need to be rendered back into the page.
+	 *
+	 * Blank-means-keep leaves no way to empty a secret, which matters now that
+	 * an empty local value is what lets a shared BLT credential apply: a site
+	 * with a key already saved could otherwise never migrate to a shared one.
+	 * render_secret_field() therefore prints a companion "clear" checkbox, and
+	 * blank + that box ticked is the only way to erase the value.
+	 *
+	 * Reading $_POST here is safe: this runs as a register_setting()
+	 * sanitize_callback, so options.php has already checked the nonce and the
+	 * user's capability, and the checkbox is part of the same submission.
 	 */
 	public static function sanitize_secret( $value, $option_name ) {
 		$value = is_string( $value ) ? trim( $value ) : '';
 
 		if ( $value === '' ) {
-			return get_option( $option_name, '' );
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- options.php verified the nonce before sanitizing.
+			$clear = ! empty( $_POST[ $option_name . '_clear' ] );
+
+			return $clear ? '' : get_option( $option_name, '' );
 		}
 
 		return sanitize_text_field( $value );
@@ -259,6 +272,20 @@ class BLT_Events_Admin_Settings {
 			$has_value
 				? esc_attr__( 'Saved — leave blank to keep current value', 'blt-events' )
 				: esc_attr__( 'Not set', 'blt-events' )
+		);
+
+		if ( ! $has_value ) {
+			return;
+		}
+
+		// The only way to empty a secret, since a blank field means "keep it".
+		// Needed to hand a credential over to the shared BLT store: this
+		// plugin's own value always wins, so the shared one applies only once
+		// nothing is stored here.
+		printf(
+			'<p class="blt-field-desc"><label><input type="checkbox" name="%1$s_clear" value="1" /> %2$s</label></p>',
+			esc_attr( $option_name ),
+			esc_html__( 'Clear the saved value', 'blt-events' )
 		);
 	}
 
@@ -317,6 +344,43 @@ class BLT_Events_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * The "Check for Updates" action shown in the page header.
+	 *
+	 * BLT Events updates from its own GitHub releases. Under the shared family
+	 * policy the automatic check runs once a day, anchored to 00:00 site time;
+	 * this link is the manual path and runs immediately, bypassing that floor.
+	 * plugin-update-checker's own handler verifies the nonce and the user's
+	 * capability, then redirects to the Plugins screen with the result notice.
+	 */
+	private static function render_update_action() {
+		if ( ! class_exists( 'BLT_Family_Updates' ) ) {
+			return;
+		}
+
+		// The checker instance is the global the main plugin file builds.
+		$checker    = isset( $GLOBALS['blt_events_update_checker'] ) ? $GLOBALS['blt_events_update_checker'] : null;
+		$last_check = $checker ? BLT_Family_Updates::last_check_time( $checker ) : 0;
+		?>
+		<div class="blt-admin-page-actions">
+			<?php if ( $last_check > 0 ) : ?>
+				<span class="blt-admin-page-header-meta">
+					<?php
+					printf(
+						/* translators: %s: human-readable time difference, e.g. "3 hours". */
+						esc_html__( 'Last checked %s ago', 'blt-events' ),
+						esc_html( human_time_diff( $last_check ) )
+					);
+					?>
+				</span>
+			<?php endif; ?>
+			<a class="button" href="<?php echo esc_url( BLT_Family_Updates::check_now_url( 'blt-events' ) ); ?>">
+				<?php esc_html_e( 'Check for Updates', 'blt-events' ); ?>
+			</a>
+		</div>
+		<?php
+	}
+
 	/* --------------------------------------------------------------------
 	 * Page shell
 	 * ------------------------------------------------------------------ */
@@ -327,6 +391,7 @@ class BLT_Events_Admin_Settings {
 		<div class="wrap blt-ui blt-events-settings">
 			<div class="blt-admin-page-header">
 				<h1><?php esc_html_e( 'BLT Events', 'blt-events' ); ?> <span class="blt-admin-page-header-sub"><?php esc_html_e( 'Settings', 'blt-events' ); ?></span></h1>
+				<?php self::render_update_action(); ?>
 			</div>
 
 			<?php settings_errors(); ?>
