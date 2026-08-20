@@ -36,10 +36,10 @@ blt_family_register(
 		'name'    => 'BLT Events',
 		'slug'    => 'blt-events',
 		'version' => BLT_EVENTS_VERSION,
-		// The Settings screen is a submenu of the Events CPT menu; WordPress
-		// also registers it under admin.php?page=..., which is the form the
-		// family overview links with.
-		'menu'    => 'blt-events-settings',
+		// A relative URL, not a bare slug: this page is a submenu of
+		// edit.php?post_type=event, and WordPress dispatches a submenu callback
+		// through its parent — admin.php?page=blt-events-settings would not reach it.
+		'menu'    => 'edit.php?post_type=event&page=blt-events-settings',
 		'groups'  => array( 'stripe', 'surecart', 'microsoft', 'google' ),
 	)
 );
