@@ -233,12 +233,25 @@ class BLT_Events_Admin_Settings {
 	/**
 	 * Keep the previously stored secret when the field is submitted blank,
 	 * so secrets never need to be rendered back into the page.
+	 *
+	 * Blank-means-keep leaves no way to empty a secret, which matters now that
+	 * an empty local value is what lets a shared BLT credential apply: a site
+	 * with a key already saved could otherwise never migrate to a shared one.
+	 * render_secret_field() therefore prints a companion "clear" checkbox, and
+	 * blank + that box ticked is the only way to erase the value.
+	 *
+	 * Reading $_POST here is safe: this runs as a register_setting()
+	 * sanitize_callback, so options.php has already checked the nonce and the
+	 * user's capability, and the checkbox is part of the same submission.
 	 */
 	public static function sanitize_secret( $value, $option_name ) {
 		$value = is_string( $value ) ? trim( $value ) : '';
 
 		if ( $value === '' ) {
-			return get_option( $option_name, '' );
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- options.php verified the nonce before sanitizing.
+			$clear = ! empty( $_POST[ $option_name . '_clear' ] );
+
+			return $clear ? '' : get_option( $option_name, '' );
 		}
 
 		return sanitize_text_field( $value );
@@ -259,6 +272,20 @@ class BLT_Events_Admin_Settings {
 			$has_value
 				? esc_attr__( 'Saved — leave blank to keep current value', 'blt-events' )
 				: esc_attr__( 'Not set', 'blt-events' )
+		);
+
+		if ( ! $has_value ) {
+			return;
+		}
+
+		// The only way to empty a secret, since a blank field means "keep it".
+		// Needed to hand a credential over to the shared BLT store: this
+		// plugin's own value always wins, so the shared one applies only once
+		// nothing is stored here.
+		printf(
+			'<p class="blt-field-desc"><label><input type="checkbox" name="%1$s_clear" value="1" /> %2$s</label></p>',
+			esc_attr( $option_name ),
+			esc_html__( 'Clear the saved value', 'blt-events' )
 		);
 	}
 
