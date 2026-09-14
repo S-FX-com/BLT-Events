@@ -80,6 +80,11 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_payments', 'blt_events_payment_provider', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_payment_provider' ),
 		) );
+		register_setting( 'blt_events_settings_payments', BLT_Events_Payment_Providers::OPTION_ENABLED, array(
+			'type'              => 'array',
+			'sanitize_callback' => array( __CLASS__, 'sanitize_enabled_providers' ),
+			'default'           => array(),
+		) );
 
 		// Stripe (secrets keep their stored value when submitted blank)
 		register_setting( 'blt_events_settings_payments', 'blt_events_stripe_secret_key', array(
@@ -180,8 +185,26 @@ class BLT_Events_Admin_Settings {
 	}
 
 	public static function sanitize_payment_provider( $value ) {
-		$allowed = array( 'none', 'stripe', 'surecart', 'fluentcart' );
-		return in_array( $value, $allowed, true ) ? $value : 'none';
+		return BLT_Events_Payment_Providers::exists( $value ) ? $value : 'none';
+	}
+
+	/**
+	 * Keep only slugs the plugin actually knows how to drive.
+	 *
+	 * The submitted list is authoritative, including when it is empty — that is
+	 * how an admin switches every provider off. get_enabled() re-adds the site
+	 * default afterwards, so a site can never end up with a default it has
+	 * disabled.
+	 */
+	public static function sanitize_enabled_providers( $value ) {
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+
+		return array_values( array_intersect(
+			array_map( 'sanitize_text_field', $value ),
+			BLT_Events_Payment_Providers::get_slugs()
+		) );
 	}
 
 	public static function sanitize_currency( $value ) {
@@ -617,37 +640,76 @@ class BLT_Events_Admin_Settings {
 	 * ------------------------------------------------------------------ */
 
 	private static function render_tab_payments() {
-		$payment_provider = get_option( 'blt_events_payment_provider', 'none' );
+		$payment_provider = BLT_Events_Payment_Providers::get_default();
+		$enabled          = BLT_Events_Payment_Providers::get_enabled();
+		$registry         = BLT_Events_Payment_Providers::get_registry();
 
 		$providers = array(
-			'none'       => array(
+			'none' => array(
 				'name' => __( 'None', 'blt-events' ),
 				'desc' => __( 'Free events only — no checkout.', 'blt-events' ),
 			),
-			'stripe'     => array(
-				'name' => __( 'Stripe', 'blt-events' ),
-				'desc' => __( 'Card payments through Stripe Checkout.', 'blt-events' ),
-			),
-			'surecart'   => array(
-				'name' => __( 'SureCart', 'blt-events' ),
-				'desc' => __( 'Checkout through your SureCart store.', 'blt-events' ),
-			),
-			'fluentcart' => array(
-				'name' => __( 'FluentCart', 'blt-events' ),
-				'desc' => __( 'On-site checkout with FluentCart.', 'blt-events' ),
-			),
 		);
+
+		foreach ( $registry as $slug => $provider ) {
+			$providers[ $slug ] = array(
+				'name' => $provider['label'],
+				'desc' => $provider['description'],
+			);
+		}
 		?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'blt_events_settings_payments' ); ?>
 
 			<div class="blt-card">
 				<div class="blt-card-header">
-					<h2><?php esc_html_e( 'Payment Provider', 'blt-events' ); ?></h2>
-					<p><?php esc_html_e( 'Choose which payment provider handles paid event registrations.', 'blt-events' ); ?></p>
+					<h2><?php esc_html_e( 'Payment Processors', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'Switch on every processor this site uses. More than one can run at a time — each event can then choose which of them it checks out through.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
-					<div class="blt-select-cards" role="radiogroup" aria-label="<?php esc_attr_e( 'Payment provider', 'blt-events' ); ?>">
+					<?php
+					// An empty array is a meaningful submission (everything off),
+					// but browsers omit unchecked boxes entirely. Without this the
+					// option would keep its old value instead of being cleared.
+					?>
+					<input type="hidden" name="<?php echo esc_attr( BLT_Events_Payment_Providers::OPTION_ENABLED ); ?>[]" value="" />
+
+					<div class="blt-toggle-stack">
+						<?php foreach ( $registry as $slug => $provider ) :
+							$class      = $provider['class'];
+							$configured = class_exists( $class ) && call_user_func( array( $class, 'is_configured' ) );
+							?>
+							<label class="blt-toggle">
+								<input
+									type="checkbox"
+									name="<?php echo esc_attr( BLT_Events_Payment_Providers::OPTION_ENABLED ); ?>[]"
+									value="<?php echo esc_attr( $slug ); ?>"
+									<?php checked( in_array( $slug, $enabled, true ) ); ?> />
+								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+								<span class="blt-toggle-text">
+									<span class="blt-toggle-label">
+										<?php echo esc_html( $provider['label'] ); ?>
+										<?php self::render_status_badge( $configured, __( 'Configured', 'blt-events' ), __( 'Not configured', 'blt-events' ) ); ?>
+									</span>
+									<span class="blt-toggle-desc"><?php echo esc_html( $provider['description'] ); ?></span>
+								</span>
+							</label>
+						<?php endforeach; ?>
+					</div>
+
+					<p class="blt-field-desc">
+						<?php esc_html_e( 'Switching a processor off stops new events from using it and hides its checkout. Its existing orders keep resolving, so refunds on past purchases still reach the right registration.', 'blt-events' ); ?>
+					</p>
+				</div>
+			</div>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Default Processor', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'Used by every event that does not pick one of its own, on the Registration & Tickets panel of the event editor.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<div class="blt-select-cards" role="radiogroup" aria-label="<?php esc_attr_e( 'Default payment processor', 'blt-events' ); ?>">
 						<?php foreach ( $providers as $value => $provider ) : ?>
 							<label class="blt-select-card <?php echo $payment_provider === $value ? 'is-selected' : ''; ?>">
 								<input type="radio" name="blt_events_payment_provider" value="<?php echo esc_attr( $value ); ?>" <?php checked( $payment_provider, $value ); ?> />
@@ -661,7 +723,7 @@ class BLT_Events_Admin_Settings {
 			</div>
 
 			<!-- Stripe -->
-			<div class="blt-card blt-provider-panel" data-provider="stripe" <?php echo $payment_provider !== 'stripe' ? 'style="display:none;"' : ''; ?>>
+			<div class="blt-card blt-provider-panel" data-provider="stripe" <?php echo ! in_array( 'stripe', $enabled, true ) ? 'style="display:none;"' : ''; ?>>
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Stripe', 'blt-events' ); ?></h2>
 					<p><?php esc_html_e( 'API keys from your Stripe dashboard. Secret values are stored but never displayed back.', 'blt-events' ); ?></p>
@@ -684,7 +746,7 @@ class BLT_Events_Admin_Settings {
 			</div>
 
 			<!-- SureCart -->
-			<div class="blt-card blt-provider-panel" data-provider="surecart" <?php echo $payment_provider !== 'surecart' ? 'style="display:none;"' : ''; ?>>
+			<div class="blt-card blt-provider-panel" data-provider="surecart" <?php echo ! in_array( 'surecart', $enabled, true ) ? 'style="display:none;"' : ''; ?>>
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'SureCart', 'blt-events' ); ?></h2>
 					<?php
@@ -719,7 +781,7 @@ class BLT_Events_Admin_Settings {
 			</div>
 
 			<!-- FluentCart -->
-			<div class="blt-card blt-provider-panel" data-provider="fluentcart" <?php echo $payment_provider !== 'fluentcart' ? 'style="display:none;"' : ''; ?>>
+			<div class="blt-card blt-provider-panel" data-provider="fluentcart" <?php echo ! in_array( 'fluentcart', $enabled, true ) ? 'style="display:none;"' : ''; ?>>
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'FluentCart', 'blt-events' ); ?></h2>
 					<?php $fc_active = class_exists( 'BLT_Events_FluentCart_Integration' ) && BLT_Events_FluentCart_Integration::is_fluentcart_plugin_active(); ?>

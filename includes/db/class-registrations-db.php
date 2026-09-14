@@ -164,6 +164,41 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 	}
 
 	/**
+	 * Get the registrations recorded against one processor payment.
+	 *
+	 * Off-site checkouts create registrations from webhooks, which retry.
+	 * Callers use this to stay idempotent: a retried SureCart confirmation
+	 * or a replayed FluentCart `order_paid_done` must not register the same
+	 * buyer twice.
+	 *
+	 * @param string $provider   Payment provider slug.
+	 * @param string $payment_id Provider-side payment/order/checkout ID.
+	 * @param int    $event_id   Optional event to narrow to. One order can
+	 *                           carry tickets for several events.
+	 * @return array Registration rows (empty when none).
+	 */
+	public function get_by_payment( $provider, $payment_id, $event_id = 0 ) {
+		global $wpdb;
+
+		$payment_id = sanitize_text_field( $payment_id );
+		if ( '' === $payment_id ) {
+			return array();
+		}
+
+		$sql    = "SELECT * FROM {$this->table_name} WHERE payment_provider = %s AND payment_id = %s";
+		$params = array( sanitize_text_field( $provider ), $payment_id );
+
+		if ( $event_id ) {
+			$sql     .= ' AND event_id = %d';
+			$params[] = absint( $event_id );
+		}
+
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ) );
+
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
 	 * Registration counts per status for an event.
 	 *
 	 * @param int $event_id The event post ID.

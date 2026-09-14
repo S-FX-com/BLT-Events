@@ -392,6 +392,17 @@
 	color: var(--blt-neutral-fg);
 }
 
+/* Why a registration is being held for review, under its status badge. */
+.blt-review-reason {
+	margin-top: 4px;
+	padding-left: 8px;
+	border-left: 2px solid var(--blt-warning-fg, #b26a00);
+	font-size: 11px;
+	line-height: 1.4;
+	color: var(--blt-muted-fg);
+	max-width: 34ch;
+}
+
 /* Event type badges (Events list table). */
 .blt-badge-type-online {
 	background: var(--blt-primary-tint);

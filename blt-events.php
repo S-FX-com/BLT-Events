@@ -96,6 +96,7 @@ spl_autoload_register( function ( $class ) {
 		'coupons'                => 'includes/class-coupons.php',
 		// Payment
 		'payment-provider'       => 'includes/payment/class-payment-provider.php',
+		'payment-providers'      => 'includes/payment/class-payment-providers.php',
 		'stripe-handler'         => 'includes/payment/class-stripe-handler.php',
 		'surecart-integration'   => 'includes/payment/class-surecart-integration.php',
 		'fluentcart-integration' => 'includes/payment/class-fluentcart-integration.php',
@@ -158,10 +159,17 @@ function blt_events_init() {
 	BLT_Events_Registrations::init();
 	BLT_Events_Coupons::init();
 
-	// Payment
-	BLT_Events_Stripe_Handler::init();
-	BLT_Events_SureCart_Integration::init();
-	BLT_Events_FluentCart_Integration::init();
+	// Payment. Every enabled provider boots, not just the site default, so
+	// orders and refunds keep resolving for events that check out elsewhere.
+	BLT_Events_Payment_Providers::init();
+
+	// A saved event, or a change to either payment setting, can change which
+	// providers are in use on the front end. Priority 25 puts the flush after
+	// the metabox has written the event's provider (10) and after the provider
+	// product syncs (20), so it never re-caches the pre-save answer.
+	add_action( 'save_post_event', array( 'BLT_Events_Payment_Provider', 'flush_usage_cache' ), 25 );
+	add_action( 'update_option_' . BLT_Events_Payment_Providers::OPTION_DEFAULT, array( 'BLT_Events_Payment_Provider', 'flush_usage_cache' ) );
+	add_action( 'update_option_' . BLT_Events_Payment_Providers::OPTION_ENABLED, array( 'BLT_Events_Payment_Provider', 'flush_usage_cache' ) );
 
 	// Meeting integrations (settings, OAuth routes, room creation, attendee sync)
 	BLT_Events_Meeting_Providers::init();

@@ -1,0 +1,99 @@
+/* ========================================
+   BLT Events - Front-end design tokens
+   ========================================
+
+   Every colour, radius, shadow and font in the plugin's front-end CSS
+   resolves through one of the custom properties below. Nothing downstream
+   hardcodes a value, so a site can restyle the whole plugin by redefining
+   these — no `!important`, no overriding dozens of selectors.
+
+   Three ways to change them, in increasing order of specificity:
+
+     1. Settings → Appearance, which prints the overrides an admin picked.
+     2. Skeleton mode (blt-events-skeleton.css), which re-points the tokens
+        at a framework's own variables — see that file.
+     3. Your own stylesheet or a code snippet:
+
+          :root {
+            --blt-e-primary: var(--action);
+            --blt-e-radius: var(--radius-m);
+          }
+
+   Token naming: `--blt-e-` prefixed so it cannot collide with a theme's
+   own `--primary` or a framework's utility variables. The admin-side
+   design system uses `--blt-` (see blt-design-system.css) and is separate:
+   these tokens never load in wp-admin.
+   ---------------------------------------- */
+
+:root {
+	/* --- Brand --- */
+	--blt-e-primary: #6366f1;
+	--blt-e-primary-hover: #4f46e5;
+	--blt-e-primary-tint: #f0f0ff;
+	/* Text drawn on top of --blt-e-primary. */
+	--blt-e-on-primary: #ffffff;
+	--blt-e-focus-ring: rgba(99, 102, 241, 0.3);
+	--blt-e-focus-glow: rgba(99, 102, 241, 0.1);
+
+	/* Links. Defaults to the brand colour so the calendar and the single
+	   event page read as one design rather than two. */
+	--blt-e-link: var(--blt-e-primary);
+	--blt-e-link-hover: var(--blt-e-primary-hover);
+
+	/* --- Text --- */
+	--blt-e-fg-strong: #111827;
+	--blt-e-fg: #1f2937;
+	--blt-e-fg-soft: #374151;
+	--blt-e-fg-muted: #6b7280;
+	--blt-e-fg-subtle: #9ca3af;
+
+	/* --- Surfaces --- */
+	--blt-e-surface: #ffffff;
+	--blt-e-surface-alt: #f9fafb;
+	--blt-e-surface-sunken: #f3f4f6;
+
+	/* --- Lines --- */
+	--blt-e-border: #e5e7eb;
+	--blt-e-border-strong: #d1d5db;
+	--blt-e-border-subtle: rgba(0, 0, 0, 0.12);
+
+	/* --- Status --- */
+	--blt-e-success: #059669;
+	--blt-e-success-bg: #f0fdf4;
+	--blt-e-success-border: #bbf7d0;
+
+	--blt-e-danger: #dc2626;
+	--blt-e-danger-bg: #fef2f2;
+	--blt-e-danger-border: #fecaca;
+
+	--blt-e-warning: #92400e;
+	--blt-e-warning-bg: #fffbeb;
+	--blt-e-warning-border: #fde68a;
+
+	/* --- Shape --- */
+	--blt-e-radius-sm: 6px;
+	--blt-e-radius: 10px;
+	--blt-e-radius-lg: 12px;
+	--blt-e-radius-pill: 999px;
+
+	/* --- Depth --- */
+	--blt-e-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+	--blt-e-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+	--blt-e-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+	/* --- Type --- */
+	/* `inherit` would be the theme's font; the plugin ships a system stack so
+	   it looks deliberate out of the box. Skeleton mode swaps this to inherit. */
+	--blt-e-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--blt-e-font-heading: var(--blt-e-font);
+
+	/* --- Rhythm --- */
+	--blt-e-gap-sm: 0.5rem;
+	--blt-e-gap: 1rem;
+	--blt-e-gap-lg: 2rem;
+	--blt-e-pad: 2rem;
+
+	/* --- Layout --- */
+	--blt-e-form-width: 640px;
+	--blt-e-content-width: 1200px;
+}

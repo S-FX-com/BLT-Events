@@ -492,12 +492,26 @@ class BLT_Events_Helpers {
     }
 
     /**
-     * Get the active payment provider from plugin settings.
+     * The site-wide default payment provider.
      *
-     * @return string The active payment provider slug (default: 'none').
+     * Delegates to the provider registry so the settings option is validated
+     * in exactly one place. Prefer get_event_payment_provider() anywhere an
+     * event is in scope: an event may override the default.
+     *
+     * @return string The default payment provider slug (default: 'none').
      */
     public static function get_payment_provider() {
-        return get_option( 'blt_events_payment_provider', 'none' );
+        return BLT_Events_Payment_Providers::get_default();
+    }
+
+    /**
+     * The payment provider a given event checks out through.
+     *
+     * @param int $event_id The event post ID.
+     * @return string Provider slug, or 'none'.
+     */
+    public static function get_event_payment_provider( $event_id ) {
+        return BLT_Events_Payment_Providers::get_event_provider( $event_id );
     }
 
     /**

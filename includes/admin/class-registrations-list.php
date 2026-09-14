@@ -131,11 +131,40 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 		$known_statuses = array( 'confirmed', 'pending', 'cancelled', 'refunded' );
 		$badge_status   = in_array( $item->status, $known_statuses, true ) ? $item->status : 'refunded';
 
-		return sprintf(
+		$out = sprintf(
 			'<span class="blt-badge blt-badge-%1$s">%2$s</span>',
 			esc_attr( $badge_status ),
 			esc_html( ucfirst( $item->status ) )
 		);
+
+		// A completed off-site payment that tripped one of the registration
+		// guards is held as pending with its reasons attached. Surfacing them
+		// here is the whole point of recording it instead of rejecting it.
+		foreach ( self::get_review_reasons( $item ) as $reason ) {
+			$out .= '<div class="blt-review-reason">' . esc_html( $reason ) . '</div>';
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Reasons a registration was flagged for review, if any.
+	 *
+	 * @param object $item Registration row.
+	 * @return string[]
+	 */
+	private static function get_review_reasons( $item ) {
+		if ( empty( $item->custom_fields ) ) {
+			return array();
+		}
+
+		$fields = json_decode( $item->custom_fields, true );
+
+		if ( ! is_array( $fields ) || empty( $fields['_review'] ) || ! is_array( $fields['_review'] ) ) {
+			return array();
+		}
+
+		return array_map( 'strval', $fields['_review'] );
 	}
 
 	public function column_created_at( $item ) {

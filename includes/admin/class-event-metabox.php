@@ -737,6 +737,10 @@ class BLT_Events_Event_Metabox {
 		if ( class_exists( 'BLT_Events_Fieldsets' ) ) {
 			$fieldsets = BLT_Events_Fieldsets::get_active_fieldsets();
 		}
+
+		$event_provider    = (string) get_post_meta( $post->ID, BLT_Events_Payment_Providers::EVENT_META, true );
+		$enabled_providers = BLT_Events_Payment_Providers::get_enabled();
+		$default_provider  = BLT_Events_Payment_Providers::get_default();
 		?>
 		<div class="blt-editor">
 			<?php
@@ -821,6 +825,32 @@ class BLT_Events_Event_Metabox {
 						<p class="blt-help"><?php esc_html_e( 'The set of form fields attendees fill in when registering.', 'blt-events' ); ?></p>
 					</div>
 				</div>
+
+				<?php // Only worth showing once the site has more than one processor to choose between. ?>
+				<?php if ( count( $enabled_providers ) > 1 ) : ?>
+				<div class="blt-config-section">
+					<div class="blt-field">
+						<label class="blt-label" for="payment_provider"><?php esc_html_e( 'Payment Processor', 'blt-events' ); ?></label>
+						<select class="blt-input" id="payment_provider" name="payment_provider">
+							<option value="">
+								<?php
+								printf(
+									/* translators: %s: the site-wide default processor name. */
+									esc_html__( '— Site Default (%s) —', 'blt-events' ),
+									esc_html( BLT_Events_Payment_Providers::get_label( $default_provider ) )
+								);
+								?>
+							</option>
+							<?php foreach ( $enabled_providers as $slug ) : ?>
+								<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $event_provider, $slug ); ?>>
+									<?php echo esc_html( BLT_Events_Payment_Providers::get_label( $slug ) ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<p class="blt-help"><?php esc_html_e( 'Which processor this event checks out through. Changing it re-syncs the ticket types to the new processor the next time you save; tickets already sold through the old one keep working.', 'blt-events' ); ?></p>
+					</div>
+				</div>
+				<?php endif; ?>
 
 				<div class="blt-config-section">
 					<?php
@@ -1139,6 +1169,19 @@ class BLT_Events_Event_Metabox {
 
 		update_post_meta( $post_id, $prefix . 'waitlist_enabled', isset( $_POST['waitlist_enabled'] ) ? '1' : '0' );
 		update_post_meta( $post_id, $prefix . 'require_approval', isset( $_POST['require_approval'] ) ? '1' : '0' );
+
+		// Per-event payment processor. The field is only rendered when the site
+		// has more than one enabled, so an absent key must leave the stored
+		// value alone rather than silently clearing an event's override.
+		if ( isset( $_POST['payment_provider'] ) ) {
+			$provider = sanitize_text_field( wp_unslash( $_POST['payment_provider'] ) );
+
+			if ( '' === $provider || ! BLT_Events_Payment_Providers::is_enabled( $provider ) ) {
+				delete_post_meta( $post_id, BLT_Events_Payment_Providers::EVENT_META );
+			} else {
+				update_post_meta( $post_id, BLT_Events_Payment_Providers::EVENT_META, $provider );
+			}
+		}
 
 		// Group discount
 		$gd_type   = in_array( $_POST['group_discount_type'] ?? '', array( 'percentage', 'flat' ), true ) ? $_POST['group_discount_type'] : 'percentage';

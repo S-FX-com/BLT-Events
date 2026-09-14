@@ -15,7 +15,10 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 	private static $secret_key;
 
 	public static function init() {
-		if ( ! self::is_active_provider( 'stripe' ) ) {
+		// Enabled, not "selected": the AJAX and webhook endpoints below have to
+		// keep answering for events that still check out through Stripe even
+		// after the site default has moved to another provider.
+		if ( ! self::is_enabled_provider( 'stripe' ) ) {
 			return;
 		}
 
@@ -80,7 +83,10 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 	}
 
 	public static function enqueue_scripts() {
-		if ( ! self::is_active_provider( 'stripe' ) || ! self::is_configured() ) {
+		// Register (not enqueue) whenever some event could check out through
+		// Stripe; the registration shortcode enqueues by handle for the event
+		// it is actually rendering.
+		if ( ! self::is_configured() || ! self::has_events_using( 'stripe' ) ) {
 			return;
 		}
 
@@ -256,20 +262,15 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 	 * Handle a Stripe refund.
 	 */
 	private static function handle_refund( $payment_intent_id ) {
-		global $wpdb;
-
 		$reg_db = new BLT_Events_Registrations_DB();
-		$table  = $reg_db->get_table_name();
 
-		$registration = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE payment_id = %s AND payment_provider = %s LIMIT 1",
-				$payment_intent_id,
-				'stripe'
-			)
-		);
+		// One intent can cover more than one registration; the old LIMIT 1
+		// left every registration after the first still marked as paid.
+		foreach ( $reg_db->get_by_payment( 'stripe', $payment_intent_id ) as $registration ) {
+			if ( 'refunded' === $registration->status ) {
+				continue;
+			}
 
-		if ( $registration ) {
 			BLT_Events_Registrations::update_status( $registration->id, 'refunded' );
 			do_action( 'blt_registration_refunded', $registration->id );
 		}

@@ -7,15 +7,15 @@
 	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
-	background: #ffffff;
+	background: var(--blt-e-surface);
 	border-radius: 12px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+	box-shadow: var(--blt-e-shadow);
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .blt-registration-form h3 {
 	margin: 0 0 1rem;
-	color: #1f2937;
+	color: var(--blt-e-fg);
 	font-size: 1.25rem;
 	font-weight: 600;
 }
@@ -40,10 +40,10 @@
 	align-items: center;
 	gap: 0.5rem;
 	padding-top: 0.6rem;
-	border-top: 3px solid #e5e7eb;
+	border-top: 3px solid var(--blt-e-border);
 	font-size: 0.8rem;
 	font-weight: 600;
-	color: #9ca3af;
+	color: var(--blt-e-fg-subtle);
 	counter-increment: blt-step;
 }
 
@@ -55,30 +55,30 @@
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;
-	background: #e5e7eb;
-	color: #6b7280;
+	background: var(--blt-e-border);
+	color: var(--blt-e-fg-muted);
 	font-size: 0.72rem;
 }
 
 .blt-reg__progress-step.is-current {
-	border-top-color: #6366f1;
-	color: #1f2937;
+	border-top-color: var(--blt-e-primary);
+	color: var(--blt-e-fg);
 }
 
 .blt-reg__progress-step.is-current::before {
-	background: #6366f1;
-	color: #fff;
+	background: var(--blt-e-primary);
+	color: var(--blt-e-surface);
 }
 
 .blt-reg__progress-step.is-done {
-	border-top-color: #6366f1;
-	color: #4b5563;
+	border-top-color: var(--blt-e-primary);
+	color: var(--blt-e-fg-soft);
 }
 
 .blt-reg__progress-step.is-done::before {
 	content: "\2713";
-	background: #6366f1;
-	color: #fff;
+	background: var(--blt-e-primary);
+	color: var(--blt-e-surface);
 }
 
 .blt-reg__step:focus {
@@ -104,30 +104,30 @@
 	font-size: 0.95rem;
 	font-weight: 600;
 	cursor: pointer;
-	border: 1px solid #d1d5db;
-	background: #fff;
-	color: #1f2937;
+	border: 1px solid var(--blt-e-border-strong);
+	background: var(--blt-e-surface);
+	color: var(--blt-e-fg);
 }
 
 .blt-reg__next {
-	border-color: #6366f1;
-	background: #6366f1;
-	color: #fff;
+	border-color: var(--blt-e-primary);
+	background: var(--blt-e-primary);
+	color: var(--blt-e-surface);
 }
 
 .blt-reg__next:hover {
-	background: #4f46e5;
+	background: var(--blt-e-primary-hover);
 }
 
 .blt-reg__back:hover {
-	border-color: #9ca3af;
+	border-color: var(--blt-e-fg-subtle);
 }
 
 /* --- Ticket Selection --- */
 .blt-ticket-selection {
 	margin-bottom: 1.5rem;
 	padding: 1.5rem;
-	background: #f8fafc;
+	background: var(--blt-e-surface-alt);
 	border-radius: 8px;
 }
 
@@ -136,7 +136,7 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 0.875rem 0;
-	border-bottom: 1px solid #e5e7eb;
+	border-bottom: 1px solid var(--blt-e-border);
 	flex-wrap: wrap;
 	gap: 0.5rem;
 }
@@ -147,21 +147,21 @@
 
 .blt-ticket-name {
 	flex: 1;
-	color: #374151;
+	color: var(--blt-e-fg-soft);
 	font-weight: 500;
 	min-width: 120px;
 }
 
 .blt-ticket-desc {
 	flex-basis: 100%;
-	color: #6b7280;
+	color: var(--blt-e-fg-muted);
 	font-size: 0.875rem;
 	order: 10;
 }
 
 .blt-ticket-price {
 	margin: 0 1rem;
-	color: #059669;
+	color: var(--blt-e-success);
 	font-weight: 600;
 	white-space: nowrap;
 }
@@ -175,29 +175,29 @@
 .blt-qty-btn {
 	cursor: pointer;
 	font-size: 18px;
-	background: #fff;
+	background: var(--blt-e-surface);
 	height: 32px;
 	width: 32px;
-	border: 1px solid #d1d5db;
+	border: 1px solid var(--blt-e-border-strong);
 	border-radius: 50%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	transition: border-color 0.15s;
-	color: #374151;
+	color: var(--blt-e-fg-soft);
 	line-height: 1;
 }
 
 .blt-qty-btn:hover {
-	border-color: #6366f1;
-	color: #6366f1;
+	border-color: var(--blt-e-primary);
+	color: var(--blt-e-primary);
 }
 
 .blt-ticket-quantity,
 .sc-ticket-quantity {
 	width: 48px;
 	text-align: center;
-	border: 1px solid #d1d5db;
+	border: 1px solid var(--blt-e-border-strong);
 	border-radius: 6px;
 	height: 32px;
 	font-size: 0.95rem;
@@ -212,10 +212,10 @@
 .blt-total-amount {
 	margin-top: 1rem;
 	padding-top: 0.75rem;
-	border-top: 2px solid #e5e7eb;
+	border-top: 2px solid var(--blt-e-border);
 	text-align: right;
 	font-weight: 600;
-	color: #1f2937;
+	color: var(--blt-e-fg);
 	font-size: 1.25rem;
 }
 
@@ -248,13 +248,13 @@
 .blt-field-wrap label {
 	display: block;
 	margin-bottom: 0.375rem;
-	color: #374151;
+	color: var(--blt-e-fg-soft);
 	font-weight: 500;
 	font-size: 0.95rem;
 }
 
 .blt-required {
-	color: #dc2626;
+	color: var(--blt-e-danger);
 }
 
 .blt-field-wrap input[type="text"],
@@ -267,10 +267,10 @@
 .blt-field-wrap textarea {
 	width: 100%;
 	padding: 0.625rem 0.75rem;
-	border: 1px solid #e5e7eb;
+	border: 1px solid var(--blt-e-border);
 	border-radius: 8px;
 	font-size: 0.95rem;
-	background: #f9fafb;
+	background: var(--blt-e-surface-alt);
 	transition: border-color 0.2s, box-shadow 0.2s;
 	box-sizing: border-box;
 }
@@ -279,8 +279,8 @@
 .blt-field-wrap select:focus,
 .blt-field-wrap textarea:focus {
 	outline: none;
-	border-color: #6366f1;
-	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+	border-color: var(--blt-e-primary);
+	box-shadow: 0 0 0 3px var(--blt-e-focus-glow);
 }
 
 .blt-other-input {
@@ -300,17 +300,17 @@
 .blt-coupon-input input {
 	flex: 1;
 	padding: 0.625rem 0.75rem;
-	border: 1px solid #e5e7eb;
+	border: 1px solid var(--blt-e-border);
 	border-radius: 8px;
 	font-size: 0.95rem;
-	background: #f9fafb;
+	background: var(--blt-e-surface-alt);
 }
 
 .blt-btn-secondary {
 	padding: 0.625rem 1rem;
-	background: #f3f4f6;
-	color: #374151;
-	border: 1px solid #d1d5db;
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-soft);
+	border: 1px solid var(--blt-e-border-strong);
 	border-radius: 8px;
 	font-size: 0.95rem;
 	cursor: pointer;
@@ -319,7 +319,7 @@
 }
 
 .blt-btn-secondary:hover {
-	background: #e5e7eb;
+	background: var(--blt-e-border);
 }
 
 #blt-coupon-message {
@@ -330,15 +330,15 @@
 }
 
 #blt-coupon-message.blt-msg-success {
-	background: #f0fdf4;
-	color: #059669;
-	border: 1px solid #bbf7d0;
+	background: var(--blt-e-success-bg);
+	color: var(--blt-e-success);
+	border: 1px solid var(--blt-e-success-border);
 }
 
 #blt-coupon-message.blt-msg-error {
-	background: #fef2f2;
-	color: #dc2626;
-	border: 1px solid #fecaca;
+	background: var(--blt-e-danger-bg);
+	color: var(--blt-e-danger);
+	border: 1px solid var(--blt-e-danger-border);
 }
 
 /* --- Consent --- */
@@ -355,7 +355,7 @@
 	align-items: flex-start;
 	gap: 0.5rem;
 	font-size: 0.875rem;
-	color: #4b5563;
+	color: var(--blt-e-fg-soft);
 	cursor: pointer;
 }
 
@@ -371,13 +371,13 @@
 
 #blt-card-element {
 	padding: 0.875rem;
-	border: 1px solid #e5e7eb;
+	border: 1px solid var(--blt-e-border);
 	border-radius: 8px;
-	background: #f9fafb;
+	background: var(--blt-e-surface-alt);
 }
 
 #blt-card-errors {
-	color: #dc2626;
+	color: var(--blt-e-danger);
 	font-size: 0.875rem;
 	margin-top: 0.5rem;
 }
@@ -391,15 +391,15 @@
 }
 
 #blt-form-messages.blt-msg-success {
-	background: #f0fdf4;
-	color: #059669;
-	border: 1px solid #bbf7d0;
+	background: var(--blt-e-success-bg);
+	color: var(--blt-e-success);
+	border: 1px solid var(--blt-e-success-border);
 }
 
 #blt-form-messages.blt-msg-error {
-	background: #fef2f2;
-	color: #dc2626;
-	border: 1px solid #fecaca;
+	background: var(--blt-e-danger-bg);
+	color: var(--blt-e-danger);
+	border: 1px solid var(--blt-e-danger-border);
 }
 
 /* --- Submit Button --- */
@@ -411,7 +411,7 @@
 	width: 100%;
 	padding: 0.875rem 1rem;
 	min-height: 48px;
-	background: #6366f1;
+	background: var(--blt-e-primary);
 	color: white;
 	border: none;
 	border-radius: 8px;
@@ -422,17 +422,17 @@
 }
 
 .blt-submit-btn:hover:not(:disabled) {
-	background: #4f46e5;
+	background: var(--blt-e-primary-hover);
 	transform: translateY(-1px);
 }
 
 .blt-submit-btn:focus {
 	outline: none;
-	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+	box-shadow: 0 0 0 3px var(--blt-e-focus-ring);
 }
 
 .blt-submit-btn:disabled {
-	background: #9ca3af;
+	background: var(--blt-e-fg-subtle);
 	cursor: not-allowed;
 	transform: none;
 }
@@ -442,9 +442,9 @@
 	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
-	background: #ffffff;
+	background: var(--blt-e-surface);
 	border-radius: 12px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+	box-shadow: var(--blt-e-shadow);
 }
 
 .blt-checkout-actions {
@@ -454,7 +454,7 @@
 
 .blt-checkout-note {
 	margin-top: 0.5rem;
-	color: #6b7280;
+	color: var(--blt-e-fg-muted);
 	font-size: 0.875rem;
 	font-style: italic;
 }
@@ -468,11 +468,11 @@
 
 .blt-sync-notice {
 	padding: 1.5rem;
-	background: #fffbeb;
-	border: 1px solid #fde68a;
+	background: var(--blt-e-warning-bg);
+	border: 1px solid var(--blt-e-warning-border);
 	border-radius: 8px;
 	text-align: center;
-	color: #92400e;
+	color: var(--blt-e-warning);
 }
 
 /* --- Registration Closed / Sold Out --- */
@@ -480,13 +480,13 @@
 	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
-	background: #f8fafc;
+	background: var(--blt-e-surface-alt);
 	border-radius: 12px;
 	text-align: center;
-	color: #6b7280;
+	color: var(--blt-e-fg-muted);
 }
 
 .blt-error {
-	color: #dc2626;
+	color: var(--blt-e-danger);
 	padding: 1rem;
 }

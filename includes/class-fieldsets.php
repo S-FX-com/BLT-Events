@@ -202,13 +202,24 @@ class BLT_Events_Fieldsets {
 	/**
 	 * Validate submitted form data against a fieldset definition.
 	 *
+	 * @param object $fieldset    The fieldset row.
+	 * @param array  $posted_data Submitted data (unslashed).
+	 * @param bool   $strict      When false, missing required fields are recorded
+	 *                            under `_missing_required` instead of failing the
+	 *                            whole submission. Off-site checkouts (SureCart,
+	 *                            FluentCart) collect only the buyer's name and
+	 *                            email, so a fieldset with any other required
+	 *                            field would otherwise reject every paid order
+	 *                            after the money has already been taken. Type
+	 *                            validation and sanitizing still apply either way.
 	 * @return array|WP_Error Sanitized data array on success, WP_Error on failure.
 	 */
-	public static function validate_submission( $fieldset, $posted_data ) {
+	public static function validate_submission( $fieldset, $posted_data, $strict = true ) {
 		$fields = self::get_fields( $fieldset );
 		$consent_fields = self::get_consent_fields( $fieldset );
 		$errors = array();
 		$clean  = array();
+		$missing = array();
 
 		foreach ( $fields as $field ) {
 			$key   = $field['key'];
@@ -223,7 +234,13 @@ class BLT_Events_Fieldsets {
 
 			// Required check
 			if ( ! empty( $field['required'] ) && $value === '' ) {
-				$errors[] = sprintf( __( '%s is required.', 'blt-events' ), $field['label'] );
+				if ( $strict ) {
+					$errors[] = sprintf( __( '%s is required.', 'blt-events' ), $field['label'] );
+					continue;
+				}
+
+				$missing[]     = $field['label'];
+				$clean[ $key ] = '';
 				continue;
 			}
 
@@ -262,7 +279,11 @@ class BLT_Events_Fieldsets {
 			$cv = ! empty( $posted_data[ $ck ] );
 
 			if ( ! empty( $cf['required'] ) && ! $cv ) {
-				$errors[] = sprintf( __( 'You must accept: %s', 'blt-events' ), wp_strip_all_tags( $cf['label'] ) );
+				if ( $strict ) {
+					$errors[] = sprintf( __( 'You must accept: %s', 'blt-events' ), wp_strip_all_tags( $cf['label'] ) );
+				} else {
+					$missing[] = wp_strip_all_tags( $cf['label'] );
+				}
 			}
 
 			$clean['_consents'][ $cf['key'] ] = $cv;
@@ -274,6 +295,13 @@ class BLT_Events_Fieldsets {
 				$wp_error->add( 'validation_error', $msg );
 			}
 			return $wp_error;
+		}
+
+		// Lenient mode: tell the caller what still has to be collected so the
+		// registration can be flagged for follow-up rather than silently
+		// stored as complete.
+		if ( ! empty( $missing ) ) {
+			$clean['_missing_required'] = $missing;
 		}
 
 		return $clean;

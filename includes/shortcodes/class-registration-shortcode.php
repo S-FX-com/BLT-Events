@@ -62,7 +62,9 @@ class BLT_Events_Registration_Shortcode {
 			}
 		}
 
-		$provider = BLT_Events_Helpers::get_payment_provider();
+		// Per event, not per site: with several providers enabled, two events
+		// on the same site can check out through different processors.
+		$provider = BLT_Events_Helpers::get_event_payment_provider( $event_id );
 
 		// Route to appropriate renderer
 		if ( $provider === 'surecart' ) {
@@ -262,7 +264,7 @@ class BLT_Events_Registration_Shortcode {
 		ob_start();
 		?>
 		<div class="blt-surecart-form" data-event-id="<?php echo esc_attr( $event_id ); ?>">
-			<?php if ( ! $all_synced ) : ?>
+			<?php if ( ! $all_synced || ! BLT_Events_SureCart_Integration::is_configured() ) : ?>
 				<div class="blt-sync-notice">
 					<p><?php esc_html_e( 'Tickets for this event are being set up. Please check back shortly.', 'blt-events' ); ?></p>
 				</div>

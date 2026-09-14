@@ -9,12 +9,12 @@
    ======================================== */
 
 .blt-event {
-	--blt-event-accent: #111827;
-	--blt-event-link: #2271b1;
-	--blt-event-border: rgba(0, 0, 0, 0.12);
-	--blt-event-muted: #6b7280;
+	--blt-event-accent: var(--blt-e-fg-strong);
+	--blt-event-link: var(--blt-e-link);
+	--blt-event-border: var(--blt-e-border-subtle);
+	--blt-event-muted: var(--blt-e-fg-muted);
 	--blt-event-radius: 10px;
-	color: #1f2937;
+	color: var(--blt-e-fg);
 }
 
 /* --- Featured image --- */
@@ -62,17 +62,17 @@
 .blt-event__category {
 	display: inline-block;
 	padding: 0.2rem 0.6rem;
-	background: #f0f0f1;
+	background: var(--blt-e-surface-alt);
 	border-radius: 4px;
 	font-size: 0.75rem;
 	font-weight: 600;
-	color: #374151;
+	color: var(--blt-e-fg-soft);
 	text-decoration: none;
 }
 
 .blt-event__category:hover {
-	background: #e2e3e5;
-	color: #111827;
+	background: var(--blt-e-border);
+	color: var(--blt-e-fg-strong);
 }
 
 /* --- Title & description --- */
@@ -255,7 +255,7 @@
 	gap: 0.4rem;
 	padding: 0.6rem 1.1rem;
 	background: var(--blt-event-accent);
-	color: #fff;
+	color: var(--blt-e-surface);
 	border-radius: 6px;
 	font-size: 0.85rem;
 	font-weight: 600;
@@ -266,7 +266,7 @@
 
 .blt-event__cta-button:hover,
 .blt-event__cta-button:focus {
-	color: #fff;
+	color: var(--blt-e-surface);
 	opacity: 0.88;
 }
 
@@ -276,7 +276,7 @@
 	margin: 0 0 0.75rem;
 	font-size: 0.9rem;
 	line-height: 1.5;
-	color: #374151;
+	color: var(--blt-e-fg-soft);
 }
 
 .blt-event__virtual-link {

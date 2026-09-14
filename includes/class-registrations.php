@@ -99,37 +99,79 @@ class BLT_Events_Registrations {
 	/**
 	 * Process a new registration.
 	 *
+	 * Two callers with very different trust models share this method:
+	 *
+	 *  - The on-site form (AJAX / Stripe), where nothing has been charged yet.
+	 *    Every guard is fatal: rejecting the submission costs the visitor
+	 *    nothing but a re-try.
+	 *  - An off-site checkout webhook (SureCart, FluentCart), where the buyer
+	 *    has already been charged. Here a fatal guard would mean money taken
+	 *    with no registration and nothing surfaced to anyone, so the guards
+	 *    instead record the registration as `pending`, attach the reason, and
+	 *    fire `blt_registration_needs_review` for an admin to resolve.
+	 *
 	 * @param int   $event_id The event post ID.
 	 * @param array $data     Submitted form data.
-	 * @param array $payment  Optional payment data (provider, id, amount, date).
+	 * @param array $payment  Optional payment data. Recognised keys: `provider`,
+	 *                        `payment_id`, `payment_date`, `amount_paid`, and
+	 *                        `line_items` (an array of `index`/`quantity` pairs
+	 *                        resolved from the order by the provider).
 	 * @return array|WP_Error Registration result array or WP_Error.
 	 */
 	public static function process_registration( $event_id, $data, $payment = array() ) {
+		// Money already captured off-site: from here on, no guard may drop the
+		// order on the floor.
+		$captured = ! empty( $payment['payment_id'] );
+		$review   = array();
+
 		// The registration cutoff is also enforced server-side so stale or
 		// hand-crafted submissions can't slip in after it passes.
 		if ( BLT_Events_Helpers::registration_cutoff_passed( $event_id ) ) {
-			return new WP_Error( 'registration_closed', __( 'Registration for this event has closed.', 'blt-events' ) );
+			if ( ! $captured ) {
+				return new WP_Error( 'registration_closed', __( 'Registration for this event has closed.', 'blt-events' ) );
+			}
+			$review[] = __( 'Payment was taken after the registration cutoff had passed.', 'blt-events' );
 		}
 
 		// Get event fieldset and validate
 		$fieldset = BLT_Events_Fieldsets::get_event_fieldset( $event_id );
 		if ( ! $fieldset ) {
-			return new WP_Error( 'no_fieldset', __( 'No fieldset configured for this event.', 'blt-events' ) );
+			if ( ! $captured ) {
+				return new WP_Error( 'no_fieldset', __( 'No fieldset configured for this event.', 'blt-events' ) );
+			}
+			$validated = self::minimal_registrant_data( $data );
+			$review[]  = __( 'No fieldset is configured for this event, so only the buyer name and email were captured.', 'blt-events' );
+		} else {
+			// Validate primary registrant data. An off-site checkout only ever
+			// returns a name and an email, so required fields it could not have
+			// collected are flagged rather than treated as a failed submission.
+			$validated = BLT_Events_Fieldsets::validate_submission( $fieldset, $data, ! $captured );
+			if ( is_wp_error( $validated ) ) {
+				return $validated;
+			}
+
+			if ( ! empty( $validated['_missing_required'] ) ) {
+				$review[] = sprintf(
+					/* translators: %s: comma-separated list of field labels. */
+					__( 'Still to be collected from the attendee: %s.', 'blt-events' ),
+					implode( ', ', $validated['_missing_required'] )
+				);
+			}
 		}
 
-		// Validate primary registrant data
-		$validated = BLT_Events_Fieldsets::validate_submission( $fieldset, $data );
-		if ( is_wp_error( $validated ) ) {
-			return $validated;
-		}
+		// What was actually bought. For an off-site checkout the order is the
+		// authoritative record, so the provider resolves the line items and the
+		// prices are read back from event meta here.
+		$ticket_data = ( isset( $payment['line_items'] ) && is_array( $payment['line_items'] ) )
+			? self::ticket_selections_from_line_items( $event_id, $payment['line_items'] )
+			: self::parse_ticket_selections( $event_id, $data );
+
+		$total_attendees = $ticket_data['total_quantity'];
 
 		// Check capacity (under an advisory lock so concurrent submissions
 		// cannot oversell the last spots).
 		global $wpdb;
-		$capacity = (int) get_post_meta( $event_id, '_blt_capacity', true );
-		$ticket_data = self::parse_ticket_selections( $event_id, $data );
-		$total_attendees = $ticket_data['total_quantity'];
-
+		$capacity  = (int) get_post_meta( $event_id, '_blt_capacity', true );
 		$lock_name = 'blt_events_reg_' . $event_id;
 		$locked    = false;
 
@@ -138,24 +180,45 @@ class BLT_Events_Registrations {
 
 			$current_count = self::$reg_db->get_event_registration_count( $event_id );
 			if ( ( $current_count + $total_attendees ) > $capacity ) {
-				if ( $locked ) {
-					$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+				if ( ! $captured ) {
+					if ( $locked ) {
+						$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+					}
+					return new WP_Error( 'capacity_exceeded', __( 'Sorry, there are not enough spots available.', 'blt-events' ) );
 				}
-				return new WP_Error( 'capacity_exceeded', __( 'Sorry, there are not enough spots available.', 'blt-events' ) );
+				$review[] = __( 'The event was already at capacity when this payment completed; it may need a refund or a raised capacity.', 'blt-events' );
 			}
 		}
 
 		// Duplicate check
 		$email = $validated['email'] ?? '';
 		if ( $email && self::$reg_db->email_registered_for_event( $email, $event_id ) ) {
-			if ( $locked ) {
-				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+			if ( ! $captured ) {
+				if ( $locked ) {
+					$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+				}
+				return new WP_Error( 'duplicate_registration', __( 'This email is already registered for this event.', 'blt-events' ) );
 			}
-			return new WP_Error( 'duplicate_registration', __( 'This email is already registered for this event.', 'blt-events' ) );
+			$review[] = __( 'This email already had a registration for this event when the payment completed.', 'blt-events' );
 		}
 
 		// Calculate pricing
 		$pricing = self::calculate_total( $event_id, $ticket_data, $data );
+
+		// What the processor actually captured always wins over what the
+		// plugin recomputes: the provider may have applied its own coupon,
+		// tax or currency rounding that this side knows nothing about.
+		$amount_paid = isset( $payment['amount_paid'] )
+			? round( (float) $payment['amount_paid'], 2 )
+			: $pricing['total'];
+
+		// Keep the stored figures coherent, so subtotal minus discount always
+		// equals what was paid. A cart-side coupon this plugin never saw would
+		// otherwise show as a full-price order with a zero discount.
+		$discount = $pricing['discount'];
+		if ( $captured && $amount_paid < $pricing['subtotal'] ) {
+			$discount = round( $pricing['subtotal'] - $amount_paid, 2 );
+		}
 
 		// Build customer name
 		$customer_name = trim( ( $validated['first_name'] ?? '' ) . ' ' . ( $validated['last_name'] ?? '' ) );
@@ -164,10 +227,10 @@ class BLT_Events_Registrations {
 		$group_id = $total_attendees > 1 ? BLT_Events_Helpers::generate_group_id() : null;
 
 		// Determine status
-		$is_free = $pricing['total'] <= 0;
+		$is_free = $pricing['total'] <= 0 && $amount_paid <= 0;
 		$status  = $is_free ? 'confirmed' : 'pending';
 
-		if ( ! empty( $payment['payment_id'] ) ) {
+		if ( $captured ) {
 			$status = 'confirmed';
 		}
 
@@ -175,6 +238,13 @@ class BLT_Events_Registrations {
 		// pending until an admin confirms it.
 		if ( get_post_meta( $event_id, '_blt_require_approval', true ) === '1' ) {
 			$status = 'pending';
+		}
+
+		// Anything flagged above is held back from the confirmed count until
+		// an admin has looked at it.
+		if ( ! empty( $review ) ) {
+			$status = 'pending';
+			$validated['_review'] = $review;
 		}
 
 		// Insert registration
@@ -187,12 +257,12 @@ class BLT_Events_Registrations {
 			'attendee_count'  => $total_attendees,
 			'custom_fields'   => wp_json_encode( $validated ),
 			'total_amount'    => $pricing['subtotal'],
-			'discount_amount' => $pricing['discount'],
-			'amount_paid'     => $pricing['total'],
+			'discount_amount' => $discount,
+			'amount_paid'     => $amount_paid,
 			'currency'        => get_option( 'blt_events_currency', 'USD' ),
 			'coupon_id'       => $pricing['coupon_id'] ?? null,
 			'coupon_data'     => ! empty( $pricing['coupon_data'] ) ? wp_json_encode( $pricing['coupon_data'] ) : null,
-			'payment_provider' => $payment['provider'] ?? ( $is_free ? 'free' : BLT_Events_Helpers::get_payment_provider() ),
+			'payment_provider' => $payment['provider'] ?? ( $is_free ? 'free' : BLT_Events_Helpers::get_event_payment_provider( $event_id ) ),
 			'payment_id'      => $payment['payment_id'] ?? null,
 			'payment_date'    => $payment['payment_date'] ?? ( $is_free ? current_time( 'mysql' ) : null ),
 			'status'          => $status,
@@ -221,12 +291,100 @@ class BLT_Events_Registrations {
 			'registration_id' => $registration_id,
 			'group_id'        => $group_id,
 			'total'           => $pricing['total'],
+			'amount_paid'     => $amount_paid,
 			'status'          => $status,
+			'review'          => $review,
 		);
 
 		do_action( 'blt_registration_created', $registration_id, $result );
 
+		if ( ! empty( $review ) ) {
+			/**
+			 * Fires when a registration was recorded but needs an admin to
+			 * look at it — typically a completed off-site payment that failed
+			 * one of the normal registration guards.
+			 *
+			 * @param int   $registration_id The new registration ID.
+			 * @param array $review          Human-readable reasons.
+			 * @param array $result          The registration result array.
+			 */
+			do_action( 'blt_registration_needs_review', $registration_id, $review, $result );
+		}
+
 		return $result;
+	}
+
+	/**
+	 * Fallback registrant data for a captured payment on an event with no
+	 * fieldset at all. Mirrors the keys the rest of the pipeline reads.
+	 */
+	private static function minimal_registrant_data( $data ) {
+		return array(
+			'first_name'    => sanitize_text_field( $data['first_name'] ?? '' ),
+			'last_name'     => sanitize_text_field( $data['last_name'] ?? '' ),
+			'email'         => sanitize_email( $data['email'] ?? '' ),
+			'mobile_number' => BLT_Events_Helpers::sanitize_phone( $data['mobile_number'] ?? '' ),
+			'_consents'     => array(),
+		);
+	}
+
+	/**
+	 * Build ticket selections from provider-resolved order line items.
+	 *
+	 * Deliberately reads the full ticket list rather than
+	 * `available_ticket_types()`: the sale-window and role filters exist to
+	 * gate what a visitor may put in a cart, and by the time a webhook runs
+	 * there is no visitor session to evaluate roles against. Filtering here
+	 * would silently drop legitimate member-only purchases and undercount a
+	 * sale that closed between checkout and confirmation. Names and prices
+	 * still come from event meta, never from the request.
+	 *
+	 * @param int   $event_id   The event post ID.
+	 * @param array $line_items Array of arrays with `index` and `quantity`.
+	 * @return array Ticket data in the shape parse_ticket_selections() returns.
+	 */
+	private static function ticket_selections_from_line_items( $event_id, $line_items ) {
+		$ticket_types = BLT_Events_Helpers::get_ticket_types( $event_id );
+
+		$selections     = array();
+		$total_quantity = 0;
+		$total_price    = 0;
+
+		foreach ( $line_items as $item ) {
+			if ( ! is_array( $item ) || ! isset( $item['index'] ) ) {
+				continue;
+			}
+
+			$index = (int) $item['index'];
+			if ( ! isset( $ticket_types[ $index ] ) ) {
+				continue;
+			}
+
+			$ticket   = $ticket_types[ $index ];
+			$quantity = isset( $item['quantity'] ) ? max( 1, (int) $item['quantity'] ) : 1;
+			$price    = isset( $ticket['price'] ) ? (float) $ticket['price'] : 0;
+
+			$selections[] = array(
+				'index'    => $index,
+				'name'     => $ticket['name'] ?? __( 'Ticket', 'blt-events' ),
+				'price'    => $price,
+				'quantity' => $quantity,
+			);
+
+			$total_quantity += $quantity;
+			$total_price    += $price * $quantity;
+		}
+
+		// Fallback: single attendee if the order carried nothing we recognise.
+		if ( 0 === $total_quantity ) {
+			$total_quantity = 1;
+		}
+
+		return array(
+			'selections'     => $selections,
+			'total_quantity' => $total_quantity,
+			'subtotal'       => $total_price,
+		);
 	}
 
 	/**
@@ -378,6 +536,33 @@ class BLT_Events_Registrations {
 					'custom_fields'  => isset( $att['custom_fields'] ) ? wp_json_encode( $att['custom_fields'] ) : null,
 				);
 			}
+		}
+
+		// Seat map: one entry per purchased seat, in selection order, so a seat
+		// can be labelled with the ticket type it was actually sold under.
+		$seats = array();
+		foreach ( $ticket_data['selections'] as $selection ) {
+			for ( $n = 0; $n < (int) $selection['quantity']; $n++ ) {
+				$seats[] = $selection;
+			}
+		}
+
+		// An off-site checkout buys N seats in one transaction without ever
+		// collecting the other attendees' details, and an on-site group booking
+		// may simply leave some blank. Fill the remainder with placeholder rows
+		// so the attendee list always matches attendee_count and the gaps are
+		// visible to whoever has to chase them.
+		for ( $i = count( $attendees ); $i < (int) $ticket_data['total_quantity']; $i++ ) {
+			$seat = isset( $seats[ $i ] ) ? $seats[ $i ] : null;
+
+			$attendees[] = array(
+				'attendee_name'  => '',
+				'attendee_email' => '',
+				'attendee_phone' => '',
+				'ticket_type'    => $seat ? $seat['name'] : null,
+				'ticket_price'   => $seat ? $seat['price'] : 0,
+				'custom_fields'  => null,
+			);
 		}
 
 		return $attendees;
