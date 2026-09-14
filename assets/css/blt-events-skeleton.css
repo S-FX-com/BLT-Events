@@ -1,0 +1,71 @@
+/* ========================================
+   BLT Events - Skeleton mode
+   ========================================
+
+   Loads after blt-events-tokens.css and re-points every token at the
+   variables your framework already defines, so the plugin inherits the
+   site's palette, radii, shadows and type instead of shipping its own.
+   Layout and structure stay exactly as they are — only the look changes.
+
+   Each token walks a fallback chain: the framework's variable first, then
+   a more generic name, then the plugin's own baked value last. So this file
+   is safe on a site with no framework at all — nothing goes unstyled, it
+   simply falls through to the defaults.
+
+   The chains below are aimed at Automatic.css (ACSS) with common generic
+   names behind it. To target a different framework, redefine the tokens in
+   your own stylesheet: yours load later and win, and you only have to name
+   the ones that differ.
+   ---------------------------------------- */
+
+:root {
+	/* --- Brand --- */
+	--blt-e-primary: var(--primary, var(--action, var(--wp--preset--color--primary, #6366f1)));
+	--blt-e-primary-hover: var(--primary-hover, var(--primary-dark, var(--action-hover, #4f46e5)));
+	--blt-e-primary-tint: var(--primary-ultra-light, var(--primary-light, #f0f0ff));
+	--blt-e-on-primary: var(--primary-contrast, var(--white, #ffffff));
+
+	--blt-e-link: var(--link-color, var(--primary, #6366f1));
+	--blt-e-link-hover: var(--link-color-hover, var(--primary-hover, #4f46e5));
+
+	/* --- Text --- */
+	--blt-e-fg-strong: var(--heading-color, var(--h1-color, var(--text-dark, #111827)));
+	--blt-e-fg: var(--text-color, var(--body-color, var(--text, #1f2937)));
+	--blt-e-fg-soft: var(--text-color, var(--body-color, #374151));
+	--blt-e-fg-muted: var(--text-muted, var(--neutral-medium, var(--base-dark, #6b7280)));
+	--blt-e-fg-subtle: var(--text-subtle, var(--neutral-light, var(--base-medium, #9ca3af)));
+
+	/* --- Surfaces --- */
+	--blt-e-surface: var(--card-background, var(--base-ultra-light, var(--white, #ffffff)));
+	--blt-e-surface-alt: var(--base-ultra-light, var(--neutral-ultra-light, #f9fafb));
+	--blt-e-surface-sunken: var(--base-light, var(--neutral-light, #f3f4f6));
+
+	/* --- Lines --- */
+	--blt-e-border: var(--border-color, var(--base-light, #e5e7eb));
+	--blt-e-border-strong: var(--border-color-dark, var(--base-medium, #d1d5db));
+	--blt-e-border-subtle: var(--border-color, rgba(0, 0, 0, 0.12));
+
+	/* --- Status --- */
+	--blt-e-success: var(--success, #059669);
+	--blt-e-danger: var(--danger, var(--error, #dc2626));
+	--blt-e-warning: var(--warning, #92400e);
+
+	/* --- Shape --- */
+	--blt-e-radius-sm: var(--radius-s, var(--radius-sm, var(--radius, 6px)));
+	--blt-e-radius: var(--radius-m, var(--radius, 10px));
+	--blt-e-radius-lg: var(--radius-l, var(--radius-lg, var(--radius, 12px)));
+
+	/* --- Depth --- */
+	--blt-e-shadow-sm: var(--box-shadow-s, var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.08)));
+	--blt-e-shadow: var(--box-shadow-m, var(--shadow, 0 4px 6px rgba(0, 0, 0, 0.07)));
+	--blt-e-shadow-lg: var(--box-shadow-l, var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.1)));
+
+	/* --- Type --- */
+	/* `inherit` last, not a stack: in skeleton mode the site's own body font
+	   is the right answer when the framework names no variable. */
+	--blt-e-font: var(--body-font, var(--font-body, inherit));
+	--blt-e-font-heading: var(--heading-font, var(--font-heading, var(--body-font, inherit)));
+
+	/* --- Layout --- */
+	--blt-e-content-width: var(--content-width, var(--width-content, 960px));
+}

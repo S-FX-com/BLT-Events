@@ -110,6 +110,7 @@ spl_autoload_register( function ( $class ) {
 		// Admin
 		'admin'                  => 'includes/admin/class-admin.php',
 		'admin-settings'         => 'includes/admin/class-admin-settings.php',
+		'setup'                  => 'includes/admin/class-setup.php',
 		'event-metabox'          => 'includes/admin/class-event-metabox.php',
 		'fieldset-builder'       => 'includes/admin/class-fieldset-builder.php',
 		'registrations-list'     => 'includes/admin/class-registrations-list.php',
@@ -117,6 +118,7 @@ spl_autoload_register( function ( $class ) {
 		'registration-shortcode' => 'includes/shortcodes/class-registration-shortcode.php',
 		'calendar-shortcode'     => 'includes/shortcodes/class-calendar-shortcode.php',
 		// Front end
+		'appearance'             => 'includes/frontend/class-appearance.php',
 		'single-event'           => 'includes/frontend/class-single-event.php',
 		'presenters'             => 'includes/frontend/class-presenters.php',
 		// REST API
@@ -168,6 +170,7 @@ function blt_events_init() {
 	// the metabox has written the event's provider (10) and after the provider
 	// product syncs (20), so it never re-caches the pre-save answer.
 	add_action( 'save_post_event', array( 'BLT_Events_Payment_Provider', 'flush_usage_cache' ), 25 );
+	add_action( 'save_post_event', array( 'BLT_Events_Setup', 'flush_cache' ), 25 );
 	add_action( 'update_option_' . BLT_Events_Payment_Providers::OPTION_DEFAULT, array( 'BLT_Events_Payment_Provider', 'flush_usage_cache' ) );
 	add_action( 'update_option_' . BLT_Events_Payment_Providers::OPTION_ENABLED, array( 'BLT_Events_Payment_Provider', 'flush_usage_cache' ) );
 
@@ -178,6 +181,7 @@ function blt_events_init() {
 	if ( is_admin() ) {
 		BLT_Events_Admin::init();
 		BLT_Events_Admin_Settings::init();
+		BLT_Events_Setup::init();
 		BLT_Events_Event_Metabox::init();
 		BLT_Events_Fieldset_Builder::init();
 		BLT_Events_Registrations_List::init();
@@ -186,6 +190,10 @@ function blt_events_init() {
 	// Shortcodes
 	BLT_Events_Registration_Shortcode::init();
 	BLT_Events_Calendar_Shortcode::init();
+
+	// Front-end styling mode and design tokens (registers the layer every
+	// other plugin stylesheet depends on, so it boots before them).
+	BLT_Events_Appearance::init();
 
 	// Front-end single event view
 	BLT_Events_Single_Event::init();
@@ -231,10 +239,13 @@ function blt_events_should_enqueue_assets() {
 function blt_events_enqueue_public_assets() {
 	// Always register so shortcodes rendered outside post content
 	// (widgets, page-builder templates) can late-enqueue by handle.
+	// The token layer is a dependency, not an assumption: it guarantees the
+	// custom properties exist before this stylesheet reads them, whichever
+	// view happens to enqueue first.
 	wp_register_style(
 		'blt-events',
 		BLT_EVENTS_PLUGIN_URL . 'assets/css/blt-events.css',
-		array(),
+		BLT_Events_Appearance::style_deps(),
 		BLT_EVENTS_VERSION
 	);
 
@@ -254,7 +265,9 @@ function blt_events_enqueue_public_assets() {
 	));
 
 	if ( blt_events_should_enqueue_assets() ) {
-		wp_enqueue_style( 'blt-events' );
+		if ( BLT_Events_Appearance::styles_enabled() ) {
+			wp_enqueue_style( 'blt-events' );
+		}
 		wp_enqueue_script( 'blt-events' );
 	}
 }

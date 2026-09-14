@@ -34,8 +34,15 @@ class BLT_Events_Calendar_Shortcode {
 
 		$view = self::resolve_view( $atts );
 
-		wp_enqueue_style( 'blt-events' );
-		wp_enqueue_style( 'blt-events-calendar', BLT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css', array(), BLT_EVENTS_VERSION );
+		if ( BLT_Events_Appearance::styles_enabled() ) {
+			wp_enqueue_style( 'blt-events' );
+			wp_enqueue_style(
+				'blt-events-calendar',
+				BLT_EVENTS_PLUGIN_URL . 'assets/css/calendar.css',
+				BLT_Events_Appearance::style_deps(),
+				BLT_EVENTS_VERSION
+			);
+		}
 
 		if ( 'calendar' === $view ) {
 			return self::render_month_view( $atts );

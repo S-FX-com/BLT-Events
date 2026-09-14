@@ -24,6 +24,7 @@ class BLT_Events_Admin_Settings {
 	public static function tabs() {
 		return array(
 			'general'      => __( 'General', 'blt-events' ),
+			'appearance'   => __( 'Appearance', 'blt-events' ),
 			'payments'     => __( 'Payments', 'blt-events' ),
 			'emails'       => __( 'Emails', 'blt-events' ),
 			'integrations' => __( 'Integrations', 'blt-events' ),
@@ -63,9 +64,12 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_general', 'blt_events_currency_symbol_custom', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_currency_symbol' ),
 		) );
-		register_setting( 'blt_events_settings_general', 'blt_events_single_styles', array(
-			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
-		) );
+		// blt_events_single_styles is deliberately NOT registered any more. It
+		// is a legacy option, read only to seed the new styling mode on an
+		// upgrade. Leaving it in this group would be actively harmful: the
+		// field no longer renders, and options.php writes null for every
+		// registered option missing from the POST — so saving the General tab
+		// would clear it and read back as "styles off".
 		register_setting( 'blt_events_settings_general', 'blt_events_events_page_id', array(
 			'sanitize_callback' => 'absint',
 		) );
@@ -74,6 +78,28 @@ class BLT_Events_Admin_Settings {
 		) );
 		register_setting( 'blt_events_settings_general', 'blt_events_google_maps_api_key', array(
 			'sanitize_callback' => 'sanitize_text_field',
+		) );
+
+		// --- Appearance ---
+		register_setting( 'blt_events_settings_appearance', BLT_Events_Appearance::OPTION_MODE, array(
+			'sanitize_callback' => array( 'BLT_Events_Appearance', 'sanitize_mode' ),
+			'default'           => 'full',
+		) );
+		register_setting( 'blt_events_settings_appearance', BLT_Events_Appearance::OPTION_PRIMARY, array(
+			'sanitize_callback' => array( 'BLT_Events_Appearance', 'sanitize_hex' ),
+			'default'           => '',
+		) );
+		register_setting( 'blt_events_settings_appearance', BLT_Events_Appearance::OPTION_RADIUS, array(
+			'sanitize_callback' => array( 'BLT_Events_Appearance', 'sanitize_radius' ),
+			'default'           => '',
+		) );
+		register_setting( 'blt_events_settings_appearance', BLT_Events_Appearance::OPTION_FONT, array(
+			'sanitize_callback' => array( 'BLT_Events_Appearance', 'sanitize_font' ),
+			'default'           => '',
+		) );
+		register_setting( 'blt_events_settings_appearance', BLT_Events_Appearance::OPTION_WIDTH, array(
+			'sanitize_callback' => array( 'BLT_Events_Appearance', 'sanitize_width' ),
+			'default'           => '',
 		) );
 
 		// --- Payments ---
@@ -430,6 +456,9 @@ class BLT_Events_Admin_Settings {
 			<div class="blt-settings-body">
 				<?php
 				switch ( $current ) {
+					case 'appearance':
+						self::render_tab_appearance();
+						break;
 					case 'payments':
 						self::render_tab_payments();
 						break;
@@ -456,6 +485,8 @@ class BLT_Events_Admin_Settings {
 	 * ------------------------------------------------------------------ */
 
 	private static function render_tab_general() {
+		self::render_setup_feedback();
+		BLT_Events_Setup::render_card();
 		?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'blt_events_settings_general' ); ?>
@@ -607,26 +638,218 @@ class BLT_Events_Admin_Settings {
 			<div class="blt-card">
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Front-End Styling', 'blt-events' ); ?></h2>
-					<p><?php esc_html_e( 'Controls whether the plugin ships its own CSS for the single event page.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<p class="blt-field-desc">
+						<?php
+						printf(
+							/* translators: %s: link to the Appearance tab. */
+							esc_html__( 'Styling now covers the whole front end, not just the event page. It moved to %s.', 'blt-events' ),
+							'<a href="' . esc_url( self::tab_url( 'appearance' ) ) . '">' . esc_html__( 'the Appearance tab', 'blt-events' ) . '</a>'
+						);
+						?>
+					</p>
+				</div>
+			</div>
+
+			<?php self::render_save_button(); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Result of a one-click setup action, on the redirect back.
+	 */
+	private static function render_setup_feedback() {
+		$result = isset( $_GET['blt-setup'] ) ? sanitize_key( wp_unslash( $_GET['blt-setup'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( '' === $result ) {
+			return;
+		}
+
+		$messages = array(
+			'page-created' => array( 'success', __( 'Events page created and selected below.', 'blt-events' ) ),
+			'page-failed'  => array( 'error', __( 'The events page could not be created. Add a page with the [blt_events_calendar] shortcode yourself, then select it below.', 'blt-events' ) ),
+		);
+
+		if ( ! isset( $messages[ $result ] ) ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-%1$s"><p>%2$s</p></div>',
+			esc_attr( $messages[ $result ][0] ),
+			esc_html( $messages[ $result ][1] )
+		);
+	}
+
+	/* --------------------------------------------------------------------
+	 * Tab: Appearance
+	 * ------------------------------------------------------------------ */
+
+	private static function render_tab_appearance() {
+		$mode    = BLT_Events_Appearance::get_mode();
+		$primary = BLT_Events_Appearance::get_primary();
+		$radius  = (string) get_option( BLT_Events_Appearance::OPTION_RADIUS, '' );
+		$font    = (string) get_option( BLT_Events_Appearance::OPTION_FONT, '' );
+		$width   = (string) get_option( BLT_Events_Appearance::OPTION_WIDTH, '' );
+
+		$modes = array(
+			'full'     => array(
+				'name' => __( 'Styled', 'blt-events' ),
+				'desc' => __( 'The plugin brings its own design. Nothing to set up — it looks finished on any theme.', 'blt-events' ),
+			),
+			'skeleton' => array(
+				'name' => __( 'Skeleton', 'blt-events' ),
+				'desc' => __( 'Keeps the layout, but takes colours, radii, shadows and fonts from your framework (ACSS, your theme).', 'blt-events' ),
+			),
+			'off'      => array(
+				'name' => __( 'No CSS', 'blt-events' ),
+				'desc' => __( 'Loads no front-end stylesheet at all. You style the BEM markup entirely yourself.', 'blt-events' ),
+			),
+		);
+		?>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'blt_events_settings_appearance' ); ?>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Styling Mode', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'How much of its own design the plugin brings to the front end. This applies everywhere: the calendar, the single event page and the registration form.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<div class="blt-select-cards" role="radiogroup" aria-label="<?php esc_attr_e( 'Styling mode', 'blt-events' ); ?>">
+						<?php foreach ( $modes as $value => $option ) : ?>
+							<label class="blt-select-card <?php echo $mode === $value ? 'is-selected' : ''; ?>">
+								<input type="radio" name="<?php echo esc_attr( BLT_Events_Appearance::OPTION_MODE ); ?>" value="<?php echo esc_attr( $value ); ?>" <?php checked( $mode, $value ); ?> data-blt-style-mode />
+								<span class="blt-select-card-check" aria-hidden="true"></span>
+								<span class="blt-select-card-name"><?php echo esc_html( $option['name'] ); ?></span>
+								<span class="blt-select-card-desc"><?php echo esc_html( $option['desc'] ); ?></span>
+							</label>
+						<?php endforeach; ?>
+					</div>
+
+					<p class="blt-field-desc">
+						<?php esc_html_e( 'Every value the plugin draws with is a CSS custom property prefixed --blt-e-. Whichever mode you pick, you can redefine any of them from your own stylesheet — no !important needed.', 'blt-events' ); ?>
+					</p>
+				</div>
+			</div>
+
+			<div class="blt-card" data-blt-style-panel <?php echo 'off' === $mode ? 'style="display:none;"' : ''; ?>>
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Overrides', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'Leave a field blank to keep what the mode above already gives you. Anything set here wins over both.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
 					<?php
 					self::render_field(
-						__( 'Single Event Styles', 'blt-events' ),
-						function () {
+						__( 'Accent Colour', 'blt-events' ),
+						function () use ( $primary ) {
 							?>
-							<label class="blt-toggle">
-								<input type="checkbox" name="blt_events_single_styles" value="1" <?php checked( get_option( 'blt_events_single_styles', '1' ), '1' ); ?> />
-								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
-								<span class="blt-toggle-text">
-									<span class="blt-toggle-label"><?php esc_html_e( 'Load the plugin\'s single event styling', 'blt-events' ); ?></span>
-									<span class="blt-toggle-desc"><?php esc_html_e( 'Turn off to style the event page entirely with your theme or framework (e.g. ACSS). The markup keeps its BEM class names either way.', 'blt-events' ); ?></span>
-								</span>
-							</label>
+							<input
+								type="text"
+								name="<?php echo esc_attr( BLT_Events_Appearance::OPTION_PRIMARY ); ?>"
+								value="<?php echo esc_attr( $primary ); ?>"
+								class="regular-text blt-color-field"
+								placeholder="#6366f1"
+								data-blt-preview-primary />
 							<?php
-						}
+						},
+						__( 'Used for buttons, links and highlights. Hover, tint and focus states are derived from it automatically, including a readable text colour on top.', 'blt-events' )
+					);
+
+					self::render_field(
+						__( 'Corner Radius', 'blt-events' ),
+						function () use ( $radius ) {
+							?>
+							<input
+								type="number"
+								name="<?php echo esc_attr( BLT_Events_Appearance::OPTION_RADIUS ); ?>"
+								value="<?php echo esc_attr( $radius ); ?>"
+								class="small-text"
+								min="0"
+								max="60"
+								step="1"
+								placeholder="10"
+								data-blt-preview-radius />
+							<span class="blt-unit">px</span>
+							<?php
+						},
+						__( 'Applies to cards, inputs and buttons. Enter 0 for square corners.', 'blt-events' )
+					);
+
+					self::render_field(
+						__( 'Typeface', 'blt-events' ),
+						function () use ( $font ) {
+							?>
+							<select name="<?php echo esc_attr( BLT_Events_Appearance::OPTION_FONT ); ?>" class="blt-input">
+								<option value="" <?php selected( $font, '' ); ?>><?php esc_html_e( 'Plugin system stack', 'blt-events' ); ?></option>
+								<option value="theme" <?php selected( $font, 'theme' ); ?>><?php esc_html_e( 'Inherit from the theme', 'blt-events' ); ?></option>
+							</select>
+							<?php
+						},
+						__( 'Skeleton mode already inherits the theme font; this forces it in the other modes too.', 'blt-events' )
+					);
+
+					self::render_field(
+						__( 'Content Width', 'blt-events' ),
+						function () use ( $width ) {
+							?>
+							<input
+								type="number"
+								name="<?php echo esc_attr( BLT_Events_Appearance::OPTION_WIDTH ); ?>"
+								value="<?php echo esc_attr( $width ); ?>"
+								class="small-text"
+								min="480"
+								max="2400"
+								step="10"
+								placeholder="1200" />
+							<span class="blt-unit">px</span>
+							<?php
+						},
+						__( 'Maximum width of the calendar and event layouts. Leave blank to follow the theme.', 'blt-events' )
 					);
 					?>
+				</div>
+			</div>
+
+			<div class="blt-card" data-blt-style-panel <?php echo 'off' === $mode ? 'style="display:none;"' : ''; ?>>
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Preview', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'An event card and a register button, drawn with the tokens above. Updates as you type; save to apply it to the site.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<div class="blt-style-preview" data-blt-preview>
+						<div class="blt-style-preview__card">
+							<span class="blt-style-preview__tag"><?php esc_html_e( 'Webinar', 'blt-events' ); ?></span>
+							<h4 class="blt-style-preview__title"><?php esc_html_e( 'Quarterly Product Briefing', 'blt-events' ); ?></h4>
+							<p class="blt-style-preview__meta"><?php esc_html_e( 'Thursday 14 May · 10:00 – 11:30', 'blt-events' ); ?></p>
+							<button type="button" class="blt-style-preview__btn" disabled><?php esc_html_e( 'Register', 'blt-events' ); ?></button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Going Further', 'blt-events' ); ?></h2>
+				</div>
+				<div class="blt-card-body">
+					<p class="blt-field-desc"><?php esc_html_e( 'To change anything not listed above, redefine the token in your own stylesheet or a code snippet. Yours loads after the plugin\'s, so it wins:', 'blt-events' ); ?></p>
+					<pre class="blt-code-block">:root {
+	--blt-e-primary: var(--action);
+	--blt-e-radius: var(--radius-m);
+	--blt-e-font: var(--body-font);
+}</pre>
+					<p class="blt-field-desc">
+						<?php
+						printf(
+							/* translators: %s: the tokens stylesheet filename. */
+							esc_html__( 'The full list of tokens, with comments, is in %s.', 'blt-events' ),
+							'<code>assets/css/blt-events-tokens.css</code>'
+						);
+						?>
+					</p>
 				</div>
 			</div>
 
@@ -1156,6 +1379,8 @@ class BLT_Events_Admin_Settings {
 			<span><?php esc_html_e( 'Paste any of these shortcodes into a page, post, or block to display BLT Events content on the front end.', 'blt-events' ); ?></span>
 		</div>
 
+		<?php self::render_shortcode_builder(); ?>
+
 		<?php foreach ( $shortcodes as $shortcode ) : ?>
 			<div class="blt-card">
 				<div class="blt-card-header">
@@ -1197,6 +1422,118 @@ class BLT_Events_Admin_Settings {
 				</div>
 			</div>
 		<?php endforeach; ?>
+		<?php
+	}
+
+	/**
+	 * Interactive builder for the calendar shortcode.
+	 *
+	 * The reference table below it documents every attribute, but reading a
+	 * table and then hand-typing a shortcode is where typos come from. The
+	 * builder composes the string from real controls — including the site's
+	 * actual event categories — and only emits attributes that differ from
+	 * their defaults, so the result stays as short as it can be.
+	 */
+	private static function render_shortcode_builder() {
+		$categories = get_terms( array(
+			'taxonomy'   => 'event_category',
+			'hide_empty' => false,
+			'number'     => 100,
+		) );
+
+		if ( is_wp_error( $categories ) ) {
+			$categories = array();
+		}
+		?>
+		<div class="blt-card blt-sc-builder" data-blt-builder>
+			<div class="blt-card-header">
+				<h2><?php esc_html_e( 'Build a Calendar Shortcode', 'blt-events' ); ?></h2>
+				<p><?php esc_html_e( 'Pick the options you want and copy the result. Anything left at its default is omitted.', 'blt-events' ); ?></p>
+			</div>
+			<div class="blt-card-body">
+				<?php
+				self::render_field(
+					__( 'Layout', 'blt-events' ),
+					function () {
+						?>
+						<select class="blt-input" data-blt-att="view" data-blt-default="list">
+							<option value="list"><?php esc_html_e( 'List of event cards', 'blt-events' ); ?></option>
+							<option value="grid"><?php esc_html_e( 'Card grid', 'blt-events' ); ?></option>
+							<option value="calendar"><?php esc_html_e( 'Month calendar', 'blt-events' ); ?></option>
+						</select>
+						<?php
+					}
+				);
+
+				self::render_field(
+					__( 'Category', 'blt-events' ),
+					function () use ( $categories ) {
+						?>
+						<select class="blt-input" data-blt-att="category" data-blt-default="">
+							<option value=""><?php esc_html_e( 'All categories', 'blt-events' ); ?></option>
+							<?php foreach ( $categories as $term ) : ?>
+								<option value="<?php echo esc_attr( $term->slug ); ?>">
+									<?php echo esc_html( $term->name ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<?php if ( empty( $categories ) ) : ?>
+							<p class="blt-help"><?php esc_html_e( 'No event categories exist yet.', 'blt-events' ); ?></p>
+						<?php endif; ?>
+						<?php
+					}
+				);
+
+				self::render_field(
+					__( 'Maximum Events', 'blt-events' ),
+					function () {
+						?>
+						<input type="number" class="small-text" min="1" max="100" step="1" value="12" data-blt-att="limit" data-blt-default="12" />
+						<p class="blt-help"><?php esc_html_e( 'Ignored by the month calendar, which always shows the whole month.', 'blt-events' ); ?></p>
+						<?php
+					}
+				);
+
+				self::render_field(
+					__( 'Options', 'blt-events' ),
+					function () {
+						?>
+						<div class="blt-toggle-stack">
+							<label class="blt-toggle">
+								<input type="checkbox" data-blt-att="switcher" data-blt-default="no" data-blt-on="yes" />
+								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+								<span class="blt-toggle-text">
+									<span class="blt-toggle-label"><?php esc_html_e( 'View switcher', 'blt-events' ); ?></span>
+									<span class="blt-toggle-desc"><?php esc_html_e( 'Lets visitors flip between list, grid and month themselves.', 'blt-events' ); ?></span>
+								</span>
+							</label>
+							<label class="blt-toggle">
+								<input type="checkbox" data-blt-att="past" data-blt-default="no" data-blt-on="yes" />
+								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+								<span class="blt-toggle-text">
+									<span class="blt-toggle-label"><?php esc_html_e( 'Include past events', 'blt-events' ); ?></span>
+									<span class="blt-toggle-desc"><?php esc_html_e( 'Off by default, so only upcoming events show.', 'blt-events' ); ?></span>
+								</span>
+							</label>
+						</div>
+						<?php
+					}
+				);
+				?>
+
+				<div class="blt-sc-result">
+					<code data-blt-builder-output>[blt_events_calendar]</code>
+					<button
+						type="button"
+						class="button button-primary blt-copy-shortcode"
+						data-blt-builder-copy
+						data-shortcode="[blt_events_calendar]"
+						data-copied-label="<?php esc_attr_e( 'Copied!', 'blt-events' ); ?>">
+						<?php esc_html_e( 'Copy', 'blt-events' ); ?>
+					</button>
+				</div>
+			</div>
+		</div>
 		<?php
 	}
 }

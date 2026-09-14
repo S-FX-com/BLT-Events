@@ -86,3 +86,221 @@
 	color: var(--blt-success-fg);
 	border-color: var(--blt-success-fg);
 }
+
+/* --- Appearance tab: live token preview ---
+   The preview seeds the front-end token defaults locally so it renders the
+   plugin's real look inside wp-admin, where blt-events-tokens.css never
+   loads. The JS then overrides only the tokens the admin is editing. */
+.blt-style-preview {
+	--blt-e-primary: #6366f1;
+	--blt-e-primary-hover: #4f46e5;
+	--blt-e-primary-tint: #f0f0ff;
+	--blt-e-on-primary: #ffffff;
+	--blt-e-radius: 10px;
+
+	padding: 24px;
+	background:
+		linear-gradient(45deg, #fafafa 25%, transparent 25%) -8px 0 / 16px 16px,
+		linear-gradient(-45deg, #fafafa 25%, transparent 25%) -8px 0 / 16px 16px,
+		#ffffff;
+	border: 1px solid var(--blt-border);
+	border-radius: var(--blt-radius);
+}
+
+.blt-style-preview__card {
+	max-width: 340px;
+	padding: 20px;
+	background: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: var(--blt-e-radius);
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.blt-style-preview__tag {
+	display: inline-block;
+	margin-bottom: 10px;
+	padding: 3px 10px;
+	background: var(--blt-e-primary-tint);
+	color: var(--blt-e-primary-hover);
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.blt-style-preview__title {
+	margin: 0 0 6px;
+	color: #1f2937;
+	font-size: 17px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.blt-style-preview__meta {
+	margin: 0 0 16px;
+	color: #6b7280;
+	font-size: 13px;
+}
+
+.blt-style-preview__btn {
+	padding: 10px 20px;
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+	border: none;
+	border-radius: var(--blt-e-radius);
+	font-size: 14px;
+	font-weight: 600;
+	/* Not really disabled to the eye: it is a swatch, not a dead control. */
+	opacity: 1;
+	cursor: default;
+}
+
+/* --- Appearance tab: code sample --- */
+.blt-code-block {
+	margin: 0 0 12px;
+	padding: 14px 16px;
+	overflow-x: auto;
+	background: var(--blt-surface-muted);
+	border: 1px solid var(--blt-border);
+	border-radius: var(--blt-radius-sm);
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--blt-fg);
+}
+
+.blt-unit {
+	margin-left: 6px;
+	color: var(--blt-muted-fg);
+	font-size: 13px;
+}
+
+/* --- Setup checklist (Settings > General) --- */
+.blt-setup-card.is-complete .blt-card-header h2::after {
+	content: "✓";
+	margin-left: 8px;
+	color: var(--blt-success-fg);
+	font-weight: 700;
+}
+
+.blt-setup-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-setup-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--blt-border);
+}
+
+.blt-setup-item:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.blt-setup-item:first-child {
+	padding-top: 0;
+}
+
+/* The mark is decorative; the is-done / is-todo class carries the meaning
+   for anyone reading the markup, and the label text stands alone. */
+.blt-setup-mark {
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	margin-top: 1px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.blt-setup-item.is-done .blt-setup-mark {
+	background: var(--blt-success-bg);
+	color: var(--blt-success-fg);
+}
+
+.blt-setup-item.is-done .blt-setup-mark::before {
+	content: "✓";
+}
+
+.blt-setup-item.is-todo .blt-setup-mark {
+	background: var(--blt-neutral-bg);
+	border: 1px dashed var(--blt-border);
+}
+
+.blt-setup-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.blt-setup-label {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--blt-fg);
+}
+
+.blt-setup-item.is-done .blt-setup-label {
+	color: var(--blt-muted-fg);
+}
+
+.blt-setup-help {
+	font-size: 12px;
+	line-height: 1.5;
+	color: var(--blt-muted-fg);
+	max-width: 62ch;
+}
+
+.blt-setup-item .button {
+	flex: 0 0 auto;
+	align-self: center;
+}
+
+@media screen and (max-width: 782px) {
+	.blt-setup-item {
+		flex-wrap: wrap;
+	}
+
+	.blt-setup-item .button {
+		margin-left: 32px;
+	}
+}
+
+/* --- Shortcode builder --- */
+.blt-sc-result {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-top: 8px;
+	padding: 14px 16px;
+	background: var(--blt-surface-muted);
+	border: 1px solid var(--blt-border);
+	border-radius: var(--blt-radius-sm);
+}
+
+.blt-sc-result code {
+	flex: 1 1 260px;
+	min-width: 0;
+	overflow-x: auto;
+	background: none;
+	padding: 0;
+	font-size: 13px;
+	color: var(--blt-fg);
+	white-space: nowrap;
+}
+
+.blt-sc-result .button {
+	flex: 0 0 auto;
+}

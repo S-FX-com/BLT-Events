@@ -3,7 +3,7 @@
    ======================================== */
 
 .blt-events-calendar {
-	max-width: 960px;
+	max-width: var(--blt-e-content-width);
 	margin: 0 auto;
 }
 
@@ -21,8 +21,8 @@
 	padding: 1.5rem;
 	margin-bottom: 1rem;
 	background: var(--blt-e-surface);
-	border-radius: 12px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	border-radius: var(--blt-e-radius-lg);
+	box-shadow: var(--blt-e-shadow-sm);
 	transition: box-shadow 0.2s;
 }
 
@@ -33,7 +33,7 @@
 .blt-events-list .blt-event-image {
 	flex-shrink: 0;
 	width: 200px;
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	overflow: hidden;
 }
 
@@ -57,7 +57,7 @@
 	text-align: center;
 	padding: 0.5rem;
 	background: var(--blt-e-primary-tint);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	height: fit-content;
 }
 
@@ -145,7 +145,7 @@
 	padding: 0.5rem 1.25rem;
 	background: var(--blt-e-primary);
 	color: var(--blt-e-surface);
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	font-size: 0.9rem;
 	font-weight: 500;
 	text-decoration: none;
@@ -168,8 +168,8 @@
 	display: flex;
 	flex-direction: column;
 	background: var(--blt-e-surface);
-	border-radius: 12px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	border-radius: var(--blt-e-radius-lg);
+	box-shadow: var(--blt-e-shadow-sm);
 	overflow: hidden;
 	transition: box-shadow 0.2s, transform 0.2s;
 }
@@ -201,7 +201,7 @@
 	top: -28px;
 	right: 12px;
 	background: var(--blt-e-surface);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: var(--blt-e-shadow);
 }
 
 .blt-events-grid .blt-event-details {
@@ -213,7 +213,7 @@
 	display: flex;
 	justify-content: flex-end;
 	gap: 0.25rem;
-	max-width: 960px;
+	max-width: var(--blt-e-content-width);
 	margin: 0 auto 1rem;
 }
 
@@ -239,7 +239,7 @@
 
 /* --- List View (toolbar + month-grouped rows) --- */
 .blt-events-listing {
-	max-width: 960px;
+	max-width: var(--blt-e-content-width);
 	margin: 0 auto;
 	color: var(--blt-e-fg);
 }
@@ -270,7 +270,7 @@
 	color: var(--blt-e-fg);
 	text-decoration: none;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	transition: border-color 0.15s, color 0.15s;
 }
 
@@ -293,7 +293,7 @@
 	color: var(--blt-e-fg);
 	text-decoration: none;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 }
 
 .blt-list-today:hover {
@@ -315,7 +315,7 @@
 	align-items: center;
 	justify-content: center;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 }
 
 .blt-view-menu summary::-webkit-details-marker {
@@ -337,7 +337,7 @@
 	list-style: none;
 	background: var(--blt-e-surface);
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	box-shadow: 0 4px 16px var(--blt-e-border-subtle);
 }
 
@@ -351,7 +351,7 @@
 	font-size: 0.85rem;
 	color: var(--blt-e-fg);
 	text-decoration: none;
-	border-radius: 4px;
+	border-radius: var(--blt-e-radius-sm);
 }
 
 .blt-view-menu li a:hover {
@@ -371,7 +371,7 @@
 	flex: 1 1 380px;
 	max-width: 460px;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	overflow: hidden;
 	background: var(--blt-e-surface);
 }
@@ -556,7 +556,7 @@
 .blt-events-month {
 	background: var(--blt-e-surface);
 	border: 1px solid var(--blt-e-border);
-	border-radius: 12px;
+	border-radius: var(--blt-e-radius-lg);
 	overflow: hidden;
 }
 
@@ -584,7 +584,7 @@
 	line-height: 1;
 	color: var(--blt-e-fg);
 	text-decoration: none;
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	transition: background 0.15s;
 }
 
@@ -600,7 +600,7 @@
 	color: var(--blt-e-fg);
 	text-decoration: none;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	transition: border-color 0.15s, color 0.15s;
 }
 

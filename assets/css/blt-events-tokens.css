@@ -95,5 +95,7 @@
 
 	/* --- Layout --- */
 	--blt-e-form-width: 640px;
-	--blt-e-content-width: 1200px;
+	/* Max width of the calendar and listing containers. 960px is what the
+	   plugin has always used; Settings > Appearance can widen or narrow it. */
+	--blt-e-content-width: 960px;
 }

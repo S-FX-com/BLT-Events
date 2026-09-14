@@ -34,21 +34,29 @@ class BLT_Events_Single_Event {
 	}
 
 	/**
-	 * Whether the plugin's self-contained single-event styling should load.
+	 * Whether the plugin's single-event styling should load.
+	 *
+	 * Delegates to the site-wide styling mode so the event page, the calendar
+	 * and the registration form can never end up half-styled against each
+	 * other. Kept as a method because themes and add-ons call it.
 	 */
 	public static function styles_enabled() {
-		return get_option( 'blt_events_single_styles', '1' ) === '1';
+		return BLT_Events_Appearance::styles_enabled();
 	}
 
 	public static function register_assets() {
+		if ( ! self::styles_enabled() ) {
+			return;
+		}
+
 		wp_register_style(
 			'blt-events-single',
 			BLT_EVENTS_PLUGIN_URL . 'assets/css/single-event.css',
-			array(),
+			BLT_Events_Appearance::style_deps(),
 			BLT_EVENTS_VERSION
 		);
 
-		if ( is_singular( 'event' ) && self::styles_enabled() ) {
+		if ( is_singular( 'event' ) ) {
 			wp_enqueue_style( 'blt-events-single' );
 		}
 	}

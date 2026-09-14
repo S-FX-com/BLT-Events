@@ -1,11 +1,11 @@
 /* ========================================
    BLT Events - Single Event (front end)
-   BEM under the `blt-event` block. Self-contained and theme-agnostic;
-   this stylesheet is only loaded when Settings > General > "Single Event
-   Styles" is on. When off, the same BEM markup renders unstyled for the
-   site's own framework (e.g. ACSS) to pick up.
+   BEM under the `blt-event` block. Every value resolves through the shared
+   token layer in blt-events-tokens.css, so restyling happens there (or in
+   Settings > Appearance) rather than by overriding selectors here.
 
-   Override the accent from anywhere with --blt-event-accent.
+   The block-local aliases below stay for backwards compatibility: sites
+   already overriding --blt-event-accent keep working.
    ======================================== */
 
 .blt-event {
@@ -13,8 +13,9 @@
 	--blt-event-link: var(--blt-e-link);
 	--blt-event-border: var(--blt-e-border-subtle);
 	--blt-event-muted: var(--blt-e-fg-muted);
-	--blt-event-radius: 10px;
+	--blt-event-radius: var(--blt-e-radius);
 	color: var(--blt-e-fg);
+	font-family: var(--blt-e-font);
 }
 
 /* --- Featured image --- */
@@ -63,7 +64,7 @@
 	display: inline-block;
 	padding: 0.2rem 0.6rem;
 	background: var(--blt-e-surface-alt);
-	border-radius: 4px;
+	border-radius: var(--blt-e-radius-sm);
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--blt-e-fg-soft);
@@ -196,7 +197,7 @@
 	height: 48px;
 	flex-shrink: 0;
 	border: 1px solid var(--blt-event-border);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	font-size: 1.4rem;
 	font-weight: 700;
 	line-height: 1;
@@ -256,7 +257,7 @@
 	padding: 0.6rem 1.1rem;
 	background: var(--blt-event-accent);
 	color: var(--blt-e-surface);
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	font-size: 0.85rem;
 	font-weight: 600;
 	text-decoration: none;
@@ -335,7 +336,7 @@ a.blt-event__presenter-name:hover {
 /* Map */
 .blt-event__map {
 	margin-top: 0.75rem;
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	overflow: hidden;
 	border: 1px solid var(--blt-event-border);
 }

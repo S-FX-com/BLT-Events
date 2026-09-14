@@ -8,9 +8,9 @@
 	margin: 2rem auto;
 	padding: 2rem;
 	background: var(--blt-e-surface);
-	border-radius: 12px;
+	border-radius: var(--blt-e-radius-lg);
 	box-shadow: var(--blt-e-shadow);
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-family: var(--blt-e-font);
 }
 
 .blt-registration-form h3 {
@@ -100,7 +100,7 @@
 .blt-reg__back,
 .blt-reg__next {
 	padding: 0.7rem 1.5rem;
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	font-size: 0.95rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -128,7 +128,7 @@
 	margin-bottom: 1.5rem;
 	padding: 1.5rem;
 	background: var(--blt-e-surface-alt);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 }
 
 .blt-ticket-type {
@@ -198,7 +198,7 @@
 	width: 48px;
 	text-align: center;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	height: 32px;
 	font-size: 0.95rem;
 	-moz-appearance: textfield;
@@ -268,7 +268,7 @@
 	width: 100%;
 	padding: 0.625rem 0.75rem;
 	border: 1px solid var(--blt-e-border);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	font-size: 0.95rem;
 	background: var(--blt-e-surface-alt);
 	transition: border-color 0.2s, box-shadow 0.2s;
@@ -301,7 +301,7 @@
 	flex: 1;
 	padding: 0.625rem 0.75rem;
 	border: 1px solid var(--blt-e-border);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	font-size: 0.95rem;
 	background: var(--blt-e-surface-alt);
 }
@@ -311,7 +311,7 @@
 	background: var(--blt-e-surface-sunken);
 	color: var(--blt-e-fg-soft);
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	font-size: 0.95rem;
 	cursor: pointer;
 	white-space: nowrap;
@@ -325,7 +325,7 @@
 #blt-coupon-message {
 	margin-top: 0.5rem;
 	padding: 0.5rem 0.75rem;
-	border-radius: 6px;
+	border-radius: var(--blt-e-radius-sm);
 	font-size: 0.875rem;
 }
 
@@ -372,7 +372,7 @@
 #blt-card-element {
 	padding: 0.875rem;
 	border: 1px solid var(--blt-e-border);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	background: var(--blt-e-surface-alt);
 }
 
@@ -386,7 +386,7 @@
 #blt-form-messages {
 	margin-bottom: 1rem;
 	padding: 0.75rem 1rem;
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	font-size: 0.95rem;
 }
 
@@ -414,7 +414,7 @@
 	background: var(--blt-e-primary);
 	color: white;
 	border: none;
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	font-size: 1.125rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -443,7 +443,7 @@
 	margin: 2rem auto;
 	padding: 2rem;
 	background: var(--blt-e-surface);
-	border-radius: 12px;
+	border-radius: var(--blt-e-radius-lg);
 	box-shadow: var(--blt-e-shadow);
 }
 
@@ -462,7 +462,7 @@
 .blt-checkout-message {
 	margin-top: 1rem;
 	padding: 0.75rem 1rem;
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	font-size: 0.95rem;
 }
 
@@ -470,7 +470,7 @@
 	padding: 1.5rem;
 	background: var(--blt-e-warning-bg);
 	border: 1px solid var(--blt-e-warning-border);
-	border-radius: 8px;
+	border-radius: var(--blt-e-radius);
 	text-align: center;
 	color: var(--blt-e-warning);
 }
@@ -481,7 +481,7 @@
 	margin: 2rem auto;
 	padding: 2rem;
 	background: var(--blt-e-surface-alt);
-	border-radius: 12px;
+	border-radius: var(--blt-e-radius-lg);
 	text-align: center;
 	color: var(--blt-e-fg-muted);
 }
