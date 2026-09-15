@@ -59,8 +59,25 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 	}
 
 	/**
-	 * Attendee counts per ticket type for an event, excluding attendees
-	 * whose registration was cancelled.
+	 * SQL fragment + params restricting a joined registrations table alias
+	 * `r` to seat-holding statuses.
+	 *
+	 * @return array{0:string,1:array} Placeholder SQL and its values.
+	 */
+	private function seat_status_sql() {
+		$statuses = BLT_Events_Helpers::seat_holding_statuses();
+		if ( empty( $statuses ) ) {
+			return array( '0 = 1', array() );
+		}
+
+		$placeholders = implode( ', ', array_fill( 0, count( $statuses ), '%s' ) );
+
+		return array( "r.status IN ( {$placeholders} )", array_values( $statuses ) );
+	}
+
+	/**
+	 * Attendee counts per ticket type for an event, counting only attendees
+	 * whose registration still holds a seat.
 	 *
 	 * @param int $event_id The event post ID.
 	 * @return array Map of ticket type name => attendee count.
@@ -69,6 +86,7 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 		global $wpdb;
 
 		$registrations_table = $wpdb->prefix . 'blt_registrations';
+		list( $status_sql, $status_params ) = $this->seat_status_sql();
 
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
@@ -76,10 +94,10 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 				 FROM {$this->table_name} a
 				 INNER JOIN {$registrations_table} r ON r.id = a.registration_id
 				 WHERE a.event_id = %d
-				   AND r.status != 'cancelled'
+				   AND {$status_sql}
 				 GROUP BY COALESCE(NULLIF(a.ticket_type, ''), '—')
-				 ORDER BY total DESC",
-				absint( $event_id )
+				 ORDER BY total DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				array_merge( array( absint( $event_id ) ), $status_params )
 			)
 		);
 
@@ -110,7 +128,7 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 	}
 
 	/**
-	 * Total attendees for an event, excluding cancelled registrations.
+	 * Total attendees for an event whose registration still holds a seat.
 	 *
 	 * @param int $event_id The event post ID.
 	 * @return int
@@ -119,14 +137,15 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 		global $wpdb;
 
 		$registrations_table = $wpdb->prefix . 'blt_registrations';
+		list( $status_sql, $status_params ) = $this->seat_status_sql();
 
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*)
 				 FROM {$this->table_name} a
 				 INNER JOIN {$registrations_table} r ON r.id = a.registration_id
-				 WHERE a.event_id = %d AND r.status != 'cancelled'",
-				absint( $event_id )
+				 WHERE a.event_id = %d AND {$status_sql}", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				array_merge( array( absint( $event_id ) ), $status_params )
 			)
 		);
 	}

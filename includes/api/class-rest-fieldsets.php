@@ -102,8 +102,8 @@ class BLT_Events_REST_Fieldsets {
 			'name'           => sanitize_text_field( $body['name'] ?? '' ),
 			'slug'           => sanitize_title( $body['slug'] ?? $body['name'] ?? '' ),
 			'description'    => sanitize_textarea_field( $body['description'] ?? '' ),
-			'fields'         => isset( $body['fields'] ) ? wp_json_encode( $body['fields'] ) : '[]',
-			'consent_fields' => isset( $body['consent_fields'] ) ? wp_json_encode( $body['consent_fields'] ) : '[]',
+			'fields'         => wp_json_encode( self::sanitize_fields( $body['fields'] ?? array() ) ),
+			'consent_fields' => wp_json_encode( self::sanitize_consents( $body['consent_fields'] ?? array() ) ),
 			'status'         => 'active',
 		);
 
@@ -142,10 +142,10 @@ class BLT_Events_REST_Fieldsets {
 			$data['description'] = sanitize_textarea_field( $body['description'] );
 		}
 		if ( isset( $body['fields'] ) ) {
-			$data['fields'] = wp_json_encode( $body['fields'] );
+			$data['fields'] = wp_json_encode( self::sanitize_fields( $body['fields'] ) );
 		}
 		if ( isset( $body['consent_fields'] ) ) {
-			$data['consent_fields'] = wp_json_encode( $body['consent_fields'] );
+			$data['consent_fields'] = wp_json_encode( self::sanitize_consents( $body['consent_fields'] ) );
 		}
 		if ( isset( $body['status'] ) ) {
 			$status = sanitize_text_field( $body['status'] );
@@ -201,6 +201,48 @@ class BLT_Events_REST_Fieldsets {
 		}
 
 		return new WP_REST_Response( self::prepare_fieldset( $fieldset ), 200 );
+	}
+
+	/**
+	 * Run every submitted field definition through the shared sanitizer, so
+	 * the REST API and the builder store identical shapes.
+	 */
+	private static function sanitize_fields( $fields ) {
+		$clean = array();
+		$keys  = array();
+		$order = 0;
+
+		foreach ( (array) $fields as $raw ) {
+			$field = BLT_Events_Fieldsets::sanitize_field_definition( $raw, $order );
+			if ( ! $field ) {
+				continue;
+			}
+
+			$base = $field['key'];
+			$n    = 2;
+			while ( in_array( $field['key'], $keys, true ) ) {
+				$field['key'] = $base . '_' . $n++;
+			}
+			$keys[]  = $field['key'];
+			$clean[] = $field;
+			$order++;
+		}
+
+		return $clean;
+	}
+
+	private static function sanitize_consents( $consents ) {
+		$clean = array();
+		$index = 0;
+
+		foreach ( (array) $consents as $raw ) {
+			$consent = BLT_Events_Fieldsets::sanitize_consent_definition( $raw, $index++ );
+			if ( $consent && '' !== $consent['label'] ) {
+				$clean[] = $consent;
+			}
+		}
+
+		return $clean;
 	}
 
 	private static function prepare_fieldset( $fieldset ) {

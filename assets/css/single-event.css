@@ -224,6 +224,22 @@
 	color: var(--blt-event-muted);
 }
 
+.blt-event__calendar-links {
+	margin: 0.75rem 0 0;
+	font-size: 0.82rem;
+	color: var(--blt-event-muted);
+}
+
+.blt-event__calendar-link {
+	color: var(--blt-event-link);
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.blt-event__calendar-link:hover {
+	text-decoration: underline;
+}
+
 /* CTA card */
 .blt-event__cta {
 	display: flex;
@@ -269,6 +285,21 @@
 .blt-event__cta-button:focus {
 	color: var(--blt-e-surface);
 	opacity: 0.88;
+}
+
+.blt-event__cta-button.is-disabled,
+.blt-event__cta-button.is-soldout {
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-muted);
+	cursor: default;
+	opacity: 1;
+}
+
+.blt-event__presenter-bio {
+	margin-top: 0.15rem;
+	font-size: 0.8rem;
+	line-height: 1.45;
+	color: var(--blt-e-fg-soft);
 }
 
 /* Address / virtual */

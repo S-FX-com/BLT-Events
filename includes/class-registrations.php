@@ -3,7 +3,9 @@
  * BLT Events - Registrations Business Logic
  *
  * Processes new registrations, handles multi-attendee logic,
- * coupon application, confirmation emails, and AJAX endpoints.
+ * coupon application, the waitlist, status transitions, and the public
+ * AJAX endpoints. Emails are sent by BLT_Events_Emails, which listens to
+ * the actions fired here.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,21 +29,33 @@ class BLT_Events_Registrations {
 		add_action( 'wp_ajax_blt_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
 		add_action( 'wp_ajax_nopriv_blt_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
 
-		// Hooks
-		add_action( 'blt_registration_created', array( __CLASS__, 'send_confirmation_email' ), 10, 2 );
+		// AJAX endpoint for the waitlist
+		add_action( 'wp_ajax_blt_join_waitlist', array( __CLASS__, 'ajax_join_waitlist' ) );
+		add_action( 'wp_ajax_nopriv_blt_join_waitlist', array( __CLASS__, 'ajax_join_waitlist' ) );
 	}
+
+	/* ------------------------------------------------------------------
+	 * Public AJAX endpoints
+	 * ---------------------------------------------------------------- */
 
 	/**
 	 * AJAX handler for direct registration (free events / no payment gateway).
+	 *
+	 * This endpoint never takes money, so it refuses any selection that
+	 * costs something: paid orders go through the payment provider's own
+	 * flow, which hands process_registration() a captured payment.
 	 */
 	public static function ajax_register() {
 		check_ajax_referer( 'blt_registration_nonce', 'nonce' );
 
-		if ( ! self::check_rate_limit() ) {
+		$data  = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized per field below.
+		$email = sanitize_email( $data['email'] ?? '' );
+
+		if ( ! self::check_rate_limit( $email ) ) {
 			wp_send_json_error( array( 'message' => __( 'Too many registration attempts. Please try again in a few minutes.', 'blt-events' ) ) );
 		}
 
-		$event_id = absint( $_POST['event_id'] ?? 0 );
+		$event_id = absint( $data['event_id'] ?? 0 );
 		if ( ! $event_id || get_post_type( $event_id ) !== 'event' || get_post_status( $event_id ) !== 'publish' ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid event.', 'blt-events' ) ) );
 		}
@@ -50,42 +64,169 @@ class BLT_Events_Registrations {
 			wp_send_json_error( array( 'message' => __( 'Registration is closed for this event.', 'blt-events' ) ) );
 		}
 
-		$result = self::process_registration( $event_id, wp_unslash( $_POST ) );
+		// Payment gate. The amount is recomputed from event meta, never from
+		// the request, so a paid ticket cannot be smuggled through here.
+		$pricing = self::calculate_order_total( $event_id, $data );
+		if ( $pricing['total'] > 0 ) {
+			wp_send_json_error( array( 'message' => __( 'This selection requires payment. Please complete the checkout to register.', 'blt-events' ) ) );
+		}
+
+		$result = self::process_registration( $event_id, $data );
 
 		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+			wp_send_json_error( array(
+				'message' => $result->get_error_message(),
+				'code'    => $result->get_error_code(),
+			) );
 		}
 
 		wp_send_json_success( array(
-			'message'         => __( 'Registration successful!', 'blt-events' ),
+			'message'         => self::success_message( $result['status'] ),
+			'status'          => $result['status'],
 			'registration_id' => $result['registration_id'],
 			'group_id'        => $result['group_id'],
 		) );
 	}
 
 	/**
-	 * Simple per-IP rate limit for the public registration endpoint,
-	 * limiting database-flooding and email spam. The nonce alone does not
-	 * throttle, since it is rendered to every visitor.
-	 *
-	 * @return bool True when the request is within the limit.
+	 * AJAX handler for joining the waitlist of a sold-out event.
 	 */
-	private static function check_rate_limit() {
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		if ( ! $ip ) {
-			return true;
+	public static function ajax_join_waitlist() {
+		check_ajax_referer( 'blt_registration_nonce', 'nonce' );
+
+		$data  = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized per field below.
+		$email = sanitize_email( $data['email'] ?? '' );
+
+		if ( ! self::check_rate_limit( $email ) ) {
+			wp_send_json_error( array( 'message' => __( 'Too many attempts. Please try again in a few minutes.', 'blt-events' ) ) );
+		}
+
+		$event_id = absint( $data['event_id'] ?? 0 );
+		$result   = self::join_waitlist( $event_id, $data );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array(
+				'message' => $result->get_error_message(),
+				'code'    => $result->get_error_code(),
+			) );
+		}
+
+		wp_send_json_success( array(
+			'message'         => self::success_message( 'waitlisted' ),
+			'status'          => 'waitlisted',
+			'registration_id' => $result['registration_id'],
+		) );
+	}
+
+	/**
+	 * AJAX handler for coupon validation.
+	 */
+	public static function ajax_validate_coupon() {
+		check_ajax_referer( 'blt_registration_nonce', 'nonce' );
+
+		// Coupon codes are guessable; keep brute-force attempts slow.
+		if ( ! self::check_rate_limit( '', 'coupon', 30 ) ) {
+			wp_send_json_error( array( 'message' => __( 'Too many attempts. Please try again in a few minutes.', 'blt-events' ) ) );
+		}
+
+		$code     = strtoupper( sanitize_text_field( wp_unslash( $_POST['coupon_code'] ?? '' ) ) );
+		$event_id = absint( $_POST['event_id'] ?? 0 );
+		$quantity = absint( $_POST['quantity'] ?? 1 );
+
+		$result = BLT_Events_Coupons::validate_coupon( $code, $event_id, $quantity );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		$type   = get_post_meta( $result->ID, '_blt_discount_type', true );
+		$amount = get_post_meta( $result->ID, '_blt_amount', true );
+
+		wp_send_json_success( array(
+			'code'   => $code,
+			'type'   => $type,
+			'amount' => $amount,
+			'label'  => $type === 'percentage'
+				/* translators: %s: percentage. */
+				? sprintf( __( '%s%% off', 'blt-events' ), $amount )
+				/* translators: %s: formatted amount. */
+				: sprintf( __( '%s off', 'blt-events' ), BLT_Events_Helpers::format_price( (float) $amount ) ),
+		) );
+	}
+
+	/**
+	 * The visitor-facing message for a registration outcome.
+	 *
+	 * @param string $status Registration status.
+	 * @return string
+	 */
+	public static function success_message( $status ) {
+		switch ( $status ) {
+			case 'pending':
+				$message = __( 'Your registration has been received and is awaiting approval. We will email you once it is confirmed.', 'blt-events' );
+				break;
+			case 'waitlisted':
+				$message = __( 'You have been added to the waitlist. We will email you if a spot opens up.', 'blt-events' );
+				break;
+			default:
+				$message = __( 'Registration successful! A confirmation email is on its way.', 'blt-events' );
 		}
 
 		/**
-		 * Filter the maximum registrations allowed per IP per 10 minutes.
-		 * Return 0 to disable rate limiting.
+		 * Filter the message shown after a successful submission.
+		 *
+		 * @param string $message The message.
+		 * @param string $status  The registration status.
 		 */
-		$max = (int) apply_filters( 'blt_events_registration_rate_limit', 10 );
+		return apply_filters( 'blt_events_registration_success_message', $message, $status );
+	}
+
+	/**
+	 * Per-IP and per-email rate limit for the public endpoints.
+	 *
+	 * The nonce alone does not throttle, since it is rendered to every
+	 * visitor. IPs are read proxy-aware (see BLT_Events_Helpers::client_ip)
+	 * so a Cloudflare-fronted site does not put every visitor in one bucket.
+	 *
+	 * @param string $email  Optional email to throttle as well.
+	 * @param string $bucket Named bucket, so coupons and registrations count separately.
+	 * @param int    $max    Default maximum per 10 minutes.
+	 * @return bool True when the request is within the limit.
+	 */
+	private static function check_rate_limit( $email = '', $bucket = 'register', $max = 10 ) {
+		/**
+		 * Filter the maximum requests allowed per IP per 10 minutes.
+		 * Return 0 to disable rate limiting.
+		 *
+		 * @param int    $max    Maximum.
+		 * @param string $bucket 'register' or 'coupon'.
+		 */
+		$max = (int) apply_filters( 'blt_events_registration_rate_limit', $max, $bucket );
 		if ( $max <= 0 ) {
 			return true;
 		}
 
-		$key   = 'blt_reg_rl_' . md5( $ip );
+		$ip = BLT_Events_Helpers::client_ip();
+		if ( $ip && ! self::bump_counter( 'blt_rl_' . $bucket . '_' . md5( $ip ), $max ) ) {
+			return false;
+		}
+
+		if ( $email ) {
+			/**
+			 * Filter the maximum submissions per email address per 10 minutes.
+			 *
+			 * @param int $max Maximum.
+			 */
+			$email_max = (int) apply_filters( 'blt_events_registration_email_rate_limit', 5 );
+			if ( $email_max > 0 && ! self::bump_counter( 'blt_rl_' . $bucket . '_e_' . md5( strtolower( $email ) ), $email_max ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static function bump_counter( $key, $max ) {
 		$count = (int) get_transient( $key );
 
 		if ( $count >= $max ) {
@@ -96,6 +237,10 @@ class BLT_Events_Registrations {
 		return true;
 	}
 
+	/* ------------------------------------------------------------------
+	 * Core registration flow
+	 * ---------------------------------------------------------------- */
+
 	/**
 	 * Process a new registration.
 	 *
@@ -104,11 +249,11 @@ class BLT_Events_Registrations {
 	 *  - The on-site form (AJAX / Stripe), where nothing has been charged yet.
 	 *    Every guard is fatal: rejecting the submission costs the visitor
 	 *    nothing but a re-try.
-	 *  - An off-site checkout webhook (SureCart, FluentCart), where the buyer
-	 *    has already been charged. Here a fatal guard would mean money taken
-	 *    with no registration and nothing surfaced to anyone, so the guards
-	 *    instead record the registration as `pending`, attach the reason, and
-	 *    fire `blt_registration_needs_review` for an admin to resolve.
+	 *  - An off-site checkout webhook (SureCart, FluentCart, Stripe webhook),
+	 *    where the buyer has already been charged. Here a fatal guard would
+	 *    mean money taken with no registration and nothing surfaced to anyone,
+	 *    so the guards instead record the registration as `pending`, attach
+	 *    the reason, and fire `blt_registration_needs_review` for an admin.
 	 *
 	 * @param int   $event_id The event post ID.
 	 * @param array $data     Submitted form data.
@@ -123,6 +268,15 @@ class BLT_Events_Registrations {
 		// order on the floor.
 		$captured = ! empty( $payment['payment_id'] );
 		$review   = array();
+
+		/**
+		 * Filter the submitted data before it is validated.
+		 *
+		 * @param array $data     Submitted data.
+		 * @param int   $event_id The event post ID.
+		 * @param array $payment  Payment data (empty for on-site submissions).
+		 */
+		$data = apply_filters( 'blt_events_registration_data', $data, $event_id, $payment );
 
 		// The registration cutoff is also enforced server-side so stale or
 		// hand-crafted submissions can't slip in after it passes.
@@ -166,6 +320,16 @@ class BLT_Events_Registrations {
 			? self::ticket_selections_from_line_items( $event_id, $payment['line_items'] )
 			: self::parse_ticket_selections( $event_id, $data );
 
+		// An event that sells tickets needs at least one picked. Without this
+		// the fallback "1 attendee, subtotal 0" would register anyone for free
+		// on a paid event by simply omitting the quantities.
+		if ( ! empty( $ticket_data['none_selected'] ) ) {
+			if ( ! $captured ) {
+				return new WP_Error( 'no_tickets_selected', __( 'Please select at least one ticket to continue.', 'blt-events' ) );
+			}
+			$review[] = __( 'The order carried no ticket the plugin recognises; one seat was recorded.', 'blt-events' );
+		}
+
 		$total_attendees = $ticket_data['total_quantity'];
 
 		// Check capacity (under an advisory lock so concurrent submissions
@@ -181,10 +345,13 @@ class BLT_Events_Registrations {
 			$current_count = self::$reg_db->get_event_registration_count( $event_id );
 			if ( ( $current_count + $total_attendees ) > $capacity ) {
 				if ( ! $captured ) {
-					if ( $locked ) {
-						$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
-					}
-					return new WP_Error( 'capacity_exceeded', __( 'Sorry, there are not enough spots available.', 'blt-events' ) );
+					self::release_lock( $locked, $lock_name );
+
+					$message = BLT_Events_Helpers::waitlist_enabled( $event_id )
+						? __( 'Sorry, there are not enough spots available. You can join the waitlist instead.', 'blt-events' )
+						: __( 'Sorry, there are not enough spots available.', 'blt-events' );
+
+					return new WP_Error( 'capacity_exceeded', $message, array( 'waitlist' => BLT_Events_Helpers::waitlist_enabled( $event_id ) ) );
 				}
 				$review[] = __( 'The event was already at capacity when this payment completed; it may need a refund or a raised capacity.', 'blt-events' );
 			}
@@ -194,9 +361,7 @@ class BLT_Events_Registrations {
 		$email = $validated['email'] ?? '';
 		if ( $email && self::$reg_db->email_registered_for_event( $email, $event_id ) ) {
 			if ( ! $captured ) {
-				if ( $locked ) {
-					$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
-				}
+				self::release_lock( $locked, $lock_name );
 				return new WP_Error( 'duplicate_registration', __( 'This email is already registered for this event.', 'blt-events' ) );
 			}
 			$review[] = __( 'This email already had a registration for this event when the payment completed.', 'blt-events' );
@@ -247,32 +412,48 @@ class BLT_Events_Registrations {
 			$validated['_review'] = $review;
 		}
 
+		/**
+		 * Filter the status a new registration is stored with.
+		 *
+		 * @param string $status   'confirmed' or 'pending'.
+		 * @param int    $event_id The event post ID.
+		 * @param array  $payment  Payment data.
+		 */
+		$status = apply_filters( 'blt_events_new_registration_status', $status, $event_id, $payment );
+
 		// Insert registration
 		$reg_data = array(
-			'event_id'        => $event_id,
-			'group_id'        => $group_id,
-			'customer_name'   => $customer_name,
-			'customer_email'  => $email,
-			'customer_phone'  => $validated['mobile_number'] ?? '',
-			'attendee_count'  => $total_attendees,
-			'custom_fields'   => wp_json_encode( $validated ),
-			'total_amount'    => $pricing['subtotal'],
-			'discount_amount' => $discount,
-			'amount_paid'     => $amount_paid,
-			'currency'        => BLT_Events_Helpers::get_currency_code(),
-			'coupon_id'       => $pricing['coupon_id'] ?? null,
-			'coupon_data'     => ! empty( $pricing['coupon_data'] ) ? wp_json_encode( $pricing['coupon_data'] ) : null,
+			'event_id'         => $event_id,
+			'group_id'         => $group_id,
+			'customer_name'    => $customer_name,
+			'customer_email'   => $email,
+			'customer_phone'   => $validated['mobile_number'] ?? ( $validated['phone'] ?? '' ),
+			'attendee_count'   => $total_attendees,
+			'custom_fields'    => wp_json_encode( $validated ),
+			'total_amount'     => $pricing['subtotal'],
+			'discount_amount'  => $discount,
+			'amount_paid'      => $amount_paid,
+			'currency'         => BLT_Events_Helpers::get_currency_code(),
+			'coupon_id'        => $pricing['coupon_id'] ?? null,
+			'coupon_data'      => ! empty( $pricing['coupon_data'] ) ? wp_json_encode( $pricing['coupon_data'] ) : null,
 			'payment_provider' => $payment['provider'] ?? ( $is_free ? 'free' : BLT_Events_Helpers::get_event_payment_provider( $event_id ) ),
-			'payment_id'      => $payment['payment_id'] ?? null,
-			'payment_date'    => $payment['payment_date'] ?? ( $is_free ? current_time( 'mysql' ) : null ),
-			'status'          => $status,
+			'payment_id'       => $payment['payment_id'] ?? null,
+			'payment_date'     => $payment['payment_date'] ?? ( $is_free ? current_time( 'mysql' ) : null ),
+			'status'           => $status,
 		);
+
+		/**
+		 * Filter the row about to be inserted into the registrations table.
+		 *
+		 * @param array $reg_data  Column => value.
+		 * @param array $validated Validated form data.
+		 * @param int   $event_id  The event post ID.
+		 */
+		$reg_data = apply_filters( 'blt_events_registration_insert_data', $reg_data, $validated, $event_id );
 
 		$registration_id = self::$reg_db->insert( $reg_data );
 
-		if ( $locked ) {
-			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
-		}
+		self::release_lock( $locked, $lock_name );
 
 		if ( ! $registration_id ) {
 			return new WP_Error( 'db_error', __( 'Failed to create registration.', 'blt-events' ) );
@@ -296,6 +477,12 @@ class BLT_Events_Registrations {
 			'review'          => $review,
 		);
 
+		/**
+		 * Fires after a registration (and its attendees) has been stored.
+		 *
+		 * @param int   $registration_id The new registration ID.
+		 * @param array $result          Result array: registration_id, group_id, total, amount_paid, status, review.
+		 */
 		do_action( 'blt_registration_created', $registration_id, $result );
 
 		if ( ! empty( $review ) ) {
@@ -310,6 +497,132 @@ class BLT_Events_Registrations {
 			 */
 			do_action( 'blt_registration_needs_review', $registration_id, $review, $result );
 		}
+
+		return $result;
+	}
+
+	private static function release_lock( $locked, $lock_name ) {
+		if ( $locked ) {
+			global $wpdb;
+			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+		}
+	}
+
+	/**
+	 * Put someone on the waitlist of a sold-out event.
+	 *
+	 * @param int   $event_id The event post ID.
+	 * @param array $data     Submitted data: first_name, last_name, email, quantity, phone.
+	 * @return array|WP_Error
+	 */
+	public static function join_waitlist( $event_id, $data ) {
+		if ( ! $event_id || get_post_type( $event_id ) !== 'event' || get_post_status( $event_id ) !== 'publish' ) {
+			return new WP_Error( 'invalid_event', __( 'Invalid event.', 'blt-events' ) );
+		}
+
+		if ( get_post_meta( $event_id, '_blt_registration_open', true ) !== '1' || BLT_Events_Helpers::registration_cutoff_passed( $event_id ) ) {
+			return new WP_Error( 'registration_closed', __( 'Registration is closed for this event.', 'blt-events' ) );
+		}
+
+		if ( ! BLT_Events_Helpers::waitlist_enabled( $event_id ) ) {
+			return new WP_Error( 'no_waitlist', __( 'This event does not have a waitlist.', 'blt-events' ) );
+		}
+
+		if ( ! BLT_Events_Helpers::is_sold_out( $event_id ) ) {
+			return new WP_Error( 'not_sold_out', __( 'Spots are available for this event. Please register instead.', 'blt-events' ) );
+		}
+
+		$first = sanitize_text_field( $data['first_name'] ?? '' );
+		$last  = sanitize_text_field( $data['last_name'] ?? '' );
+		$email = sanitize_email( $data['email'] ?? '' );
+		$phone = BLT_Events_Helpers::sanitize_phone( $data['phone'] ?? ( $data['mobile_number'] ?? '' ) );
+
+		if ( '' === $first || ! is_email( $email ) ) {
+			return new WP_Error( 'validation_error', __( 'Please enter your name and a valid email address.', 'blt-events' ) );
+		}
+
+		/**
+		 * Filter the maximum seats one person may request on the waitlist.
+		 *
+		 * @param int $max      Default 10.
+		 * @param int $event_id The event post ID.
+		 */
+		$max_qty  = max( 1, (int) apply_filters( 'blt_events_waitlist_max_quantity', 10, $event_id ) );
+		$quantity = min( $max_qty, max( 1, absint( $data['quantity'] ?? 1 ) ) );
+
+		if ( self::$reg_db->email_registered_for_event( $email, $event_id ) ) {
+			return new WP_Error( 'duplicate_registration', __( 'This email is already registered or on the waitlist for this event.', 'blt-events' ) );
+		}
+
+		$custom = array(
+			'first_name'    => $first,
+			'last_name'     => $last,
+			'email'         => $email,
+			'mobile_number' => $phone,
+			'_consents'     => array(),
+			'_waitlist'     => true,
+		);
+
+		$registration_id = self::$reg_db->insert( array(
+			'event_id'         => $event_id,
+			'group_id'         => null,
+			'customer_name'    => trim( $first . ' ' . $last ),
+			'customer_email'   => $email,
+			'customer_phone'   => $phone,
+			'attendee_count'   => $quantity,
+			'custom_fields'    => wp_json_encode( $custom ),
+			'total_amount'     => 0,
+			'discount_amount'  => 0,
+			'amount_paid'      => 0,
+			'currency'         => BLT_Events_Helpers::get_currency_code(),
+			'payment_provider' => 'waitlist',
+			'status'           => 'waitlisted',
+		) );
+
+		if ( ! $registration_id ) {
+			return new WP_Error( 'db_error', __( 'Could not join the waitlist. Please try again.', 'blt-events' ) );
+		}
+
+		$attendees = array( array(
+			'attendee_name'  => trim( $first . ' ' . $last ),
+			'attendee_email' => $email,
+			'attendee_phone' => $phone,
+			'ticket_type'    => null,
+			'ticket_price'   => 0,
+			'custom_fields'  => wp_json_encode( $custom ),
+		) );
+		for ( $i = 1; $i < $quantity; $i++ ) {
+			$attendees[] = array(
+				'attendee_name'  => '',
+				'attendee_email' => '',
+				'attendee_phone' => '',
+				'ticket_type'    => null,
+				'ticket_price'   => 0,
+				'custom_fields'  => null,
+			);
+		}
+		self::$att_db->bulk_insert( $registration_id, $event_id, $attendees );
+
+		$result = array(
+			'registration_id' => $registration_id,
+			'group_id'        => null,
+			'total'           => 0,
+			'amount_paid'     => 0,
+			'status'          => 'waitlisted',
+			'review'          => array(),
+		);
+
+		/** This action is documented above in process_registration(). */
+		do_action( 'blt_registration_created', $registration_id, $result );
+
+		/**
+		 * Fires when someone joins an event's waitlist.
+		 *
+		 * @param int $registration_id The waitlist registration ID.
+		 * @param int $event_id        The event post ID.
+		 * @param int $quantity        Seats requested.
+		 */
+		do_action( 'blt_events_waitlist_joined', $registration_id, $event_id, $quantity );
 
 		return $result;
 	}
@@ -375,6 +688,8 @@ class BLT_Events_Registrations {
 			$total_price    += $price * $quantity;
 		}
 
+		$none_selected = ( 0 === $total_quantity && ! empty( $ticket_types ) );
+
 		// Fallback: single attendee if the order carried nothing we recognise.
 		if ( 0 === $total_quantity ) {
 			$total_quantity = 1;
@@ -384,6 +699,7 @@ class BLT_Events_Registrations {
 			'selections'     => $selections,
 			'total_quantity' => $total_quantity,
 			'subtotal'       => $total_price,
+			'none_selected'  => $none_selected,
 		);
 	}
 
@@ -402,6 +718,28 @@ class BLT_Events_Registrations {
 	}
 
 	/**
+	 * The ticket selections (index/quantity pairs) a form submission carries,
+	 * for providers that need to remember them independently of a session.
+	 *
+	 * @param int   $event_id The event post ID.
+	 * @param array $data     Submitted form data (unslashed).
+	 * @return array List of array( 'index' => int, 'quantity' => int ).
+	 */
+	public static function line_items_from_form( $event_id, $data ) {
+		$ticket_data = self::parse_ticket_selections( $event_id, $data );
+		$items       = array();
+
+		foreach ( $ticket_data['selections'] as $selection ) {
+			$items[] = array(
+				'index'    => (int) $selection['index'],
+				'quantity' => (int) $selection['quantity'],
+			);
+		}
+
+		return $items;
+	}
+
+	/**
 	 * Parse ticket type selections from form data.
 	 */
 	private static function parse_ticket_selections( $event_id, $data ) {
@@ -409,6 +747,7 @@ class BLT_Events_Registrations {
 		// visitor's role count; quantities submitted for hidden tickets
 		// are ignored.
 		$ticket_types = BLT_Events_Helpers::available_ticket_types( $event_id );
+		$has_tickets  = ! empty( BLT_Events_Helpers::get_ticket_types( $event_id ) );
 
 		$selections     = array();
 		$total_quantity = 0;
@@ -418,11 +757,21 @@ class BLT_Events_Registrations {
 			$qty_key  = 'ticket_quantity_' . $i;
 			$quantity = isset( $data[ $qty_key ] ) ? absint( $data[ $qty_key ] ) : 0;
 
+			/**
+			 * Filter the maximum quantity of one ticket type per registration.
+			 *
+			 * @param int   $max      Default 50.
+			 * @param array $ticket   Ticket definition.
+			 * @param int   $event_id The event post ID.
+			 */
+			$max_qty  = max( 1, (int) apply_filters( 'blt_events_max_ticket_quantity', 50, $ticket, $event_id ) );
+			$quantity = min( $quantity, $max_qty );
+
 			if ( $quantity > 0 ) {
 				$price = isset( $ticket['price'] ) ? (float) $ticket['price'] : 0;
 				$selections[] = array(
 					'index'    => $i,
-					'name'     => $ticket['name'] ?? 'Ticket',
+					'name'     => $ticket['name'] ?? __( 'Ticket', 'blt-events' ),
 					'price'    => $price,
 					'quantity' => $quantity,
 				);
@@ -431,15 +780,20 @@ class BLT_Events_Registrations {
 			}
 		}
 
-		// Fallback: single attendee if nothing selected
-		if ( $total_quantity === 0 ) {
+		// Only an event with no ticket types at all is a plain "one person
+		// signs up" form. When tickets exist and none was picked, the caller
+		// decides (on-site: reject; webhook: flag for review).
+		$none_selected = ( 0 === $total_quantity && $has_tickets );
+
+		if ( 0 === $total_quantity ) {
 			$total_quantity = 1;
 		}
 
 		return array(
 			'selections'     => $selections,
-			'total_quantity'  => $total_quantity,
-			'subtotal'        => $total_price,
+			'total_quantity' => $total_quantity,
+			'subtotal'       => $total_price,
+			'none_selected'  => $none_selected,
 		);
 	}
 
@@ -447,9 +801,9 @@ class BLT_Events_Registrations {
 	 * Calculate total price including group discounts and coupons.
 	 */
 	private static function calculate_total( $event_id, $ticket_data, $form_data ) {
-		$subtotal  = $ticket_data['subtotal'];
-		$discount  = 0;
-		$coupon_id = null;
+		$subtotal    = $ticket_data['subtotal'];
+		$discount    = 0;
+		$coupon_id   = null;
 		$coupon_data = null;
 
 		// Apply group discount
@@ -464,31 +818,41 @@ class BLT_Events_Registrations {
 		}
 
 		// Apply coupon
-		$coupon_code = isset( $form_data['coupon_code'] ) ? strtoupper( trim( $form_data['coupon_code'] ) ) : '';
+		$coupon_code = isset( $form_data['coupon_code'] ) ? strtoupper( trim( (string) $form_data['coupon_code'] ) ) : '';
 		if ( $coupon_code ) {
 			$coupon_result = BLT_Events_Coupons::validate_coupon( $coupon_code, $event_id, $ticket_data['total_quantity'] );
 			if ( ! is_wp_error( $coupon_result ) ) {
 				$coupon_discount = BLT_Events_Coupons::calculate_discount( $coupon_result, $subtotal - $discount );
-				$discount  += $coupon_discount;
-				$coupon_id  = $coupon_result->ID;
+				$discount   += $coupon_discount;
+				$coupon_id   = $coupon_result->ID;
 				$coupon_data = array(
-					'code'     => $coupon_code,
-					'type'     => get_post_meta( $coupon_result->ID, '_blt_discount_type', true ),
-					'amount'   => get_post_meta( $coupon_result->ID, '_blt_amount', true ),
-					'saved'    => $coupon_discount,
+					'code'   => $coupon_code,
+					'type'   => get_post_meta( $coupon_result->ID, '_blt_discount_type', true ),
+					'amount' => get_post_meta( $coupon_result->ID, '_blt_amount', true ),
+					'saved'  => $coupon_discount,
 				);
 			}
 		}
 
 		$total = max( 0, $subtotal - $discount );
 
-		return array(
+		$pricing = array(
 			'subtotal'    => round( $subtotal, 2 ),
 			'discount'    => round( $discount, 2 ),
 			'total'       => round( $total, 2 ),
 			'coupon_id'   => $coupon_id,
 			'coupon_data' => $coupon_data,
 		);
+
+		/**
+		 * Filter the computed pricing of an order.
+		 *
+		 * @param array $pricing     subtotal, discount, total, coupon_id, coupon_data.
+		 * @param int   $event_id    The event post ID.
+		 * @param array $ticket_data Parsed ticket selections.
+		 * @param array $form_data   Submitted data.
+		 */
+		return apply_filters( 'blt_events_order_pricing', $pricing, $event_id, $ticket_data, $form_data );
 	}
 
 	/**
@@ -501,7 +865,7 @@ class BLT_Events_Registrations {
 		$attendees[] = array(
 			'attendee_name'  => trim( ( $primary_validated['first_name'] ?? '' ) . ' ' . ( $primary_validated['last_name'] ?? '' ) ),
 			'attendee_email' => $primary_validated['email'] ?? '',
-			'attendee_phone' => $primary_validated['mobile_number'] ?? '',
+			'attendee_phone' => $primary_validated['mobile_number'] ?? ( $primary_validated['phone'] ?? '' ),
 			'ticket_type'    => ! empty( $ticket_data['selections'] ) ? $ticket_data['selections'][0]['name'] : null,
 			'ticket_price'   => ! empty( $ticket_data['selections'] ) ? $ticket_data['selections'][0]['price'] : 0,
 			'custom_fields'  => wp_json_encode( $primary_validated ),
@@ -514,18 +878,41 @@ class BLT_Events_Registrations {
 			$ticket_prices[ $selection['name'] ] = $selection['price'];
 		}
 
+		// Seat map: one entry per purchased seat, in selection order, so a seat
+		// can be labelled with the ticket type it was actually sold under.
+		$seats = array();
+		foreach ( $ticket_data['selections'] as $selection ) {
+			for ( $n = 0; $n < (int) $selection['quantity']; $n++ ) {
+				$seats[] = $selection;
+			}
+		}
+
 		// Additional attendees from form data (bounded by the validated
 		// total quantity so one request cannot flood the attendees table).
 		if ( isset( $data['attendees'] ) && is_array( $data['attendees'] ) ) {
 			$max_additional = max( 0, (int) $ticket_data['total_quantity'] - 1 );
 			$additional     = array_slice( array_values( $data['attendees'] ), 0, $max_additional );
 
-			foreach ( $additional as $att ) {
+			foreach ( $additional as $n => $att ) {
 				if ( ! is_array( $att ) ) {
 					continue;
 				}
 
 				$ticket_type = sanitize_text_field( $att['ticket_type'] ?? '' );
+
+				// A ticket type the order does not contain falls back to the
+				// seat this attendee occupies.
+				if ( '' === $ticket_type || ! isset( $ticket_prices[ $ticket_type ] ) ) {
+					$seat        = $seats[ $n + 1 ] ?? null;
+					$ticket_type = $seat ? $seat['name'] : '';
+				}
+
+				$custom = array();
+				if ( isset( $att['custom_fields'] ) && is_array( $att['custom_fields'] ) ) {
+					foreach ( $att['custom_fields'] as $k => $v ) {
+						$custom[ sanitize_key( $k ) ] = is_scalar( $v ) ? sanitize_text_field( (string) $v ) : '';
+					}
+				}
 
 				$attendees[] = array(
 					'attendee_name'  => sanitize_text_field( $att['name'] ?? '' ),
@@ -533,17 +920,8 @@ class BLT_Events_Registrations {
 					'attendee_phone' => BLT_Events_Helpers::sanitize_phone( $att['phone'] ?? '' ),
 					'ticket_type'    => $ticket_type,
 					'ticket_price'   => isset( $ticket_prices[ $ticket_type ] ) ? (float) $ticket_prices[ $ticket_type ] : 0,
-					'custom_fields'  => isset( $att['custom_fields'] ) ? wp_json_encode( $att['custom_fields'] ) : null,
+					'custom_fields'  => $custom ? wp_json_encode( $custom ) : null,
 				);
-			}
-		}
-
-		// Seat map: one entry per purchased seat, in selection order, so a seat
-		// can be labelled with the ticket type it was actually sold under.
-		$seats = array();
-		foreach ( $ticket_data['selections'] as $selection ) {
-			for ( $n = 0; $n < (int) $selection['quantity']; $n++ ) {
-				$seats[] = $selection;
 			}
 		}
 
@@ -565,90 +943,38 @@ class BLT_Events_Registrations {
 			);
 		}
 
-		return $attendees;
+		/**
+		 * Filter the attendee rows about to be inserted for a registration.
+		 *
+		 * @param array $attendees        Rows.
+		 * @param array $data             Submitted data.
+		 * @param array $ticket_data      Parsed ticket selections.
+		 * @param array $primary_validated Validated primary registrant data.
+		 */
+		return apply_filters( 'blt_events_attendees_data', $attendees, $data, $ticket_data, $primary_validated );
 	}
 
-	/**
-	 * AJAX handler for coupon validation.
-	 */
-	public static function ajax_validate_coupon() {
-		check_ajax_referer( 'blt_registration_nonce', 'nonce' );
-
-		$code     = strtoupper( sanitize_text_field( $_POST['coupon_code'] ?? '' ) );
-		$event_id = absint( $_POST['event_id'] ?? 0 );
-		$quantity = absint( $_POST['quantity'] ?? 1 );
-
-		$result = BLT_Events_Coupons::validate_coupon( $code, $event_id, $quantity );
-
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-		}
-
-		$type   = get_post_meta( $result->ID, '_blt_discount_type', true );
-		$amount = get_post_meta( $result->ID, '_blt_amount', true );
-
-		wp_send_json_success( array(
-			'code'   => $code,
-			'type'   => $type,
-			'amount' => $amount,
-			'label'  => $type === 'percentage' ? sprintf( __( '%s%% off', 'blt-events' ), $amount ) : sprintf( __( '$%s off', 'blt-events' ), number_format( (float) $amount, 2 ) ),
-		) );
-	}
+	/* ------------------------------------------------------------------
+	 * Emails (kept for backwards compatibility; see BLT_Events_Emails)
+	 * ---------------------------------------------------------------- */
 
 	/**
-	 * Send confirmation email after registration.
+	 * Send the confirmation email for a registration.
+	 *
+	 * @deprecated 2.4.0 Use BLT_Events_Emails::send( 'registration', $registration ).
 	 */
-	public static function send_confirmation_email( $registration_id, $result ) {
-		$reg = self::$reg_db->get( $registration_id );
+	public static function send_confirmation_email( $registration_id, $result = array() ) {
+		$reg = self::$reg_db->get( absint( $registration_id ) );
 		if ( ! $reg || $reg->status !== 'confirmed' ) {
 			return;
 		}
 
-		$event = get_post( $reg->event_id );
-		if ( ! $event ) {
-			return;
-		}
-
-		$subject_template = get_option( 'blt_events_email_subject_registration', __( 'Registration confirmation for {event_name}', 'blt-events' ) );
-		$body_template    = get_option( 'blt_events_email_template_registration', __( 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.', 'blt-events' ) );
-
-		$event_date = get_post_meta( $event->ID, '_blt_event_date', true );
-		$event_time = get_post_meta( $event->ID, '_blt_event_start_time', true );
-
-		$replacements = array(
-			'{customer_name}'  => $reg->customer_name,
-			'{event_name}'     => $event->post_title,
-			'{event_date}'     => $event_date,
-			'{event_time}'     => $event_time,
-			'{event_location}' => BLT_Events_Helpers::get_event_location_string( $event->ID ),
-			'{event_url}'      => get_permalink( $event->ID ),
-		);
-
-		$subject = str_replace( array_keys( $replacements ), array_values( $replacements ), $subject_template );
-		$body    = str_replace( array_keys( $replacements ), array_values( $replacements ), $body_template );
-
-		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
-
-		// Attach a calendar invite (.ics) when enabled in Settings > Emails.
-		$attachments = array();
-		$ics_path    = '';
-		if ( get_option( 'blt_events_calendar_invite_enabled', '1' ) === '1' ) {
-			$ics_content = BLT_Events_Helpers::generate_ics_content( $event );
-			$ics_path    = get_temp_dir() . 'blt-event-' . $event->ID . '-' . wp_generate_password( 8, false ) . '.ics';
-
-			if ( file_put_contents( $ics_path, $ics_content ) !== false ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-				$attachments[] = $ics_path;
-			} else {
-				$ics_path = '';
-			}
-		}
-
-		wp_mail( $reg->customer_email, $subject, wpautop( $body ), $headers, $attachments );
-
-		if ( $ics_path !== '' ) {
-			wp_delete_file( $ics_path );
-		}
+		BLT_Events_Emails::send( 'registration', $reg );
 	}
+
+	/* ------------------------------------------------------------------
+	 * Reads and status transitions
+	 * ---------------------------------------------------------------- */
 
 	/**
 	 * Get a registration by ID.
@@ -666,20 +992,56 @@ class BLT_Events_Registrations {
 
 	/**
 	 * Update registration status.
+	 *
+	 * Every status change in the plugin goes through here so the lifecycle
+	 * actions fire exactly once per transition, whoever triggered it: the
+	 * bulk action on the Registrations screen, the REST API, a refund
+	 * webhook, or code. The actions are what send the confirmation email,
+	 * tag the CRM contact and cross-register attendees into meeting rooms.
+	 *
+	 * @param int    $registration_id The registration ID.
+	 * @param string $status          New status slug.
+	 * @return int|false Rows updated (0 when nothing changed), or false on error.
 	 */
 	public static function update_status( $registration_id, $status ) {
-		$allowed = array( 'pending', 'confirmed', 'cancelled', 'refunded' );
-		if ( ! in_array( $status, $allowed, true ) ) {
+		$registration_id = absint( $registration_id );
+		$status          = sanitize_key( $status );
+
+		if ( ! array_key_exists( $status, BLT_Events_Helpers::registration_statuses() ) ) {
 			return false;
 		}
-		return self::$reg_db->update( $registration_id, array( 'status' => $status ) );
+
+		$reg = self::$reg_db->get( $registration_id );
+		if ( ! $reg ) {
+			return false;
+		}
+
+		$old_status = (string) $reg->status;
+		if ( $old_status === $status ) {
+			return 0;
+		}
+
+		$result = self::$reg_db->update( $registration_id, array( 'status' => $status ) );
+		if ( false === $result ) {
+			return false;
+		}
+
+		self::fire_transition_hooks( $registration_id, $status, $old_status, $reg->event_id );
+
+		return $result;
 	}
 
 	/**
 	 * Confirm a pending registration (e.g., after payment).
 	 */
 	public static function confirm_registration( $registration_id, $payment_data = array() ) {
-		$data = array( 'status' => 'confirmed' );
+		$registration_id = absint( $registration_id );
+		$reg             = self::$reg_db->get( $registration_id );
+		if ( ! $reg ) {
+			return false;
+		}
+
+		$data = array();
 
 		if ( ! empty( $payment_data['payment_id'] ) ) {
 			$data['payment_id'] = sanitize_text_field( $payment_data['payment_id'] );
@@ -694,12 +1056,97 @@ class BLT_Events_Registrations {
 			$data['payment_provider'] = sanitize_text_field( $payment_data['provider'] );
 		}
 
-		$result = self::$reg_db->update( $registration_id, $data );
-
-		if ( $result !== false ) {
-			do_action( 'blt_registration_confirmed', $registration_id );
+		if ( ! empty( $data ) && false === self::$reg_db->update( $registration_id, $data ) ) {
+			return false;
 		}
 
+		if ( 'confirmed' === $reg->status ) {
+			return 0;
+		}
+
+		$result = self::$reg_db->update( $registration_id, array( 'status' => 'confirmed' ) );
+		if ( false === $result ) {
+			return false;
+		}
+
+		self::fire_transition_hooks( $registration_id, 'confirmed', (string) $reg->status, $reg->event_id );
+
 		return $result;
+	}
+
+	/**
+	 * Fire the lifecycle actions for a status change.
+	 */
+	private static function fire_transition_hooks( $registration_id, $status, $old_status, $event_id ) {
+		/**
+		 * Fires on every registration status change.
+		 *
+		 * @param int    $registration_id The registration ID.
+		 * @param string $status          New status.
+		 * @param string $old_status      Previous status.
+		 */
+		do_action( 'blt_registration_status_changed', $registration_id, $status, $old_status );
+
+		switch ( $status ) {
+			case 'confirmed':
+				/**
+				 * Fires when a registration becomes confirmed.
+				 *
+				 * @param int $registration_id The registration ID.
+				 */
+				do_action( 'blt_registration_confirmed', $registration_id );
+				break;
+			case 'cancelled':
+				/**
+				 * Fires when a registration is cancelled.
+				 *
+				 * @param int $registration_id The registration ID.
+				 */
+				do_action( 'blt_registration_cancelled', $registration_id );
+				break;
+			case 'refunded':
+				/**
+				 * Fires when a registration is refunded.
+				 *
+				 * @param int $registration_id The registration ID.
+				 */
+				do_action( 'blt_registration_refunded', $registration_id );
+				break;
+		}
+
+		// A seat was freed: if people are waiting, tell whoever manages the event.
+		$seat_statuses = BLT_Events_Helpers::seat_holding_statuses();
+		if ( in_array( $old_status, $seat_statuses, true ) && ! in_array( $status, $seat_statuses, true ) ) {
+			self::maybe_notify_waitlist( (int) $event_id );
+		}
+	}
+
+	/**
+	 * Fire the waitlist notice when an event with a waitlist has room again.
+	 *
+	 * @param int $event_id The event post ID.
+	 */
+	public static function maybe_notify_waitlist( $event_id ) {
+		if ( ! BLT_Events_Helpers::waitlist_enabled( $event_id ) ) {
+			return;
+		}
+
+		$waiting = self::$reg_db->count_waitlisted( $event_id );
+		if ( $waiting < 1 ) {
+			return;
+		}
+
+		$left = BLT_Events_Helpers::spots_left( $event_id );
+		if ( null !== $left && $left <= 0 ) {
+			return;
+		}
+
+		/**
+		 * Fires when a seat opens up on an event that has people waitlisted.
+		 *
+		 * @param int $event_id       The event post ID.
+		 * @param int $waitlist_count People currently on the waitlist.
+		 */
+		do_action( 'blt_events_waitlist_spot_opened', $event_id, $waiting );
 	}
 }

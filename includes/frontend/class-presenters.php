@@ -175,7 +175,7 @@ class BLT_Events_Presenters {
 	public static function ajax_search() {
 		check_ajax_referer( 'blt_presenter_search', 'nonce' );
 
-		if ( ! current_user_can( 'edit_posts' ) ) {
+		if ( ! current_user_can( 'edit_blt_events' ) && ! current_user_can( 'edit_posts' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'blt-events' ) ) );
 		}
 
@@ -236,32 +236,20 @@ class BLT_Events_Presenters {
 			return;
 		}
 
-		$label = count( $presenters ) > 1
-			? __( 'Presenters', 'blt-events' )
-			: __( 'Presenter', 'blt-events' );
-		?>
-		<div class="blt-event__card blt-event__presenters">
-			<h3 class="blt-event__card-title"><?php echo esc_html( $label ); ?></h3>
-			<ul class="blt-event__presenter-list">
-				<?php foreach ( $presenters as $p ) : ?>
-					<li class="blt-event__presenter">
-						<?php if ( $p['photo'] ) : ?>
-							<img class="blt-event__presenter-photo" src="<?php echo esc_url( $p['photo'] ); ?>" alt="<?php echo esc_attr( $p['name'] ); ?>" loading="lazy" />
-						<?php endif; ?>
-						<span class="blt-event__presenter-meta">
-							<?php if ( $p['url'] ) : ?>
-								<a class="blt-event__presenter-name" href="<?php echo esc_url( $p['url'] ); ?>"><?php echo esc_html( $p['name'] ); ?></a>
-							<?php else : ?>
-								<span class="blt-event__presenter-name"><?php echo esc_html( $p['name'] ); ?></span>
-							<?php endif; ?>
-							<?php if ( $p['role'] ) : ?>
-								<span class="blt-event__presenter-role"><?php echo esc_html( $p['role'] ); ?></span>
-							<?php endif; ?>
-						</span>
-					</li>
-				<?php endforeach; ?>
-			</ul>
-		</div>
-		<?php
+		/**
+		 * Filter the presenters shown on an event page.
+		 *
+		 * @param array $presenters Rows with name, role, bio, photo, url.
+		 * @param int   $event_id   The event post ID.
+		 */
+		$presenters = apply_filters( 'blt_events_presenters', $presenters, $event_id );
+
+		BLT_Events_Templates::include_template( 'single/presenters.php', array(
+			'event_id'   => $event_id,
+			'presenters' => $presenters,
+			'label'      => count( $presenters ) > 1
+				? __( 'Presenters', 'blt-events' )
+				: __( 'Presenter', 'blt-events' ),
+		) );
 	}
 }

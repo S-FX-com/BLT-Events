@@ -1,6 +1,12 @@
 <?php
 /**
- * Plugin activation: create custom DB tables and seed default data.
+ * Plugin activation, upgrades and defaults.
+ *
+ * Activation creates the custom tables, seeds the default fieldset, grants
+ * capabilities and schedules the reminder task. The same routine runs as an
+ * upgrade whenever the stored database version differs from the plugin's,
+ * because updates delivered through the update checker never re-run the
+ * activation hook.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -9,20 +15,129 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class BLT_Events_Activator {
 
-	public static function activate() {
-		self::migrate_from_cmt();
-		self::create_tables();
-		self::seed_default_fieldset();
-		self::set_default_options();
-		self::grant_capabilities();
+	const OPTION_DB_VERSION = 'blt_events_db_version';
+
+	/**
+	 * Activation hook.
+	 *
+	 * @param bool $network_wide Whether the plugin is being network-activated.
+	 */
+	public static function activate( $network_wide = false ) {
+		if ( is_multisite() && $network_wide ) {
+			$site_ids = get_sites( array( 'fields' => 'ids', 'number' => 0 ) );
+			foreach ( $site_ids as $site_id ) {
+				switch_to_blog( $site_id );
+				self::install();
+				restore_current_blog();
+			}
+			return;
+		}
+
+		self::install();
+	}
+
+	/**
+	 * Deactivation hook: stop the cron task, keep every bit of data.
+	 */
+	public static function deactivate() {
+		if ( class_exists( 'BLT_Events_Reminders' ) ) {
+			BLT_Events_Reminders::unschedule();
+		}
 		flush_rewrite_rules();
 	}
 
 	/**
-	 * Grant the plugin's management capability to administrators.
-	 * Other roles can be granted 'manage_blt_events' via a role editor.
+	 * A new site on a network where the plugin is network-active gets its
+	 * tables straight away.
+	 *
+	 * @param WP_Site $site The new site.
+	 */
+	public static function initialize_site( $site ) {
+		if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		if ( ! is_plugin_active_for_network( plugin_basename( BLT_EVENTS_PLUGIN_FILE ) ) ) {
+			return;
+		}
+
+		switch_to_blog( (int) $site->blog_id );
+		self::install();
+		restore_current_blog();
+	}
+
+	/**
+	 * Run the upgrade routine when the plugin was updated without being
+	 * re-activated. Cheap: one option read per request.
+	 */
+	public static function maybe_upgrade() {
+		$stored = (string) get_option( self::OPTION_DB_VERSION, '' );
+
+		if ( $stored === BLT_EVENTS_DB_VERSION ) {
+			return;
+		}
+
+		self::install();
+	}
+
+	/**
+	 * Install or upgrade the current site. Idempotent.
+	 */
+	public static function install() {
+		$stored     = (string) get_option( self::OPTION_DB_VERSION, '' );
+		$is_upgrade = '' !== $stored || self::is_installed();
+
+		self::migrate_from_cmt();
+		self::create_tables();
+		self::seed_default_fieldset();
+		self::set_default_options( $is_upgrade );
+		self::grant_capabilities();
+
+		if ( class_exists( 'BLT_Events_Reminders' ) ) {
+			BLT_Events_Reminders::schedule();
+		}
+
+		update_option( self::OPTION_DB_VERSION, BLT_EVENTS_DB_VERSION );
+
+		// Rewrite rules can only be flushed once the post type is registered;
+		// on plugins_loaded it is not yet, so defer to init.
+		if ( did_action( 'init' ) ) {
+			flush_rewrite_rules();
+		} else {
+			add_action( 'init', 'flush_rewrite_rules', 99 );
+		}
+
+		/**
+		 * Fires after the plugin installed or upgraded the current site.
+		 *
+		 * @param string $from_version Previously stored DB version ('' on a fresh install).
+		 * @param bool   $is_upgrade   Whether data already existed.
+		 */
+		do_action( 'blt_events_installed', $stored, $is_upgrade );
+	}
+
+	/**
+	 * Whether the registrations table already exists (an installed site
+	 * that predates the version option).
+	 */
+	private static function is_installed() {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'blt_registrations';
+
+		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table;
+	}
+
+	/**
+	 * Grant the plugin's capabilities to the standard roles and create the
+	 * Event Manager role.
 	 */
 	private static function grant_capabilities() {
+		if ( class_exists( 'BLT_Events_Roles' ) ) {
+			BLT_Events_Roles::install();
+			return;
+		}
+
 		$role = get_role( 'administrator' );
 		if ( $role && ! $role->has_cap( BLT_Events_Helpers::MANAGE_CAP ) ) {
 			$role->add_cap( BLT_Events_Helpers::MANAGE_CAP );
@@ -51,12 +166,12 @@ class BLT_Events_Activator {
 			'cmt_attendees'     => 'blt_attendees',
 		);
 		foreach ( $rename_map as $old => $new ) {
-			$old_table = $prefix . $old;
-			$new_table = $prefix . $new;
+			$old_table  = $prefix . $old;
+			$new_table  = $prefix . $new;
 			$old_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $old_table ) ) === $old_table;
 			$new_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $new_table ) ) === $new_table;
 			if ( $old_exists && ! $new_exists ) {
-				$wpdb->query( "RENAME TABLE `{$old_table}` TO `{$new_table}`" );
+				$wpdb->query( "RENAME TABLE `{$old_table}` TO `{$new_table}`" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			}
 		}
 
@@ -101,7 +216,7 @@ class BLT_Events_Activator {
 
 		// Fieldsets table
 		$table_fieldsets = $wpdb->prefix . 'blt_fieldsets';
-		$sql_fieldsets = "CREATE TABLE {$table_fieldsets} (
+		$sql_fieldsets   = "CREATE TABLE {$table_fieldsets} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			name varchar(255) NOT NULL,
 			slug varchar(255) NOT NULL,
@@ -118,7 +233,7 @@ class BLT_Events_Activator {
 
 		// Registrations table
 		$table_registrations = $wpdb->prefix . 'blt_registrations';
-		$sql_registrations = "CREATE TABLE {$table_registrations} (
+		$sql_registrations   = "CREATE TABLE {$table_registrations} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			event_id bigint(20) unsigned NOT NULL,
 			group_id char(36) DEFAULT NULL,
@@ -144,12 +259,13 @@ class BLT_Events_Activator {
 			KEY idx_group_id (group_id),
 			KEY idx_email (customer_email),
 			KEY idx_status (status),
-			KEY idx_payment_id (payment_id)
+			KEY idx_payment_id (payment_id),
+			KEY idx_event_status (event_id, status)
 		) {$charset};";
 
 		// Attendees table (multi-attendee support)
 		$table_attendees = $wpdb->prefix . 'blt_attendees';
-		$sql_attendees = "CREATE TABLE {$table_attendees} (
+		$sql_attendees   = "CREATE TABLE {$table_attendees} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			registration_id bigint(20) unsigned NOT NULL,
 			event_id bigint(20) unsigned NOT NULL,
@@ -171,8 +287,6 @@ class BLT_Events_Activator {
 		dbDelta( $sql_fieldsets );
 		dbDelta( $sql_registrations );
 		dbDelta( $sql_attendees );
-
-		update_option( 'blt_events_db_version', BLT_EVENTS_DB_VERSION );
 	}
 
 	// ----- Default fieldset -----
@@ -195,176 +309,136 @@ class BLT_Events_Activator {
 		self::seed_default_fieldset();
 	}
 
-	private static function seed_default_fieldset() {
-		global $wpdb;
-		$table = $wpdb->prefix . 'blt_fieldsets';
-
-		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE slug = 'blt-standard' OR is_default = 1" );
-		if ( $exists ) {
-			return;
-		}
-
+	/**
+	 * The fields a fresh install starts with: a generic name/email/phone
+	 * form. Sites that need more pick a preset in the builder or add fields.
+	 *
+	 * @return array
+	 */
+	public static function default_fields() {
 		$fields = array(
 			array(
-				'key'         => 'title',
-				'type'        => 'select',
-				'label'       => 'Title',
-				'required'    => false,
-				'width'       => 'third',
-				'order'       => 0,
-				'options'     => array( 'Mr', 'Ms', 'Mrs', 'Dr' ),
-				'allow_other' => true,
-				'placeholder' => '',
-				'validation'  => array(),
-				'conditional' => array(),
+				'key'      => 'first_name',
+				'type'     => 'text',
+				'label'    => __( 'First Name', 'blt-events' ),
+				'required' => true,
+				'width'    => 'half',
+				'order'    => 0,
 			),
 			array(
-				'key'         => 'first_name',
-				'type'        => 'text',
-				'label'       => 'First Name',
-				'required'    => true,
-				'width'       => 'half',
-				'order'       => 1,
-				'options'     => array(),
-				'allow_other' => false,
-				'placeholder' => '',
-				'validation'  => array(),
-				'conditional' => array(),
+				'key'      => 'last_name',
+				'type'     => 'text',
+				'label'    => __( 'Last Name', 'blt-events' ),
+				'required' => true,
+				'width'    => 'half',
+				'order'    => 1,
 			),
 			array(
-				'key'         => 'last_name',
-				'type'        => 'text',
-				'label'       => 'Last Name',
-				'required'    => true,
-				'width'       => 'half',
-				'order'       => 2,
-				'options'     => array(),
-				'allow_other' => false,
-				'placeholder' => '',
-				'validation'  => array(),
-				'conditional' => array(),
-			),
-			array(
-				'key'         => 'email',
-				'type'        => 'email',
-				'label'       => 'Email',
-				'required'    => true,
-				'width'       => 'full',
-				'order'       => 3,
-				'options'     => array(),
-				'allow_other' => false,
-				'placeholder' => '',
-				'validation'  => array(),
-				'conditional' => array(),
+				'key'      => 'email',
+				'type'     => 'email',
+				'label'    => __( 'Email', 'blt-events' ),
+				'required' => true,
+				'width'    => 'full',
+				'order'    => 2,
 			),
 			array(
 				'key'         => 'mobile_number',
 				'type'        => 'tel',
-				'label'       => 'Mobile Number',
-				'required'    => true,
-				'width'       => 'full',
-				'order'       => 4,
-				'options'     => array(),
-				'allow_other' => false,
-				'placeholder' => 'Include country code',
-				'validation'  => array(),
-				'conditional' => array(),
-			),
-			array(
-				'key'         => 'organization',
-				'type'        => 'text',
-				'label'       => 'Organization / Company',
-				'required'    => true,
-				'width'       => 'full',
-				'order'       => 5,
-				'options'     => array(),
-				'allow_other' => false,
-				'placeholder' => '',
-				'validation'  => array(),
-				'conditional' => array(),
-			),
-			array(
-				'key'         => 'job_title',
-				'type'        => 'text',
-				'label'       => 'Job Title / Role',
-				'required'    => true,
-				'width'       => 'full',
-				'order'       => 6,
-				'options'     => array(),
-				'allow_other' => false,
-				'placeholder' => '',
-				'validation'  => array(),
-				'conditional' => array(),
-			),
-			array(
-				'key'         => 'professional_credentials',
-				'type'        => 'select',
-				'label'       => 'Professional Credentials',
+				'label'       => __( 'Phone', 'blt-events' ),
 				'required'    => false,
 				'width'       => 'full',
-				'order'       => 7,
-				'options'     => array( 'CMT', 'CFA', 'CAIA', 'CFP', 'MSTA', 'None' ),
-				'allow_other' => true,
-				'placeholder' => '',
-				'validation'  => array(),
-				'conditional' => array(),
-			),
-			array(
-				'key'         => 'linkedin_website',
-				'type'        => 'url',
-				'label'       => 'LinkedIn / Website',
-				'required'    => false,
-				'width'       => 'full',
-				'order'       => 8,
-				'options'     => array(),
-				'allow_other' => false,
-				'placeholder' => 'https://',
-				'validation'  => array(),
-				'conditional' => array(),
+				'order'       => 3,
+				'placeholder' => __( 'Include country code', 'blt-events' ),
 			),
 		);
 
-		$consent_fields = array(
-			array(
-				'key'      => 'terms_privacy',
-				'label'    => 'I accept the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>.',
-				'required' => true,
-			),
-			array(
-				'key'      => 'data_consent',
-				'label'    => 'I consent to the collection and processing of my personal data in accordance with GDPR / PDPL.',
-				'required' => true,
-			),
-			array(
-				'key'      => 'marketing_optin',
-				'label'    => 'I would like to receive updates and marketing communications.',
-				'required' => false,
-			),
-		);
+		/**
+		 * Filter the fields of the default fieldset seeded on a fresh install.
+		 *
+		 * @param array $fields Field definitions.
+		 */
+		$fields = apply_filters( 'blt_events_default_fieldset_fields', $fields );
+
+		if ( class_exists( 'BLT_Events_Fieldsets' ) ) {
+			$fields = array_map( array( 'BLT_Events_Fieldsets', 'normalize_field' ), (array) $fields );
+		}
+
+		return $fields;
+	}
+
+	private static function seed_default_fieldset() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'blt_fieldsets';
+
+		$exists = $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE is_default = 1" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		if ( $exists ) {
+			return;
+		}
+
+		$consent_fields = class_exists( 'BLT_Events_Fieldsets' )
+			? BLT_Events_Fieldsets::default_consent_fields()
+			: array();
+
+		$slug = 'default';
+		$db   = class_exists( 'BLT_Events_Fieldsets_DB' ) ? new BLT_Events_Fieldsets_DB() : null;
+		if ( $db && $db->get_by_slug( $slug ) ) {
+			$slug = 'default-' . wp_generate_password( 4, false, false );
+		}
 
 		$wpdb->insert( $table, array(
-			'name'           => 'BLT Standard',
-			'slug'           => 'blt-standard',
-			'description'    => 'Default registration fieldset for BLT Association events.',
-			'fields'         => wp_json_encode( $fields ),
+			'name'           => __( 'Default Registration Form', 'blt-events' ),
+			'slug'           => $slug,
+			'description'    => __( 'Name, email and phone. Used by every event that does not pick a fieldset of its own.', 'blt-events' ),
+			'fields'         => wp_json_encode( self::default_fields() ),
 			'consent_fields' => wp_json_encode( $consent_fields ),
 			'is_default'     => 1,
 			'status'         => 'active',
 			'created_at'     => current_time( 'mysql' ),
 			'updated_at'     => current_time( 'mysql' ),
-		));
+		) );
 	}
 
 	// ----- Default options -----
 
-	private static function set_default_options() {
+	/**
+	 * Seed options that have never been saved.
+	 *
+	 * A fresh install gets the plug-and-play defaults. An upgrade seeds the
+	 * value that preserves what the site was already doing, so an update
+	 * never silently changes a live page; the admin can opt in afterwards.
+	 *
+	 * @param bool $is_upgrade Whether the plugin was already installed.
+	 */
+	private static function set_default_options( $is_upgrade ) {
 		$defaults = array(
-			'blt_events_payment_provider' => 'none',
-			'blt_events_date_format'      => 'F j, Y',
+			'blt_events_payment_provider'          => 'none',
+			'blt_events_date_format'               => 'F j, Y',
+			'blt_events_display_currency_sign'     => '1',
+			'blt_events_schema_enabled'            => '1',
+			'blt_events_email_pending_enabled'     => '1',
+			'blt_events_email_waitlist_enabled'    => '1',
+			'blt_events_single_show_featured'      => '1',
+			'blt_events_single_show_back'          => '1',
+			'blt_events_single_show_calendar_links' => '1',
+			// Fresh vs upgrade below.
+			'blt_events_single_show_title'         => $is_upgrade ? '1' : '0',
+			'blt_events_archive_mode'              => $is_upgrade ? 'theme' : 'plugin',
+			'blt_events_reminder_24h_enabled'      => $is_upgrade ? '0' : '1',
+			'blt_events_reminder_1h_enabled'       => $is_upgrade ? '0' : '1',
+			'blt_events_admin_notify_enabled'      => $is_upgrade ? '0' : '1',
+			'blt_events_email_wrapper_enabled'     => $is_upgrade ? '0' : '1',
 		);
 
+		/**
+		 * Filter the options seeded on install/upgrade.
+		 *
+		 * @param array $defaults   Option name => value.
+		 * @param bool  $is_upgrade Whether the plugin was already installed.
+		 */
+		$defaults = apply_filters( 'blt_events_default_options', $defaults, $is_upgrade );
+
 		foreach ( $defaults as $key => $value ) {
-			if ( get_option( $key ) === false ) {
+			if ( get_option( $key, null ) === null ) {
 				update_option( $key, $value );
 			}
 		}

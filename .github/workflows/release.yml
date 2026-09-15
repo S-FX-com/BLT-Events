@@ -88,8 +88,17 @@ jobs:
             --exclude '.github' \
             --exclude 'build' \
             --exclude '.gitignore' \
+            --exclude '.distignore' \
             --exclude '*.md' \
-            --exclude 'blt-family-smoke.php'
+            --exclude 'blt-family-smoke.php' \
+            --exclude 'tests' \
+            --exclude 'vendor' \
+            --exclude 'node_modules' \
+            --exclude 'composer.json' \
+            --exclude 'composer.lock' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'bin'
           cd build
           zip -rq blt-events.zip blt-events
           echo "Zip contents (top level):"

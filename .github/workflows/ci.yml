@@ -1,0 +1,103 @@
+name: CI
+
+# Lint, coding standards and unit tests for every push and pull request.
+# The release workflow is separate and only runs on main.
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: PHP ${{ matrix.php }} syntax
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: none
+
+      - name: php -l
+        run: |
+          set -e
+          while IFS= read -r file; do
+            php -l "$file" > /dev/null
+          done < <(git ls-files '*.php' | grep -v '^includes/lib/')
+          echo "All PHP files parse on PHP ${{ matrix.php }}."
+
+  standards:
+    name: Coding standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: phpcs
+        run: composer phpcs -- --report=checkstyle | cs2pr || composer phpcs
+
+  tests:
+    name: Unit tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: phpunit
+        run: composer test
+
+  i18n:
+    name: Translation template is current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Regenerate POT
+        run: node bin/make-pot.js
+
+      - name: Check for drift
+        run: |
+          if ! git diff --quiet --ignore-matching-lines='^"POT-Creation-Date' -- languages/blt-events.pot; then
+            echo "languages/blt-events.pot is out of date. Run: node bin/make-pot.js" >&2
+            git --no-pager diff -- languages/blt-events.pot | head -n 80
+            exit 1
+          fi

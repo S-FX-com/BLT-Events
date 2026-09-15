@@ -111,7 +111,9 @@ class BLT_Events_Coupon_CPT {
             'show_in_menu'       => 'edit.php?post_type=event',
             'show_in_admin_bar'  => true,
             'menu_position'      => null,
-            'capability_type'    => 'post',
+            // Coupons are managed by whoever manages events (see BLT_Events_Roles).
+            'capability_type'    => array( 'blt_event', 'blt_events' ),
+            'map_meta_cap'       => true,
             'hierarchical'       => false,
             'supports'           => array( 'title' ),
             'has_archive'        => false,

@@ -54,12 +54,22 @@
 	});
 
 	/**
-	 * Handle "Other" select fields.
+	 * Handle "Other" options on dropdowns and radio groups.
 	 */
 	$(document).on("change", ".blt-field-wrap select", function () {
 		var otherInput = $(this).siblings(".blt-other-input");
 		if ($(this).val() === "__other__") {
-			otherInput.show().focus();
+			otherInput.show().trigger("focus");
+		} else {
+			otherInput.hide();
+		}
+	});
+
+	$(document).on("change", ".blt-field-wrap .blt-choice-group input[type='radio']", function () {
+		var $group = $(this).closest(".blt-choice-group");
+		var otherInput = $group.find(".blt-other-input");
+		if ($(this).val() === "__other__") {
+			otherInput.show().trigger("focus");
 		} else {
 			otherInput.hide();
 		}

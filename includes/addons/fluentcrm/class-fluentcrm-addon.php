@@ -17,13 +17,11 @@ class BLT_Events_FluentCRM_Addon {
 			return;
 		}
 
-		// Sync on registration
+		// Sync on registration. Settings live on Settings > Integrations
+		// (BLT_Events_Admin_Settings::render_fluentcrm_card).
 		add_action( 'blt_registration_created', array( __CLASS__, 'sync_contact' ), 20, 2 );
 		add_action( 'blt_registration_confirmed', array( __CLASS__, 'tag_confirmed' ), 20, 1 );
 		add_action( 'blt_registration_refunded', array( __CLASS__, 'tag_refunded' ), 20, 1 );
-
-		// Admin settings
-		add_filter( 'blt_events_settings_sections', array( __CLASS__, 'add_settings_section' ) );
 	}
 
 	/**
@@ -38,6 +36,17 @@ class BLT_Events_FluentCRM_Addon {
 		$reg    = $reg_db->get( $registration_id );
 
 		if ( ! $reg ) {
+			return;
+		}
+
+		/**
+		 * Filter whether a registration is synced to FluentCRM. Waitlist
+		 * sign-ups are synced by default; return false to skip them.
+		 *
+		 * @param bool   $sync Whether to sync.
+		 * @param object $reg  Registration row.
+		 */
+		if ( ! apply_filters( 'blt_events_fluentcrm_should_sync', true, $reg ) ) {
 			return;
 		}
 
@@ -221,19 +230,4 @@ class BLT_Events_FluentCRM_Addon {
 		}
 	}
 
-	/**
-	 * Add FluentCRM settings section to plugin settings.
-	 */
-	public static function add_settings_section( $sections ) {
-		$sections['fluentcrm'] = array(
-			'title'  => 'FluentCRM Integration',
-			'fields' => array(
-				'blt_events_fluentcrm_list_id'          => 'Default List ID',
-				'blt_events_fluentcrm_registration_tag' => 'Registration Tag ID',
-				'blt_events_fluentcrm_confirmed_tag'    => 'Confirmed Tag ID',
-				'blt_events_fluentcrm_refunded_tag'     => 'Refunded Tag ID',
-			),
-		);
-		return $sections;
-	}
 }

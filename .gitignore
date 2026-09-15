@@ -1,0 +1,17 @@
+# Dependencies
+/vendor/
+/node_modules/
+composer.lock
+package-lock.json
+
+# Build output
+/build/
+
+# Tooling caches
+.phpunit.result.cache
+.phpcs.cache
+/.phpunit.cache/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

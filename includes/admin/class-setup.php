@@ -53,7 +53,7 @@ class BLT_Events_Setup {
 			'key'          => 'events_page',
 			'label'        => __( 'An events page exists', 'blt-events' ),
 			'done'         => $has_page,
-			'help'         => __( 'A published page holding the [blt_events_calendar] shortcode. Visitors need somewhere to browse events, and "back to events" links point here.', 'blt-events' ),
+			'help'         => __( 'A published page holding the Events Calendar block or the [blt_events_calendar] shortcode. Visitors need somewhere to browse events, and "back to events" links point here.', 'blt-events' ),
 			'action_url'   => $has_page
 				? get_edit_post_link( $page_id, 'raw' )
 				: wp_nonce_url( admin_url( 'admin-post.php?action=' . self::ACTION_CREATE ), self::ACTION_CREATE ),
@@ -327,11 +327,24 @@ class BLT_Events_Setup {
 			exit;
 		}
 
+		// The block when the site edits pages with blocks (so it shows up
+		// with its controls in the editor), the shortcode otherwise.
+		$content = function_exists( 'use_block_editor_for_post_type' ) && use_block_editor_for_post_type( 'page' )
+			? '<!-- wp:blt-events/calendar {"view":"list","switcher":true} /-->'
+			: '[blt_events_calendar view="list" switcher="yes"]';
+
+		/**
+		 * Filter the content of the auto-created Events page.
+		 *
+		 * @param string $content Post content.
+		 */
+		$content = apply_filters( 'blt_events_events_page_content', $content );
+
 		$page_id = wp_insert_post( array(
 			'post_type'    => 'page',
 			'post_status'  => 'publish',
 			'post_title'   => __( 'Events', 'blt-events' ),
-			'post_content' => '[blt_events_calendar view="calendar" switcher="yes"]',
+			'post_content' => $content,
 		), true );
 
 		if ( is_wp_error( $page_id ) ) {

@@ -2,9 +2,10 @@
 /**
  * BLT Events - Admin Settings Page
  *
- * Tabbed settings screen: General, Payments, Emails, Integrations, and a
- * Shortcodes reference. Each tab posts to its own settings group so saving
- * one tab never resets options that live on another tab.
+ * Tabbed settings screen: General, Appearance, Payments, Emails,
+ * Integrations, and a Shortcodes reference. Each tab posts to its own
+ * settings group so saving one tab never resets options that live on
+ * another tab.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,14 +23,19 @@ class BLT_Events_Admin_Settings {
 	 * has no settings group.
 	 */
 	public static function tabs() {
-		return array(
+		/**
+		 * Filter the settings tabs.
+		 *
+		 * @param array $tabs Slug => label.
+		 */
+		return apply_filters( 'blt_events_settings_tabs', array(
 			'general'      => __( 'General', 'blt-events' ),
 			'appearance'   => __( 'Appearance', 'blt-events' ),
 			'payments'     => __( 'Payments', 'blt-events' ),
 			'emails'       => __( 'Emails', 'blt-events' ),
 			'integrations' => __( 'Integrations', 'blt-events' ),
-			'shortcodes'   => __( 'Shortcodes', 'blt-events' ),
-		);
+			'shortcodes'   => __( 'Shortcodes & Blocks', 'blt-events' ),
+		) );
 	}
 
 	private static function current_tab() {
@@ -70,11 +76,23 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_general', 'blt_events_events_page_id', array(
 			'sanitize_callback' => 'absint',
 		) );
+		register_setting( 'blt_events_settings_general', BLT_Events_Archive::OPTION, array(
+			'sanitize_callback' => array( 'BLT_Events_Archive', 'sanitize_mode' ),
+			'default'           => 'plugin',
+		) );
 		register_setting( 'blt_events_settings_general', 'blt_events_map_provider', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_map_provider' ),
 		) );
 		register_setting( 'blt_events_settings_general', 'blt_events_google_maps_api_key', array(
 			'sanitize_callback' => 'sanitize_text_field',
+		) );
+		register_setting( 'blt_events_settings_general', BLT_Events_Schema::OPTION, array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
+			'default'           => '1',
+		) );
+		register_setting( 'blt_events_settings_general', 'blt_events_delete_data_on_uninstall', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
+			'default'           => '0',
 		) );
 
 		// --- Appearance ---
@@ -98,6 +116,16 @@ class BLT_Events_Admin_Settings {
 			'sanitize_callback' => array( 'BLT_Events_Appearance', 'sanitize_width' ),
 			'default'           => '',
 		) );
+		foreach ( array(
+			BLT_Events_Single_Event::OPTION_SHOW_TITLE,
+			BLT_Events_Single_Event::OPTION_SHOW_FEATURED,
+			BLT_Events_Single_Event::OPTION_SHOW_BACK,
+			BLT_Events_Single_Event::OPTION_SHOW_CALENDAR,
+		) as $single_option ) {
+			register_setting( 'blt_events_settings_appearance', $single_option, array(
+				'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
+			) );
+		}
 
 		// --- Payments ---
 		register_setting( 'blt_events_settings_payments', 'blt_events_payment_provider', array(
@@ -135,23 +163,33 @@ class BLT_Events_Admin_Settings {
 		) );
 
 		// --- Emails ---
-		register_setting( 'blt_events_settings_emails', 'blt_events_email_template_registration', array(
-			'sanitize_callback' => 'wp_kses_post',
-		) );
-		register_setting( 'blt_events_settings_emails', 'blt_events_email_template_reminder_24h', array(
-			'sanitize_callback' => 'wp_kses_post',
-		) );
-		register_setting( 'blt_events_settings_emails', 'blt_events_email_template_reminder_1h', array(
-			'sanitize_callback' => 'wp_kses_post',
-		) );
-		register_setting( 'blt_events_settings_emails', 'blt_events_email_subject_registration', array(
+		foreach ( BLT_Events_Emails::templates() as $template ) {
+			register_setting( 'blt_events_settings_emails', $template['subject_key'], array(
+				'sanitize_callback' => 'sanitize_text_field',
+			) );
+			register_setting( 'blt_events_settings_emails', $template['body_key'], array(
+				'sanitize_callback' => 'wp_kses_post',
+			) );
+			if ( ! empty( $template['enabled_key'] ) ) {
+				register_setting( 'blt_events_settings_emails', $template['enabled_key'], array(
+					'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
+				) );
+			}
+		}
+		register_setting( 'blt_events_settings_emails', 'blt_events_email_from_name', array(
 			'sanitize_callback' => 'sanitize_text_field',
 		) );
-		register_setting( 'blt_events_settings_emails', 'blt_events_email_subject_reminder_24h', array(
-			'sanitize_callback' => 'sanitize_text_field',
+		register_setting( 'blt_events_settings_emails', 'blt_events_email_from_address', array(
+			'sanitize_callback' => 'sanitize_email',
 		) );
-		register_setting( 'blt_events_settings_emails', 'blt_events_email_subject_reminder_1h', array(
-			'sanitize_callback' => 'sanitize_text_field',
+		register_setting( 'blt_events_settings_emails', 'blt_events_email_reply_to', array(
+			'sanitize_callback' => 'sanitize_email',
+		) );
+		register_setting( 'blt_events_settings_emails', 'blt_events_admin_notify_email', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_email_list' ),
+		) );
+		register_setting( 'blt_events_settings_emails', 'blt_events_email_wrapper_enabled', array(
+			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
 		) );
 		register_setting( 'blt_events_settings_emails', 'blt_events_calendar_invite_enabled', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
@@ -205,7 +243,17 @@ class BLT_Events_Admin_Settings {
 				}
 			}
 		}
+
+		/**
+		 * Fires after the plugin registered its settings, so add-ons can
+		 * register their own into the same groups.
+		 */
+		do_action( 'blt_events_register_settings' );
 	}
+
+	/* --------------------------------------------------------------------
+	 * Sanitizers
+	 * ------------------------------------------------------------------ */
 
 	public static function sanitize_payment_provider( $value ) {
 		return BLT_Events_Payment_Providers::exists( $value ) ? $value : 'none';
@@ -240,6 +288,14 @@ class BLT_Events_Admin_Settings {
 	}
 
 	/**
+	 * Comma-separated list of email addresses; invalid ones are dropped.
+	 */
+	public static function sanitize_email_list( $value ) {
+		$parts = array_filter( array_map( 'sanitize_email', array_map( 'trim', explode( ',', (string) $value ) ) ) );
+		return implode( ', ', $parts );
+	}
+
+	/**
 	 * Only allow connecting to a real, registered public post type (and
 	 * never the plugin's own event/coupon types).
 	 */
@@ -252,7 +308,6 @@ class BLT_Events_Admin_Settings {
 
 		return post_type_exists( $value ) ? $value : '';
 	}
-
 
 	/**
 	 * Keep the previously stored secret when the field is submitted blank,
@@ -315,11 +370,16 @@ class BLT_Events_Admin_Settings {
 
 	/**
 	 * Toggle switch bound to a "1"/"0" checkbox option.
+	 *
+	 * @param string $option_name Option.
+	 * @param string $label       Label.
+	 * @param string $description Helper text.
+	 * @param string $default     Value assumed when the option was never saved.
 	 */
-	private static function render_toggle( $option_name, $label, $description = '' ) {
+	private static function render_toggle( $option_name, $label, $description = '', $default = '0' ) {
 		?>
 		<label class="blt-toggle">
-			<input type="checkbox" name="<?php echo esc_attr( $option_name ); ?>" value="1" <?php checked( get_option( $option_name ), '1' ); ?> />
+			<input type="checkbox" name="<?php echo esc_attr( $option_name ); ?>" value="1" <?php checked( (string) get_option( $option_name, $default ), '1' ); ?> />
 			<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
 			<span class="blt-toggle-text">
 				<span class="blt-toggle-label"><?php echo esc_html( $label ); ?></span>
@@ -446,8 +506,17 @@ class BLT_Events_Admin_Settings {
 					case 'shortcodes':
 						self::render_tab_shortcodes();
 						break;
-					default:
+					case 'general':
 						self::render_tab_general();
+						break;
+					default:
+						/**
+						 * Fires for a settings tab the plugin does not render
+						 * itself (added via blt_events_settings_tabs).
+						 *
+						 * @param string $tab Tab slug.
+						 */
+						do_action( 'blt_events_render_settings_tab', $current );
 				}
 				?>
 			</div>
@@ -469,7 +538,7 @@ class BLT_Events_Admin_Settings {
 			<div class="blt-card">
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Events Page', 'blt-events' ); ?></h2>
-					<p><?php esc_html_e( 'The page that lists your events (usually one holding the [blt_events_calendar] shortcode). Used for "back to events" links.', 'blt-events' ); ?></p>
+					<p><?php esc_html_e( 'The page that lists your events (usually one holding the Events Calendar block or shortcode). Used for "back to events" links and, optionally, as the destination of the /event/ archive.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
 					<?php
@@ -486,6 +555,24 @@ class BLT_Events_Admin_Settings {
 						},
 						__( 'Leave as “None” to use the default event archive.', 'blt-events' )
 					);
+
+					self::render_field(
+						__( 'Event Archive (/event/)', 'blt-events' ),
+						function () {
+							$modes = array(
+								'plugin'   => __( 'Rendered by the plugin (list with search and view switcher)', 'blt-events' ),
+								'redirect' => __( 'Redirect to the Events Page selected above', 'blt-events' ),
+								'theme'    => __( 'Leave it to the theme', 'blt-events' ),
+							);
+							$selected = BLT_Events_Archive::mode();
+							echo '<select name="' . esc_attr( BLT_Events_Archive::OPTION ) . '">';
+							foreach ( $modes as $value => $label ) {
+								printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $selected, $value, false ), esc_html( $label ) );
+							}
+							echo '</select>';
+						},
+						__( 'What visitors see at the event archive URL and on event category pages. A theme that ships its own archive-event.php always wins.', 'blt-events' )
+					);
 					?>
 				</div>
 			</div>
@@ -493,7 +580,7 @@ class BLT_Events_Admin_Settings {
 			<div class="blt-card">
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Date & Time', 'blt-events' ); ?></h2>
-					<p><?php esc_html_e( 'How event dates are displayed across calendars, event pages, and emails.', 'blt-events' ); ?></p>
+					<p><?php esc_html_e( 'How event dates are displayed across calendars, event pages, and emails. Times use the site time format and timezone from Settings > General.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
 					<?php
@@ -504,7 +591,11 @@ class BLT_Events_Admin_Settings {
 							<input type="text" name="blt_events_date_format" value="<?php echo esc_attr( get_option( 'blt_events_date_format', 'F j, Y' ) ); ?>" class="regular-text" />
 							<?php
 						},
-						__( 'PHP date format string (e.g., F j, Y).', 'blt-events' )
+						sprintf(
+							/* translators: %s: today's date in the current format. */
+							__( 'PHP date format string. Today would show as: %s', 'blt-events' ),
+							wp_date( BLT_Events_Helpers::date_format() )
+						)
 					);
 					?>
 				</div>
@@ -523,8 +614,8 @@ class BLT_Events_Admin_Settings {
 							?>
 							<div class="blt-toggle-stack">
 								<?php
-								self::render_toggle( 'blt_events_display_currency', __( 'Show currency code', 'blt-events' ), __( 'Appends the code after prices, e.g. 25.00 USD.', 'blt-events' ) );
-								self::render_toggle( 'blt_events_display_currency_sign', __( 'Show currency symbol', 'blt-events' ), __( 'Prefixes prices with the symbol, e.g. $25.00.', 'blt-events' ) );
+								self::render_toggle( 'blt_events_display_currency_sign', __( 'Show currency symbol', 'blt-events' ), __( 'Prefixes prices with the symbol, e.g. $25.00.', 'blt-events' ), '1' );
+								self::render_toggle( 'blt_events_display_currency', __( 'Show currency code', 'blt-events' ), __( 'Appends the code after prices, e.g. 25.00 USD.', 'blt-events' ), '0' );
 								?>
 							</div>
 							<?php
@@ -573,14 +664,39 @@ class BLT_Events_Admin_Settings {
 
 			<div class="blt-card">
 				<div class="blt-card-header">
-					<h2><?php esc_html_e( 'Front-End Styling', 'blt-events' ); ?></h2>
+					<h2><?php esc_html_e( 'SEO', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'Structured data lets search engines show event rich results: date, place and price directly in the listing.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
+					<?php
+					self::render_field(
+						__( 'Structured Data', 'blt-events' ),
+						function () {
+							self::render_toggle( BLT_Events_Schema::OPTION, __( 'Print schema.org Event JSON-LD on event pages', 'blt-events' ), __( 'Switch off if an SEO plugin already generates Event schema for this post type.', 'blt-events' ), '1' );
+						}
+					);
+					?>
+				</div>
+			</div>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Advanced', 'blt-events' ); ?></h2>
+				</div>
+				<div class="blt-card-body">
+					<?php
+					self::render_field(
+						__( 'Uninstall', 'blt-events' ),
+						function () {
+							self::render_toggle( 'blt_events_delete_data_on_uninstall', __( 'Delete all plugin data when the plugin is deleted', 'blt-events' ), __( 'Removes events, registrations, attendees, fieldsets, coupons and settings when BLT Events is deleted from the Plugins screen. Deactivating never deletes anything.', 'blt-events' ), '0' );
+						}
+					);
+					?>
 					<p class="blt-field-desc">
 						<?php
 						printf(
 							/* translators: %s: link to the Appearance tab. */
-							esc_html__( 'Styling now covers the whole front end, not just the event page. It moved to %s.', 'blt-events' ),
+							esc_html__( 'Front-end styling lives in %s.', 'blt-events' ),
 							'<a href="' . esc_url( self::tab_url( 'appearance' ) ) . '">' . esc_html__( 'the Appearance tab', 'blt-events' ) . '</a>'
 						);
 						?>
@@ -605,7 +721,7 @@ class BLT_Events_Admin_Settings {
 
 		$messages = array(
 			'page-created' => array( 'success', __( 'Events page created and selected below.', 'blt-events' ) ),
-			'page-failed'  => array( 'error', __( 'The events page could not be created. Add a page with the [blt_events_calendar] shortcode yourself, then select it below.', 'blt-events' ) ),
+			'page-failed'  => array( 'error', __( 'The events page could not be created. Add a page with the Events Calendar block or the [blt_events_calendar] shortcode yourself, then select it below.', 'blt-events' ) ),
 		);
 
 		if ( ! isset( $messages[ $result ] ) ) {
@@ -768,6 +884,32 @@ class BLT_Events_Admin_Settings {
 
 			<div class="blt-card">
 				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Single Event Page', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'The event layout renders inside your theme\'s own single template, which usually prints the title and featured image already. Switch the plugin\'s copies off to avoid duplicates.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<?php
+					self::render_field(
+						__( 'Elements', 'blt-events' ),
+						function () {
+							?>
+							<div class="blt-toggle-stack">
+								<?php
+								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_TITLE, __( 'Print the event title', 'blt-events' ), __( 'Off by default: nearly every theme already shows the title above the content.', 'blt-events' ), '0' );
+								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_FEATURED, __( 'Print the featured image', 'blt-events' ), __( 'Turn off if your theme shows the featured image on single posts.', 'blt-events' ), '1' );
+								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_BACK, __( 'Show the "All events" back link', 'blt-events' ), '', '1' );
+								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_CALENDAR, __( 'Show "Add to calendar" links', 'blt-events' ), __( 'A .ics download and a Google Calendar link in the date box.', 'blt-events' ), '1' );
+								?>
+							</div>
+							<?php
+						}
+					);
+					?>
+				</div>
+			</div>
+
+			<div class="blt-card">
+				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Going Further', 'blt-events' ); ?></h2>
 				</div>
 				<div class="blt-card-body">
@@ -783,6 +925,16 @@ class BLT_Events_Admin_Settings {
 							/* translators: %s: the tokens stylesheet filename. */
 							esc_html__( 'The full list of tokens, with comments, is in %s.', 'blt-events' ),
 							'<code>assets/css/blt-events-tokens.css</code>'
+						);
+						?>
+					</p>
+					<p class="blt-field-desc">
+						<?php
+						printf(
+							/* translators: 1: templates directory, 2: theme override directory. */
+							esc_html__( 'To change the HTML itself, copy any file from %1$s into %2$s in your theme and edit it there. Your copy is used instead of the plugin\'s.', 'blt-events' ),
+							'<code>blt-events/templates/</code>',
+							'<code>your-theme/blt-events/</code>'
 						);
 						?>
 					</p>
@@ -897,9 +1049,22 @@ class BLT_Events_Admin_Settings {
 						<input type="text" name="blt_events_stripe_publishable_key" value="<?php echo esc_attr( get_option( 'blt_events_stripe_publishable_key' ) ); ?>" class="regular-text" />
 						<?php
 					} );
-					self::render_field( __( 'Webhook Secret', 'blt-events' ), function () {
-						self::render_secret_field( 'blt_events_stripe_webhook_secret' );
-					} );
+					self::render_field(
+						__( 'Webhook Secret', 'blt-events' ),
+						function () {
+							self::render_secret_field( 'blt_events_stripe_webhook_secret' );
+						},
+						__( 'Needed for refunds and for finishing registrations whose browser closed mid-payment. Listen to payment_intent.succeeded and charge.refunded.', 'blt-events' )
+					);
+					self::render_field(
+						__( 'Webhook URL', 'blt-events' ),
+						function () {
+							?>
+							<code class="blt-redirect-uri"><?php echo esc_html( rest_url( 'blt-events/v1/stripe-webhook' ) ); ?></code>
+							<?php
+						},
+						__( 'Add this endpoint in the Stripe dashboard under Developers > Webhooks.', 'blt-events' )
+					);
 					?>
 				</div>
 			</div>
@@ -949,9 +1114,16 @@ class BLT_Events_Admin_Settings {
 					</div>
 				</div>
 				<div class="blt-card-body">
-					<p class="blt-field-desc"><?php echo wp_kses_post( sprintf( __( 'FluentCart runs on this site, so no API keys are needed. Event ticket types are synced to FluentCart products automatically when an event is saved, and checkout uses FluentCart\'s instant checkout. Install FluentCart from %s if it is not detected.', 'blt-events' ), '<a href="https://fluentcart.com" target="_blank" rel="noopener noreferrer">fluentcart.com</a>' ) ); ?></p>
+					<p class="blt-field-desc"><?php echo wp_kses_post( sprintf( /* translators: %s: link to fluentcart.com. */ __( 'FluentCart runs on this site, so no API keys are needed. Event ticket types are synced to FluentCart products automatically when an event is saved, and checkout uses FluentCart\'s instant checkout. Install FluentCart from %s if it is not detected.', 'blt-events' ), '<a href="https://fluentcart.com" target="_blank" rel="noopener noreferrer">fluentcart.com</a>' ) ); ?></p>
 				</div>
 			</div>
+
+			<?php
+			/**
+			 * Fires at the end of the Payments tab, inside the form.
+			 */
+			do_action( 'blt_events_settings_payments_after' );
+			?>
 
 			<?php self::render_save_button(); ?>
 		</form>
@@ -963,56 +1135,93 @@ class BLT_Events_Admin_Settings {
 	 * ------------------------------------------------------------------ */
 
 	private static function render_tab_emails() {
-		$variables = array( '{customer_name}', '{event_name}', '{event_date}', '{event_time}', '{event_location}', '{event_url}' );
-
-		$emails = array(
-			array(
-				'title'        => __( 'Registration Confirmation', 'blt-events' ),
-				'desc'         => __( 'Sent immediately after a successful registration.', 'blt-events' ),
-				'subject_key'  => 'blt_events_email_subject_registration',
-				'subject_def'  => __( 'Registration confirmation for {event_name}', 'blt-events' ),
-				'body_key'     => 'blt_events_email_template_registration',
-				'body_def'     => __( 'Hello {customer_name}, your registration for {event_name} on {event_date} at {event_time} has been confirmed.', 'blt-events' ),
-			),
-			array(
-				'title'        => __( '24-Hour Reminder', 'blt-events' ),
-				'desc'         => __( 'Sent to attendees one day before the event starts.', 'blt-events' ),
-				'subject_key'  => 'blt_events_email_subject_reminder_24h',
-				'subject_def'  => __( 'Reminder: {event_name} is tomorrow', 'blt-events' ),
-				'body_key'     => 'blt_events_email_template_reminder_24h',
-				'body_def'     => __( 'Hello {customer_name}, your event {event_name} is tomorrow ({event_date}) at {event_time}.', 'blt-events' ),
-			),
-			array(
-				'title'        => __( '1-Hour Reminder', 'blt-events' ),
-				'desc'         => __( 'Sent to attendees one hour before the event starts.', 'blt-events' ),
-				'subject_key'  => 'blt_events_email_subject_reminder_1h',
-				'subject_def'  => __( 'Reminder: {event_name} starts in 1 hour', 'blt-events' ),
-				'body_key'     => 'blt_events_email_template_reminder_1h',
-				'body_def'     => __( 'Hello {customer_name}, your event {event_name} starts in 1 hour at {event_time}.', 'blt-events' ),
-			),
-		);
+		$placeholders = BLT_Events_Emails::placeholders();
+		$templates    = BLT_Events_Emails::templates();
+		$next_cron    = class_exists( 'BLT_Events_Reminders' ) ? wp_next_scheduled( BLT_Events_Reminders::HOOK ) : false;
 		?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'blt_events_settings_emails' ); ?>
 
+			<div class="blt-card">
+				<div class="blt-card-header">
+					<h2><?php esc_html_e( 'Sender', 'blt-events' ); ?></h2>
+					<p><?php esc_html_e( 'Who the plugin\'s emails come from. Leave blank to use the WordPress defaults. Use an address on your own domain so mail providers accept it.', 'blt-events' ); ?></p>
+				</div>
+				<div class="blt-card-body">
+					<?php
+					self::render_field( __( 'From Name', 'blt-events' ), function () {
+						?>
+						<input type="text" name="blt_events_email_from_name" value="<?php echo esc_attr( get_option( 'blt_events_email_from_name', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" />
+						<?php
+					} );
+					self::render_field( __( 'From Email', 'blt-events' ), function () {
+						?>
+						<input type="email" name="blt_events_email_from_address" value="<?php echo esc_attr( get_option( 'blt_events_email_from_address', '' ) ); ?>" class="regular-text" placeholder="events@<?php echo esc_attr( wp_parse_url( home_url(), PHP_URL_HOST ) ); ?>" />
+						<?php
+					} );
+					self::render_field( __( 'Reply-To', 'blt-events' ), function () {
+						?>
+						<input type="email" name="blt_events_email_reply_to" value="<?php echo esc_attr( get_option( 'blt_events_email_reply_to', '' ) ); ?>" class="regular-text" />
+						<?php
+					}, __( 'Where replies from attendees should land. Optional.', 'blt-events' ) );
+					self::render_field( __( 'Admin Notifications To', 'blt-events' ), function () {
+						?>
+						<input type="text" name="blt_events_admin_notify_email" value="<?php echo esc_attr( get_option( 'blt_events_admin_notify_email', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" />
+						<?php
+					}, __( 'One or more addresses, comma-separated. Defaults to the site admin email.', 'blt-events' ) );
+					self::render_field( __( 'Layout', 'blt-events' ), function () {
+						self::render_toggle( 'blt_events_email_wrapper_enabled', __( 'Wrap emails in the HTML template', 'blt-events' ), __( 'A simple branded shell (site name header in your accent colour). Override templates/emails/wrapper.php in your theme to change it.', 'blt-events' ), '1' );
+					} );
+					?>
+				</div>
+			</div>
+
 			<div class="blt-callout">
 				<strong><?php esc_html_e( 'Template variables', 'blt-events' ); ?></strong>
-				<span><?php esc_html_e( 'Use these placeholders in any subject or body — they are replaced per attendee when the email is sent:', 'blt-events' ); ?></span>
+				<span><?php esc_html_e( 'Use these placeholders in any subject or body — they are replaced per registration when the email is sent:', 'blt-events' ); ?></span>
 				<span class="blt-chips">
-					<?php foreach ( $variables as $variable ) : ?>
-						<code class="blt-chip"><?php echo esc_html( $variable ); ?></code>
+					<?php foreach ( $placeholders as $variable => $description ) : ?>
+						<code class="blt-chip" title="<?php echo esc_attr( $description ); ?>"><?php echo esc_html( $variable ); ?></code>
 					<?php endforeach; ?>
 				</span>
 			</div>
 
-			<?php foreach ( $emails as $email ) : ?>
-				<div class="blt-card">
+			<?php foreach ( $templates as $type => $email ) : ?>
+				<div class="blt-card blt-email-card" data-email-type="<?php echo esc_attr( $type ); ?>">
 					<div class="blt-card-header">
 						<h2><?php echo esc_html( $email['title'] ); ?></h2>
 						<p><?php echo esc_html( $email['desc'] ); ?></p>
+						<?php if ( ! empty( $email['enabled_key'] ) ) : ?>
+							<div class="blt-card-header-badges">
+								<?php self::render_status_badge( BLT_Events_Emails::is_enabled( $type ), __( 'On', 'blt-events' ), __( 'Off', 'blt-events' ) ); ?>
+							</div>
+						<?php endif; ?>
 					</div>
 					<div class="blt-card-body">
 						<?php
+						if ( ! empty( $email['enabled_key'] ) ) {
+							self::render_field( __( 'Send', 'blt-events' ), function () use ( $email ) {
+								self::render_toggle( $email['enabled_key'], __( 'Send this email', 'blt-events' ), '', $email['enabled_default'] ?? '1' );
+							} );
+						}
+
+						if ( 0 === strpos( $type, 'reminder_' ) ) {
+							self::render_field( __( 'Schedule', 'blt-events' ), function () use ( $next_cron ) {
+								if ( $next_cron ) {
+									printf(
+										'<p class="blt-field-desc">%s</p>',
+										esc_html( sprintf(
+											/* translators: %s: human-readable time until the next run. */
+											__( 'Reminders are checked every 15 minutes by WP-Cron. Next check in %s.', 'blt-events' ),
+											human_time_diff( time(), $next_cron )
+										) )
+									);
+								} else {
+									printf( '<p class="blt-field-desc">%s</p>', esc_html__( 'The reminder task is not scheduled yet. It will be scheduled on the next page load.', 'blt-events' ) );
+								}
+							} );
+						}
+
 						self::render_field( __( 'Subject', 'blt-events' ), function () use ( $email ) {
 							?>
 							<input type="text" name="<?php echo esc_attr( $email['subject_key'] ); ?>" value="<?php echo esc_attr( get_option( $email['subject_key'], $email['subject_def'] ) ); ?>" class="large-text" />
@@ -1024,7 +1233,8 @@ class BLT_Events_Admin_Settings {
 								$email['body_key'],
 								array(
 									'textarea_name' => $email['body_key'],
-									'textarea_rows' => 6,
+									'textarea_rows' => 8,
+									'media_buttons' => false,
 								)
 							);
 						} );
@@ -1044,15 +1254,7 @@ class BLT_Events_Admin_Settings {
 					self::render_field(
 						__( 'Attach to Emails', 'blt-events' ),
 						function () {
-							?>
-							<label class="blt-toggle">
-								<input type="checkbox" name="blt_events_calendar_invite_enabled" value="1" <?php checked( get_option( 'blt_events_calendar_invite_enabled', '1' ), '1' ); ?> />
-								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
-								<span class="blt-toggle-text">
-									<span class="blt-toggle-label"><?php esc_html_e( 'Attach a calendar invite (.ics) to registration confirmation emails', 'blt-events' ); ?></span>
-								</span>
-							</label>
-							<?php
+							self::render_toggle( 'blt_events_calendar_invite_enabled', __( 'Attach a calendar invite (.ics) to registration confirmation emails', 'blt-events' ), '', '1' );
 						}
 					);
 
@@ -1072,6 +1274,13 @@ class BLT_Events_Admin_Settings {
 					?>
 				</div>
 			</div>
+
+			<?php
+			/**
+			 * Fires at the end of the Emails tab, inside the form.
+			 */
+			do_action( 'blt_events_settings_emails_after' );
+			?>
 
 			<?php self::render_save_button(); ?>
 		</form>
@@ -1095,6 +1304,13 @@ class BLT_Events_Admin_Settings {
 			<?php self::render_meeting_provider_cards(); ?>
 			<?php self::render_presenters_card(); ?>
 			<?php self::render_fluentcrm_card(); ?>
+
+			<?php
+			/**
+			 * Fires at the end of the Integrations tab, inside the form.
+			 */
+			do_action( 'blt_events_settings_integrations_after' );
+			?>
 
 			<?php self::render_save_button(); ?>
 		</form>
@@ -1281,7 +1497,7 @@ class BLT_Events_Admin_Settings {
 	}
 
 	/* --------------------------------------------------------------------
-	 * Tab: Shortcodes (read-only reference)
+	 * Tab: Shortcodes & Blocks (read-only reference)
 	 * ------------------------------------------------------------------ */
 
 	private static function render_tab_shortcodes() {
@@ -1289,7 +1505,7 @@ class BLT_Events_Admin_Settings {
 			array(
 				'tag'     => '[blt_events_calendar]',
 				'title'   => __( 'Events Calendar', 'blt-events' ),
-				'desc'    => __( 'Displays your published events. Three layouts are available: a list of event cards, a card grid, and a full month calendar with previous/next navigation.', 'blt-events' ),
+				'desc'    => __( 'Displays your published events. Three layouts are available: a list of event cards, a card grid, and a full month calendar with previous/next navigation. Also available as the "Events Calendar" block.', 'blt-events' ),
 				'example' => '[blt_events_calendar view="calendar" switcher="yes"]',
 				'atts'    => array(
 					array( 'view', 'list', __( 'Layout to render: "list" (event cards in a vertical list), "grid" (card grid), or "calendar" (month grid with navigation).', 'blt-events' ) ),
@@ -1297,22 +1513,30 @@ class BLT_Events_Admin_Settings {
 					array( 'limit', '12', __( 'Maximum number of events to show in list/grid views (1–100). The calendar view always shows the whole month.', 'blt-events' ) ),
 					array( 'past', 'no', __( 'Set to "yes" to include past events in list/grid views.', 'blt-events' ) ),
 					array( 'switcher', 'no', __( 'Set to "yes" to show a List / Grid / Month view switcher above the events, letting visitors flip between layouts.', 'blt-events' ) ),
+					array( 'featured', 'no', __( 'Set to "yes" to show only events marked "Featured" in the event editor.', 'blt-events' ) ),
 				),
 			),
 			array(
 				'tag'     => '[blt_event_registration]',
 				'title'   => __( 'Registration Form', 'blt-events' ),
-				'desc'    => __( 'Renders the registration form for an event, including ticket selection, attendee fields, coupons, and payment. On a single event page it picks up the event automatically.', 'blt-events' ),
+				'desc'    => __( 'Renders the registration form for an event, including ticket selection, attendee fields, coupons, and payment. On a single event page it picks up the event automatically. Also available as the "Event Registration Form" block.', 'blt-events' ),
 				'example' => '[blt_event_registration event_id="123"]',
 				'atts'    => array(
 					array( 'event_id', __( 'current event', 'blt-events' ), __( 'The ID of the event to register for. Optional inside a single event page.', 'blt-events' ) ),
 				),
 			),
 		);
+
+		/**
+		 * Filter the shortcode reference shown on the Shortcodes tab.
+		 *
+		 * @param array $shortcodes Reference entries.
+		 */
+		$shortcodes = apply_filters( 'blt_events_shortcode_reference', $shortcodes );
 		?>
 		<div class="blt-callout">
-			<strong><?php esc_html_e( 'Shortcode reference', 'blt-events' ); ?></strong>
-			<span><?php esc_html_e( 'Paste any of these shortcodes into a page, post, or block to display BLT Events content on the front end.', 'blt-events' ); ?></span>
+			<strong><?php esc_html_e( 'Blocks and shortcodes', 'blt-events' ); ?></strong>
+			<span><?php esc_html_e( 'In the block editor, search the inserter for "BLT Events" to add the Events Calendar or the Event Registration Form with visual controls. Anywhere else, paste one of these shortcodes.', 'blt-events' ); ?></span>
 		</div>
 
 		<?php self::render_shortcode_builder(); ?>
@@ -1358,6 +1582,15 @@ class BLT_Events_Admin_Settings {
 				</div>
 			</div>
 		<?php endforeach; ?>
+
+		<div class="blt-card">
+			<div class="blt-card-header">
+				<h2><?php esc_html_e( 'For developers', 'blt-events' ); ?></h2>
+			</div>
+			<div class="blt-card-body">
+				<p class="blt-field-desc"><?php esc_html_e( 'Every template can be overridden from the theme (copy templates/* to your-theme/blt-events/*), every query and email passes through a filter, and event data is available in the REST API under the blt_event field of each event. See HOOKS.md and README.md in the plugin folder for the full reference.', 'blt-events' ); ?></p>
+			</div>
+		</div>
 		<?php
 	}
 
@@ -1449,6 +1682,14 @@ class BLT_Events_Admin_Settings {
 								<span class="blt-toggle-text">
 									<span class="blt-toggle-label"><?php esc_html_e( 'Include past events', 'blt-events' ); ?></span>
 									<span class="blt-toggle-desc"><?php esc_html_e( 'Off by default, so only upcoming events show.', 'blt-events' ); ?></span>
+								</span>
+							</label>
+							<label class="blt-toggle">
+								<input type="checkbox" data-blt-att="featured" data-blt-default="no" data-blt-on="yes" />
+								<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+								<span class="blt-toggle-text">
+									<span class="blt-toggle-label"><?php esc_html_e( 'Featured only', 'blt-events' ); ?></span>
+									<span class="blt-toggle-desc"><?php esc_html_e( 'Only events marked "Featured" in the event editor.', 'blt-events' ); ?></span>
 								</span>
 							</label>
 						</div>

@@ -73,7 +73,12 @@ class BLT_Events_Event_CPT {
             'not_found_in_trash' => __( 'No events found in Trash', 'blt-events' ),
         );
 
-        $args = array(
+        /**
+         * Filter the arguments used to register the event post type.
+         *
+         * @param array $args register_post_type() arguments.
+         */
+        $args = apply_filters( 'blt_events_post_type_args', array(
             'labels'             => $labels,
             'public'             => true,
             'publicly_queryable' => true,
@@ -81,7 +86,11 @@ class BLT_Events_Event_CPT {
             'show_in_menu'       => true,
             'query_var'          => true,
             'rewrite'            => array( 'slug' => self::$slug ),
-            'capability_type'    => 'post',
+            // Own capabilities (edit_blt_events, ...) so who manages events is
+            // decided independently of who writes posts. Granted to the
+            // standard roles on activation/upgrade; see BLT_Events_Roles.
+            'capability_type'    => array( 'blt_event', 'blt_events' ),
+            'map_meta_cap'       => true,
             'has_archive'        => true,
             'hierarchical'       => false,
             'menu_position'      => null,
@@ -95,7 +104,7 @@ class BLT_Events_Event_CPT {
             'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
             // Expose to the block editor, core REST API, and Query Loop blocks.
             'show_in_rest'       => true,
-        );
+        ) );
 
         register_post_type( self::$slug, $args );
     }
@@ -118,7 +127,12 @@ class BLT_Events_Event_CPT {
             'menu_name'         => __( 'Categories', 'blt-events' ),
         );
 
-        $args = array(
+        /**
+         * Filter the arguments used to register the event_category taxonomy.
+         *
+         * @param array $args register_taxonomy() arguments.
+         */
+        $args = apply_filters( 'blt_events_taxonomy_args', array(
             'hierarchical'      => true,
             'labels'            => $labels,
             'show_ui'           => true,
@@ -126,7 +140,13 @@ class BLT_Events_Event_CPT {
             'query_var'         => true,
             'rewrite'           => array( 'slug' => 'event-category' ),
             'show_in_rest'      => true,
-        );
+            'capabilities'      => array(
+                'manage_terms' => 'manage_categories',
+                'edit_terms'   => 'manage_categories',
+                'delete_terms' => 'manage_categories',
+                'assign_terms' => 'edit_blt_events',
+            ),
+        ) );
 
         register_taxonomy( 'event_category', array( self::$slug ), $args );
     }

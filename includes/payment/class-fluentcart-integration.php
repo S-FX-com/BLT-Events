@@ -314,8 +314,8 @@ class BLT_Events_FluentCart_Integration extends BLT_Events_Payment_Provider {
 				continue;
 			}
 
+			// update_status() fires blt_registration_refunded itself.
 			BLT_Events_Registrations::update_status( $reg->id, 'refunded' );
-			do_action( 'blt_registration_refunded', $reg->id );
 		}
 	}
 

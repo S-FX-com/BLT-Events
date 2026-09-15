@@ -2,7 +2,9 @@
 /**
  * BLT Events - Registrations List Table
  *
- * Admin page displaying all event registrations using WP_List_Table.
+ * Admin page displaying all event registrations using WP_List_Table, with
+ * an event dashboard, bulk status changes, and CSV exports of registrations
+ * and attendees.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -30,15 +32,15 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 
 	public function get_columns() {
 		return array(
-			'cb'              => '<input type="checkbox" />',
-			'customer_name'   => __( 'Customer', 'blt-events' ),
-			'customer_email'  => __( 'Email', 'blt-events' ),
-			'event'           => __( 'Event', 'blt-events' ),
-			'attendee_count'  => __( 'Attendees', 'blt-events' ),
-			'amount_paid'     => __( 'Amount', 'blt-events' ),
+			'cb'               => '<input type="checkbox" />',
+			'customer_name'    => __( 'Customer', 'blt-events' ),
+			'customer_email'   => __( 'Email', 'blt-events' ),
+			'event'            => __( 'Event', 'blt-events' ),
+			'attendee_count'   => __( 'Attendees', 'blt-events' ),
+			'amount_paid'      => __( 'Amount', 'blt-events' ),
 			'payment_provider' => __( 'Provider', 'blt-events' ),
-			'status'          => __( 'Status', 'blt-events' ),
-			'created_at'      => __( 'Date', 'blt-events' ),
+			'status'           => __( 'Status', 'blt-events' ),
+			'created_at'       => __( 'Date', 'blt-events' ),
 		);
 	}
 
@@ -57,10 +59,10 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 
 		$this->process_bulk_action();
 
-		$per_page     = 20;
+		$per_page     = (int) apply_filters( 'blt_events_registrations_per_page', 20 );
 		$current_page = $this->get_pagenum();
-		$orderby      = sanitize_key( $_GET['orderby'] ?? 'created_at' );
-		$order        = ( isset( $_GET['order'] ) && strtoupper( $_GET['order'] ) === 'ASC' ) ? 'ASC' : 'DESC';
+		$orderby      = sanitize_key( $_GET['orderby'] ?? 'created_at' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$order        = ( isset( $_GET['order'] ) && strtoupper( sanitize_key( $_GET['order'] ) ) === 'ASC' ) ? 'ASC' : 'DESC'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// Only allow ordering by real, sortable columns.
 		$sortable_keys = array_keys( $this->get_sortable_columns() );
@@ -69,14 +71,17 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 		}
 
 		$where = array();
-		if ( ! empty( $_GET['event_id'] ) ) {
-			$where[] = array( 'column' => 'event_id', 'value' => absint( $_GET['event_id'] ) );
+		if ( ! empty( $_GET['event_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$where[] = array( 'column' => 'event_id', 'value' => absint( $_GET['event_id'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
-		if ( ! empty( $_GET['status'] ) ) {
-			$where[] = array( 'column' => 'status', 'value' => sanitize_text_field( wp_unslash( $_GET['status'] ) ) );
+		if ( ! empty( $_GET['status'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$status = sanitize_key( wp_unslash( $_GET['status'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( array_key_exists( $status, BLT_Events_Helpers::registration_statuses() ) ) {
+				$where[] = array( 'column' => 'status', 'value' => $status );
+			}
 		}
-		if ( ! empty( $_GET['s'] ) ) {
-			$term    = sanitize_text_field( wp_unslash( $_GET['s'] ) );
+		if ( ! empty( $_GET['s'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$term    = sanitize_text_field( wp_unslash( $_GET['s'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$where[] = array( 'column' => 'customer_email', 'value' => '%' . $wpdb->esc_like( $term ) . '%', 'compare' => 'LIKE' );
 		}
 
@@ -111,30 +116,47 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 
 	public function column_customer_name( $item ) {
-		return '<strong>' . esc_html( $item->customer_name ) . '</strong>';
+		$out = '<strong>' . esc_html( $item->customer_name ) . '</strong>';
+
+		if ( $item->customer_phone ) {
+			$out .= '<br /><span class="blt-text-muted">' . esc_html( $item->customer_phone ) . '</span>';
+		}
+
+		return $out;
 	}
 
 	public function column_event( $item ) {
 		$event = get_post( $item->event_id );
-		return $event ? '<a href="' . get_edit_post_link( $event->ID ) . '">' . esc_html( $event->post_title ) . '</a>' : '—';
+		return $event ? '<a href="' . esc_url( (string) get_edit_post_link( $event->ID ) ) . '">' . esc_html( $event->post_title ) . '</a>' : '—';
 	}
 
 	public function column_amount_paid( $item ) {
-		return BLT_Events_Helpers::format_price( $item->amount_paid );
+		return esc_html( BLT_Events_Helpers::format_price( $item->amount_paid ) );
 	}
 
 	public function column_payment_provider( $item ) {
-		return esc_html( ucfirst( $item->payment_provider ?: 'N/A' ) );
+		$labels = array(
+			'free'     => __( 'Free', 'blt-events' ),
+			'waitlist' => __( 'Waitlist', 'blt-events' ),
+			'none'     => __( 'N/A', 'blt-events' ),
+		);
+		$slug = (string) ( $item->payment_provider ?: 'none' );
+
+		if ( isset( $labels[ $slug ] ) ) {
+			return esc_html( $labels[ $slug ] );
+		}
+
+		return esc_html( BLT_Events_Payment_Providers::get_label( $slug ) );
 	}
 
 	public function column_status( $item ) {
-		$known_statuses = array( 'confirmed', 'pending', 'cancelled', 'refunded' );
-		$badge_status   = in_array( $item->status, $known_statuses, true ) ? $item->status : 'refunded';
+		$known = BLT_Events_Helpers::registration_statuses();
+		$slug  = array_key_exists( $item->status, $known ) ? $item->status : 'refunded';
 
 		$out = sprintf(
 			'<span class="blt-badge blt-badge-%1$s">%2$s</span>',
-			esc_attr( $badge_status ),
-			esc_html( ucfirst( $item->status ) )
+			esc_attr( $slug ),
+			esc_html( BLT_Events_Helpers::status_label( $item->status ) )
 		);
 
 		// A completed off-site payment that tripped one of the registration
@@ -187,9 +209,10 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			'order'          => 'ASC',
 			'fields'         => 'ids',
 			'no_found_rows'  => true,
+			'post_status'    => array( 'publish', 'private', 'draft', 'pending', 'future' ),
 		) );
-		$current_event  = absint( $_GET['event_id'] ?? 0 );
-		$current_status = sanitize_text_field( $_GET['status'] ?? '' );
+		$current_event  = absint( $_GET['event_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$current_status = sanitize_key( $_GET['status'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		?>
 		<div class="alignleft actions">
 			<select name="event_id">
@@ -202,8 +225,8 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			</select>
 			<select name="status">
 				<option value=""><?php esc_html_e( 'All Statuses', 'blt-events' ); ?></option>
-				<?php foreach ( array( 'confirmed', 'pending', 'cancelled', 'refunded' ) as $s ) : ?>
-					<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $current_status, $s ); ?>><?php echo esc_html( ucfirst( $s ) ); ?></option>
+				<?php foreach ( BLT_Events_Helpers::registration_statuses() as $s => $label ) : ?>
+					<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $current_status, $s ); ?>><?php echo esc_html( $label ); ?></option>
 				<?php endforeach; ?>
 			</select>
 			<?php submit_button( __( 'Filter', 'blt-events' ), '', 'filter_action', false ); ?>
@@ -212,15 +235,22 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 
 	public function get_bulk_actions() {
-		return array(
-			'confirm' => __( 'Confirm', 'blt-events' ),
-			'cancel'  => __( 'Cancel', 'blt-events' ),
-		);
+		/**
+		 * Filter the bulk actions on the Registrations screen. Keys are
+		 * target statuses.
+		 *
+		 * @param array $actions Status slug => label.
+		 */
+		return apply_filters( 'blt_events_registration_bulk_actions', array(
+			'confirmed' => __( 'Confirm', 'blt-events' ),
+			'pending'   => __( 'Mark as pending', 'blt-events' ),
+			'cancelled' => __( 'Cancel', 'blt-events' ),
+		) );
 	}
 
 	private function process_bulk_action() {
 		$action = $this->current_action();
-		if ( ! in_array( $action, array( 'confirm', 'cancel' ), true ) ) {
+		if ( ! $action || ! array_key_exists( $action, $this->get_bulk_actions() ) ) {
 			return;
 		}
 
@@ -230,11 +260,27 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 
 		check_admin_referer( 'bulk-' . $this->_args['plural'] );
 
-		$ids = array_map( 'absint', (array) ( $_REQUEST['registration_ids'] ?? array() ) );
-		$new_status = $action === 'confirm' ? 'confirmed' : 'cancelled';
+		$ids     = array_map( 'absint', (array) ( $_REQUEST['registration_ids'] ?? array() ) );
+		$changed = 0;
 
 		foreach ( array_filter( $ids ) as $id ) {
-			BLT_Events_Registrations::update_status( $id, $new_status );
+			if ( BLT_Events_Registrations::update_status( $id, $action ) ) {
+				$changed++;
+			}
+		}
+
+		if ( $changed ) {
+			add_action( 'admin_notices', function () use ( $changed, $action ) {
+				printf(
+					'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+					esc_html( sprintf(
+						/* translators: 1: number of registrations, 2: status label. */
+						_n( '%1$d registration marked as %2$s.', '%1$d registrations marked as %2$s.', $changed, 'blt-events' ),
+						$changed,
+						BLT_Events_Helpers::status_label( $action )
+					) )
+				);
+			} );
 		}
 	}
 }
@@ -243,17 +289,30 @@ class BLT_Events_Registrations_List {
 
 	public static function init() {
 		add_action( 'wp_ajax_blt_export_registrations', array( __CLASS__, 'ajax_export_csv' ) );
+		add_action( 'wp_ajax_blt_export_attendees', array( __CLASS__, 'ajax_export_attendees_csv' ) );
 	}
 
 	public static function render_page() {
 		$table = new BLT_Events_Registrations_List_Table();
 		$table->prepare_items();
 
-		$event_id = absint( $_GET['event_id'] ?? 0 );
+		$event_id = absint( $_GET['event_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$event    = $event_id ? get_post( $event_id ) : null;
 		if ( $event && $event->post_type !== 'event' ) {
 			$event = null;
 		}
+
+		$export_url = add_query_arg( array(
+			'action'   => 'blt_export_registrations',
+			'event_id' => $event_id,
+			'_wpnonce' => wp_create_nonce( 'blt_export' ),
+		), admin_url( 'admin-ajax.php' ) );
+
+		$export_attendees_url = add_query_arg( array(
+			'action'   => 'blt_export_attendees',
+			'event_id' => $event_id,
+			'_wpnonce' => wp_create_nonce( 'blt_export' ),
+		), admin_url( 'admin-ajax.php' ) );
 		?>
 		<div class="wrap blt-ui blt-ui-wide blt-events-registrations">
 			<div class="blt-admin-page-header">
@@ -271,9 +330,8 @@ class BLT_Events_Registrations_List {
 					<?php if ( $event ) : ?>
 						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=event&page=blt-registrations' ) ); ?>" class="button"><?php esc_html_e( 'All Registrations', 'blt-events' ); ?></a>
 					<?php endif; ?>
-					<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=blt_export_registrations&event_id=' . $event_id . '&_wpnonce=' . wp_create_nonce( 'blt_export' ) ) ); ?>" class="button button-primary">
-						<?php esc_html_e( 'Export CSV', 'blt-events' ); ?>
-					</a>
+					<a href="<?php echo esc_url( $export_attendees_url ); ?>" class="button"><?php esc_html_e( 'Export Attendees CSV', 'blt-events' ); ?></a>
+					<a href="<?php echo esc_url( $export_url ); ?>" class="button button-primary"><?php esc_html_e( 'Export Registrations CSV', 'blt-events' ); ?></a>
 				</div>
 			</div>
 
@@ -308,13 +366,9 @@ class BLT_Events_Registrations_List {
 		$reg_db = new BLT_Events_Registrations_DB();
 		$att_db = new BLT_Events_Attendees_DB();
 
-		$event_date  = get_post_meta( $event->ID, '_blt_event_date', true );
-		$start_time  = get_post_meta( $event->ID, '_blt_event_start_time', true );
-		$event_type  = get_post_meta( $event->ID, '_blt_event_type', true ) ?: 'in-person';
-		$capacity    = (int) get_post_meta( $event->ID, '_blt_capacity', true );
-		$venue       = BLT_Events_Helpers::get_event_location_string( $event->ID );
-		$date_format = get_option( 'blt_events_date_format', 'F j, Y' );
-		$time_format = get_option( 'time_format', 'g:i A' );
+		$event_type = get_post_meta( $event->ID, '_blt_event_type', true ) ?: 'in-person';
+		$capacity   = (int) get_post_meta( $event->ID, '_blt_capacity', true );
+		$venue      = BLT_Events_Helpers::get_event_location_string( $event->ID );
 
 		$type_labels = array(
 			'online'    => __( 'Online', 'blt-events' ),
@@ -356,9 +410,10 @@ class BLT_Events_Registrations_List {
 						<p class="blt-dash-row">
 							<span class="blt-dash-label"><?php esc_html_e( 'Date', 'blt-events' ); ?></span>
 							<span>
-								<?php echo $event_date ? esc_html( date_i18n( $date_format, strtotime( $event_date ) ) ) : '&mdash;'; ?>
-								<?php if ( $start_time && $event_date ) : ?>
-									<span class="blt-text-muted"><?php echo esc_html( date_i18n( $time_format, strtotime( $event_date . ' ' . $start_time ) ) ); ?></span>
+								<?php echo esc_html( BLT_Events_Helpers::event_date_label( $event->ID ) ?: '—' ); ?>
+								<?php $time_label = BLT_Events_Helpers::event_time_label( $event->ID ); ?>
+								<?php if ( $time_label ) : ?>
+									<span class="blt-text-muted"><?php echo esc_html( $time_label ); ?></span>
 								<?php endif; ?>
 							</span>
 						</p>
@@ -414,13 +469,7 @@ class BLT_Events_Registrations_List {
 					<div class="blt-dashboard-col">
 						<h3><?php esc_html_e( 'Attendance Overview', 'blt-events' ); ?></h3>
 						<?php
-						$status_labels = array(
-							'confirmed' => __( 'Confirmed', 'blt-events' ),
-							'pending'   => __( 'Pending', 'blt-events' ),
-							'cancelled' => __( 'Cancelled', 'blt-events' ),
-							'refunded'  => __( 'Refunded', 'blt-events' ),
-						);
-						foreach ( $status_labels as $status => $label ) :
+						foreach ( BLT_Events_Helpers::registration_statuses() as $status => $label ) :
 							if ( empty( $status_counts[ $status ] ) ) {
 								continue;
 							}
@@ -445,10 +494,29 @@ class BLT_Events_Registrations_List {
 		<?php
 	}
 
-	public static function ajax_export_csv() {
-		if ( ! BLT_Events_Helpers::user_can_manage() || ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'blt_export' ) ) {
+	/* ------------------------------------------------------------------
+	 * CSV exports
+	 * ---------------------------------------------------------------- */
+
+	private static function authorize_export() {
+		if ( ! BLT_Events_Helpers::user_can_manage() || ! wp_verify_nonce( sanitize_key( $_GET['_wpnonce'] ?? '' ), 'blt_export' ) ) {
 			wp_die( esc_html__( 'Unauthorized', 'blt-events' ) );
 		}
+	}
+
+	private static function send_csv_headers( $filename ) {
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=UTF-8' );
+		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+	}
+
+	/**
+	 * Registrations CSV. When filtered to one event, every field of that
+	 * event's fieldset becomes a column; otherwise custom fields are
+	 * exported as one JSON column.
+	 */
+	public static function ajax_export_csv() {
+		self::authorize_export();
 
 		$reg_db   = new BLT_Events_Registrations_DB();
 		$event_id = absint( $_GET['event_id'] ?? 0 );
@@ -459,18 +527,58 @@ class BLT_Events_Registrations_List {
 		}
 
 		$registrations = $reg_db->get_all( array(
-			'limit' => 10000,
+			'limit' => 100000,
 			'where' => $where,
 		) );
 
-		$filename = 'registrations-' . ( $event_id ? $event_id . '-' : '' ) . wp_date( 'Y-m-d' ) . '.csv';
+		// Custom-field columns: the event's fieldset when exporting one event.
+		$custom_columns = array();
+		if ( $event_id && class_exists( 'BLT_Events_Fieldsets' ) ) {
+			$fieldset = BLT_Events_Fieldsets::get_event_fieldset( $event_id );
+			foreach ( BLT_Events_Fieldsets::get_fields( $fieldset ) as $field ) {
+				$type = BLT_Events_Fieldsets::field_type( $field['type'] );
+				if ( ! empty( $type['stores_value'] ) && ! in_array( $field['key'], array( 'first_name', 'last_name', 'email', 'mobile_number' ), true ) ) {
+					$custom_columns[ $field['key'] ] = $field['label'];
+				}
+			}
+		}
 
-		header( 'Content-Type: text/csv; charset=UTF-8' );
-		header( 'Content-Disposition: attachment; filename=' . $filename );
+		$columns = array(
+			'id'             => __( 'ID', 'blt-events' ),
+			'event'          => __( 'Event', 'blt-events' ),
+			'name'           => __( 'Name', 'blt-events' ),
+			'email'          => __( 'Email', 'blt-events' ),
+			'phone'          => __( 'Phone', 'blt-events' ),
+			'attendees'      => __( 'Attendees', 'blt-events' ),
+			'total'          => __( 'Total', 'blt-events' ),
+			'discount'       => __( 'Discount', 'blt-events' ),
+			'paid'           => __( 'Paid', 'blt-events' ),
+			'coupon'         => __( 'Coupon', 'blt-events' ),
+			'provider'       => __( 'Provider', 'blt-events' ),
+			'payment_id'     => __( 'Payment ID', 'blt-events' ),
+			'status'         => __( 'Status', 'blt-events' ),
+			'date'           => __( 'Date', 'blt-events' ),
+		);
+		foreach ( $custom_columns as $key => $label ) {
+			$columns[ 'field:' . $key ] = $label;
+		}
+		$columns['consents'] = __( 'Consents', 'blt-events' );
+		if ( ! $event_id ) {
+			$columns['custom_fields'] = __( 'Custom Fields (JSON)', 'blt-events' );
+		}
+
+		/**
+		 * Filter the registrations CSV columns.
+		 *
+		 * @param array $columns  Column key => header label.
+		 * @param int   $event_id The event being exported, or 0 for all.
+		 */
+		$columns = apply_filters( 'blt_events_csv_columns', $columns, $event_id );
+
+		self::send_csv_headers( 'registrations-' . ( $event_id ? $event_id . '-' : '' ) . wp_date( 'Y-m-d' ) . '.csv' );
 
 		$output = fopen( 'php://output', 'w' );
-
-		fputcsv( $output, array( __( 'ID', 'blt-events' ), __( 'Event', 'blt-events' ), __( 'Name', 'blt-events' ), __( 'Email', 'blt-events' ), __( 'Phone', 'blt-events' ), __( 'Attendees', 'blt-events' ), __( 'Total', 'blt-events' ), __( 'Paid', 'blt-events' ), __( 'Provider', 'blt-events' ), __( 'Status', 'blt-events' ), __( 'Date', 'blt-events' ) ) );
+		fputcsv( $output, array_values( $columns ) );
 
 		// Prime post caches once so event titles don't trigger a query per row.
 		$event_ids = array_unique( wp_list_pluck( $registrations, 'event_id' ) );
@@ -479,23 +587,162 @@ class BLT_Events_Registrations_List {
 		}
 
 		foreach ( $registrations as $reg ) {
-			$event = get_post( $reg->event_id );
-			fputcsv( $output, array_map( array( __CLASS__, 'escape_csv_field' ), array(
-				$reg->id,
-				$event ? $event->post_title : $reg->event_id,
-				$reg->customer_name,
-				$reg->customer_email,
-				$reg->customer_phone,
-				$reg->attendee_count,
-				$reg->total_amount,
-				$reg->amount_paid,
-				$reg->payment_provider,
-				$reg->status,
-				$reg->created_at,
-			) ) );
+			$event  = get_post( $reg->event_id );
+			$custom = json_decode( (string) $reg->custom_fields, true );
+			$custom = is_array( $custom ) ? $custom : array();
+			$coupon = json_decode( (string) $reg->coupon_data, true );
+
+			$consents = array();
+			foreach ( (array) ( $custom['_consents'] ?? array() ) as $key => $given ) {
+				if ( $given ) {
+					$consents[] = $key;
+				}
+			}
+
+			$row = array(
+				'id'         => $reg->id,
+				'event'      => $event ? $event->post_title : $reg->event_id,
+				'name'       => $reg->customer_name,
+				'email'      => $reg->customer_email,
+				'phone'      => $reg->customer_phone,
+				'attendees'  => $reg->attendee_count,
+				'total'      => $reg->total_amount,
+				'discount'   => $reg->discount_amount,
+				'paid'       => $reg->amount_paid,
+				'coupon'     => is_array( $coupon ) ? ( $coupon['code'] ?? '' ) : '',
+				'provider'   => $reg->payment_provider,
+				'payment_id' => $reg->payment_id,
+				'status'     => $reg->status,
+				'date'       => $reg->created_at,
+				'consents'   => implode( ', ', $consents ),
+			);
+
+			foreach ( $custom_columns as $key => $label ) {
+				$value                  = $custom[ $key ] ?? '';
+				$row[ 'field:' . $key ] = is_array( $value ) ? implode( ', ', $value ) : (string) $value;
+			}
+
+			if ( ! $event_id ) {
+				$public = array_filter( $custom, function ( $key ) {
+					return 0 !== strpos( (string) $key, '_' );
+				}, ARRAY_FILTER_USE_KEY );
+				$row['custom_fields'] = wp_json_encode( $public );
+			}
+
+			/**
+			 * Filter one row of the registrations CSV.
+			 *
+			 * @param array  $row      Column key => value.
+			 * @param object $reg      Registration row.
+			 * @param int    $event_id The event being exported, or 0 for all.
+			 */
+			$row = apply_filters( 'blt_events_csv_row', $row, $reg, $event_id );
+
+			$ordered = array();
+			foreach ( array_keys( $columns ) as $key ) {
+				$ordered[] = $row[ $key ] ?? '';
+			}
+
+			fputcsv( $output, array_map( array( __CLASS__, 'escape_csv_field' ), $ordered ) );
 		}
 
-		fclose( $output );
+		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		exit;
+	}
+
+	/**
+	 * Attendees CSV: one row per seat, for check-in lists and badges.
+	 */
+	public static function ajax_export_attendees_csv() {
+		self::authorize_export();
+
+		global $wpdb;
+
+		$event_id = absint( $_GET['event_id'] ?? 0 );
+		$att_db   = new BLT_Events_Attendees_DB();
+		$reg_tbl  = $wpdb->prefix . 'blt_registrations';
+
+		$sql    = "SELECT a.*, r.customer_name, r.customer_email, r.status AS registration_status
+				   FROM {$att_db->get_table_name()} a
+				   INNER JOIN {$reg_tbl} r ON r.id = a.registration_id";
+		$params = array();
+		if ( $event_id ) {
+			$sql     .= ' WHERE a.event_id = %d';
+			$params[] = $event_id;
+		}
+		$sql .= ' ORDER BY a.event_id ASC, a.registration_id ASC, a.id ASC LIMIT 100000';
+
+		$rows = $params ? $wpdb->get_results( $wpdb->prepare( $sql, $params ) ) : $wpdb->get_results( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+		$columns = array(
+			'registration_id' => __( 'Registration ID', 'blt-events' ),
+			'event'           => __( 'Event', 'blt-events' ),
+			'attendee_name'   => __( 'Attendee', 'blt-events' ),
+			'attendee_email'  => __( 'Email', 'blt-events' ),
+			'attendee_phone'  => __( 'Phone', 'blt-events' ),
+			'ticket'          => __( 'Ticket', 'blt-events' ),
+			'price'           => __( 'Price', 'blt-events' ),
+			'booked_by'       => __( 'Booked by', 'blt-events' ),
+			'booked_by_email' => __( 'Booker email', 'blt-events' ),
+			'status'          => __( 'Registration status', 'blt-events' ),
+			'checked_in'      => __( 'Checked in', 'blt-events' ),
+			'check_in_time'   => __( 'Check-in time', 'blt-events' ),
+		);
+
+		/**
+		 * Filter the attendees CSV columns.
+		 *
+		 * @param array $columns  Column key => header label.
+		 * @param int   $event_id The event being exported, or 0 for all.
+		 */
+		$columns = apply_filters( 'blt_events_attendees_csv_columns', $columns, $event_id );
+
+		self::send_csv_headers( 'attendees-' . ( $event_id ? $event_id . '-' : '' ) . wp_date( 'Y-m-d' ) . '.csv' );
+
+		$output = fopen( 'php://output', 'w' );
+		fputcsv( $output, array_values( $columns ) );
+
+		$event_ids = array_unique( wp_list_pluck( $rows, 'event_id' ) );
+		if ( $event_ids ) {
+			_prime_post_caches( $event_ids, false, false );
+		}
+
+		foreach ( $rows as $att ) {
+			$event = get_post( $att->event_id );
+
+			$row = array(
+				'registration_id' => $att->registration_id,
+				'event'           => $event ? $event->post_title : $att->event_id,
+				'attendee_name'   => $att->attendee_name,
+				'attendee_email'  => $att->attendee_email,
+				'attendee_phone'  => $att->attendee_phone,
+				'ticket'          => $att->ticket_type,
+				'price'           => $att->ticket_price,
+				'booked_by'       => $att->customer_name,
+				'booked_by_email' => $att->customer_email,
+				'status'          => $att->registration_status,
+				'checked_in'      => 'checked_in' === $att->check_in_status ? __( 'Yes', 'blt-events' ) : __( 'No', 'blt-events' ),
+				'check_in_time'   => $att->check_in_time,
+			);
+
+			/**
+			 * Filter one row of the attendees CSV.
+			 *
+			 * @param array  $row      Column key => value.
+			 * @param object $att      Attendee row (joined with its registration).
+			 * @param int    $event_id The event being exported, or 0 for all.
+			 */
+			$row = apply_filters( 'blt_events_attendees_csv_row', $row, $att, $event_id );
+
+			$ordered = array();
+			foreach ( array_keys( $columns ) as $key ) {
+				$ordered[] = $row[ $key ] ?? '';
+			}
+
+			fputcsv( $output, array_map( array( __CLASS__, 'escape_csv_field' ), $ordered ) );
+		}
+
+		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		exit;
 	}
 

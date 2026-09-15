@@ -287,6 +287,113 @@
 	margin-top: 0.5rem;
 }
 
+.blt-field-desc {
+	margin: 0.35rem 0 0;
+	font-size: 0.8rem;
+	color: var(--blt-e-fg-muted);
+}
+
+.blt-field-html {
+	font-size: 0.95rem;
+	color: var(--blt-e-fg-soft);
+	line-height: 1.6;
+}
+
+.blt-field-html > *:first-child { margin-top: 0; }
+.blt-field-html > *:last-child { margin-bottom: 0; }
+
+/* Radio and checkbox groups */
+.blt-choice-group {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	min-width: 0;
+}
+
+.blt-choice-group legend {
+	display: block;
+	margin-bottom: 0.375rem;
+	padding: 0;
+	color: var(--blt-e-fg-soft);
+	font-weight: 500;
+	font-size: 0.95rem;
+}
+
+.blt-choices {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+}
+
+.blt-choice {
+	display: inline-flex !important;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0 !important;
+	font-weight: 400 !important;
+	cursor: pointer;
+}
+
+.blt-choice-group .blt-other-input {
+	flex-basis: 100%;
+}
+
+.blt-choice-group.blt-invalid legend {
+	color: var(--blt-e-danger);
+}
+
+.blt-check-label {
+	display: flex !important;
+	align-items: flex-start;
+	gap: 0.5rem;
+	cursor: pointer;
+	font-weight: 400 !important;
+}
+
+.blt-check-label input {
+	margin-top: 0.2rem;
+	flex-shrink: 0;
+}
+
+/* Hidden by conditional logic */
+.blt-field-wrap[hidden] {
+	display: none;
+}
+
+/* Additional attendees */
+.blt-attendees-section {
+	margin-bottom: 1.5rem;
+}
+
+.blt-attendee {
+	margin: 0 0 1rem;
+	padding: 1rem 1.25rem 1.25rem;
+	border: 1px solid var(--blt-e-border);
+	border-radius: var(--blt-e-radius);
+	background: var(--blt-e-surface-alt);
+	min-width: 0;
+}
+
+.blt-attendee__title {
+	padding: 0 0.4rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-attendee .blt-field-wrap input,
+.blt-attendee .blt-field-wrap select {
+	background: var(--blt-e-surface);
+}
+
+/* Scarcity hint */
+.blt-spots-left {
+	margin: -0.5rem 0 1rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--blt-e-warning);
+}
+
 /* --- Coupon --- */
 .blt-coupon-section {
 	margin-bottom: 1.5rem;
@@ -484,6 +591,36 @@
 	border-radius: var(--blt-e-radius-lg);
 	text-align: center;
 	color: var(--blt-e-fg-muted);
+}
+
+.blt-registration-closed p:last-child {
+	margin-bottom: 0;
+}
+
+/* --- Waitlist --- */
+.blt-waitlist .blt-registration-closed {
+	margin: 0 0 1.5rem;
+	padding: 1rem 1.25rem;
+	background: var(--blt-e-warning-bg);
+	border: 1px solid var(--blt-e-warning-border);
+	color: var(--blt-e-warning);
+}
+
+.blt-waitlist .blt-reg__step-title {
+	margin-bottom: 0.25rem;
+	color: var(--blt-e-fg);
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.blt-waitlist .blt-field-desc {
+	margin-bottom: 1rem;
+}
+
+/* --- Hidden attribute fallback --- */
+.blt-registration-form [hidden],
+.blt-waitlist [hidden] {
+	display: none !important;
 }
 
 .blt-error {

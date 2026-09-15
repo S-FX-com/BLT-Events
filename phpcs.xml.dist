@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ruleset name="BLT Events">
+	<description>WordPress Coding Standards for BLT Events.</description>
+
+	<file>blt-events.php</file>
+	<file>uninstall.php</file>
+	<file>includes</file>
+	<file>templates</file>
+
+	<!-- Vendored libraries and the shared family layer are linted in their own repos. -->
+	<exclude-pattern>*/includes/lib/*</exclude-pattern>
+	<exclude-pattern>*/includes/blt-family/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+
+	<arg name="extensions" value="php" />
+	<arg name="colors" />
+	<arg value="sp" />
+	<arg name="parallel" value="8" />
+
+	<config name="minimum_wp_version" value="6.2" />
+	<config name="testVersion" value="7.4-" />
+
+	<rule ref="WordPress">
+		<!-- Files are named class-*.php by hand; the class-name check is noise here. -->
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName" />
+		<!-- Long, descriptive doc comments are preferred over the 120-char limit. -->
+		<exclude name="Generic.Files.LineLength.TooLong" />
+		<!-- Inline comments ending in punctuation are enforced loosely. -->
+		<exclude name="Squiz.Commenting.InlineComment.InvalidEndChar" />
+		<!-- Template files are procedural by design. -->
+		<exclude name="Squiz.Commenting.FileComment.Missing" />
+		<exclude name="Squiz.Commenting.FunctionComment.Missing" />
+		<exclude name="Squiz.Commenting.ClassComment.Missing" />
+		<exclude name="Squiz.Commenting.VariableComment.Missing" />
+		<exclude name="Squiz.Commenting.FunctionComment.MissingParamTag" />
+		<exclude name="Squiz.Commenting.FunctionComment.MissingParamComment" />
+		<exclude name="Generic.Commenting.DocComment.MissingShort" />
+		<!-- Yoda conditions are not required. -->
+		<exclude name="WordPress.PHP.YodaConditions.NotYoda" />
+		<!-- Short array syntax is fine; the codebase uses long syntax by convention but does not enforce it. -->
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax" />
+	</rule>
+
+	<rule ref="PHPCompatibilityWP" />
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="blt-events" />
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="blt_events" />
+				<element value="BLT_Events" />
+				<element value="BLT_EVENTS" />
+				<element value="blt_family" />
+				<element value="BLT_Family" />
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Templates receive their data as local variables from the loader. -->
+	<rule ref="VariableAnalysis.CodeAnalysis.VariableAnalysis">
+		<exclude-pattern>*/templates/*</exclude-pattern>
+	</rule>
+</ruleset>

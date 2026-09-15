@@ -14,6 +14,53 @@
 	font-size: 1.1rem;
 }
 
+/* --- Featured badge (list, grid, month) --- */
+.blt-featured-badge {
+	display: inline-block;
+	margin-left: 0.5rem;
+	padding: 0.1rem 0.5rem;
+	border-radius: var(--blt-e-radius-pill);
+	background: var(--blt-e-primary-tint);
+	color: var(--blt-e-primary);
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	vertical-align: middle;
+}
+
+.blt-events-grid .blt-featured-badge {
+	margin: 0 0 0.5rem;
+}
+
+.blt-list-event.is-featured,
+.blt-event-card.is-featured {
+	box-shadow: 0 0 0 2px var(--blt-e-primary-tint), var(--blt-e-shadow-sm);
+}
+
+.blt-cal-event.is-featured a {
+	font-weight: 700;
+}
+
+/* --- Archive page wrapper (templates/archive-event.php) --- */
+.blt-events-archive__inner {
+	max-width: var(--blt-e-content-width);
+	margin: 0 auto;
+	padding: var(--blt-e-gap-lg) var(--blt-e-gap);
+	font-family: var(--blt-e-font);
+}
+
+.blt-events-archive__title {
+	margin: 0 0 0.5rem;
+	font-size: 2rem;
+	color: var(--blt-e-fg-strong);
+}
+
+.blt-events-archive__description {
+	margin-bottom: 1.5rem;
+	color: var(--blt-e-fg-muted);
+}
+
 /* --- List View --- */
 .blt-events-list .blt-event-card {
 	display: flex;

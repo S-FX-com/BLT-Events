@@ -1,13 +1,18 @@
 <?php
 /**
- * Plugin Name: BLT Events
- * Plugin URI:  https://s-fx.com
- * Description: A comprehensive event registration system with configurable forms, multi-attendee support, and payment gateway integration.
- * Version:     2.3.2
- * Author:      S-FX.com
- * Author URI:  https://www.s-fx.com
- * License:     GPL2
- * Text Domain: blt-events
+ * Plugin Name:       BLT Events
+ * Plugin URI:        https://github.com/S-FX-com/BLT-Events
+ * Description:       Event registration for WordPress: calendar and list views, ticket types, configurable registration forms, multi-attendee bookings, waitlists, reminders, Stripe, SureCart and FluentCart checkout, and Zoom, Teams, GoTo and ClickMeeting rooms.
+ * Version:           2.4.0
+ * Requires at least: 6.2
+ * Requires PHP:      7.4
+ * Author:            S-FX.com
+ * Author URI:        https://www.s-fx.com
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       blt-events
+ * Domain Path:       /languages
+ * Update URI:        https://github.com/S-FX-com/BLT-Events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,8 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.3.2' );
-define( 'BLT_EVENTS_DB_VERSION', '1.0' );
+define( 'BLT_EVENTS_VERSION', '2.4.0' );
+// Bumped whenever install()/upgrade work has to run on sites updated
+// without re-activation (schema, roles, cron, seeded options).
+define( 'BLT_EVENTS_DB_VERSION', '1.1' );
 define( 'BLT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_FILE', __FILE__ );
@@ -80,52 +87,60 @@ spl_autoload_register( function ( $class ) {
 
 	$map = array(
 		// Foundation
-		'activator'              => 'includes/class-activator.php',
-		'helpers'                => 'includes/class-helpers.php',
+		'activator'                => 'includes/class-activator.php',
+		'helpers'                  => 'includes/class-helpers.php',
+		'templates'                => 'includes/class-templates.php',
+		'roles'                    => 'includes/class-roles.php',
+		'emails'                   => 'includes/class-emails.php',
+		'reminders'                => 'includes/class-reminders.php',
 		// DB
-		'db'                     => 'includes/db/class-db.php',
-		'fieldsets-db'           => 'includes/db/class-fieldsets-db.php',
-		'registrations-db'       => 'includes/db/class-registrations-db.php',
-		'attendees-db'           => 'includes/db/class-attendees-db.php',
+		'db'                       => 'includes/db/class-db.php',
+		'fieldsets-db'             => 'includes/db/class-fieldsets-db.php',
+		'registrations-db'         => 'includes/db/class-registrations-db.php',
+		'attendees-db'             => 'includes/db/class-attendees-db.php',
 		// CPT
-		'event-cpt'              => 'includes/cpt/class-event-cpt.php',
-		'coupon-cpt'             => 'includes/cpt/class-coupon-cpt.php',
+		'event-cpt'                => 'includes/cpt/class-event-cpt.php',
+		'event-meta'               => 'includes/cpt/class-event-meta.php',
+		'coupon-cpt'               => 'includes/cpt/class-coupon-cpt.php',
 		// Business logic
-		'fieldsets'              => 'includes/class-fieldsets.php',
-		'registrations'          => 'includes/class-registrations.php',
-		'coupons'                => 'includes/class-coupons.php',
+		'fieldsets'                => 'includes/class-fieldsets.php',
+		'registrations'            => 'includes/class-registrations.php',
+		'coupons'                  => 'includes/class-coupons.php',
 		// Payment
-		'payment-provider'       => 'includes/payment/class-payment-provider.php',
-		'payment-providers'      => 'includes/payment/class-payment-providers.php',
-		'stripe-handler'         => 'includes/payment/class-stripe-handler.php',
-		'surecart-integration'   => 'includes/payment/class-surecart-integration.php',
-		'fluentcart-integration' => 'includes/payment/class-fluentcart-integration.php',
+		'payment-provider'         => 'includes/payment/class-payment-provider.php',
+		'payment-providers'        => 'includes/payment/class-payment-providers.php',
+		'stripe-handler'           => 'includes/payment/class-stripe-handler.php',
+		'surecart-integration'     => 'includes/payment/class-surecart-integration.php',
+		'fluentcart-integration'   => 'includes/payment/class-fluentcart-integration.php',
 		// Meeting integrations
-		'meeting-provider'       => 'includes/integrations/class-meeting-provider.php',
-		'meeting-providers'      => 'includes/integrations/class-meeting-providers.php',
-		'zoom-integration'       => 'includes/integrations/class-zoom-integration.php',
-		'teams-integration'      => 'includes/integrations/class-teams-integration.php',
-		'goto-integration'       => 'includes/integrations/class-goto-integration.php',
+		'meeting-provider'         => 'includes/integrations/class-meeting-provider.php',
+		'meeting-providers'        => 'includes/integrations/class-meeting-providers.php',
+		'zoom-integration'         => 'includes/integrations/class-zoom-integration.php',
+		'teams-integration'        => 'includes/integrations/class-teams-integration.php',
+		'goto-integration'         => 'includes/integrations/class-goto-integration.php',
 		'clickmeeting-integration' => 'includes/integrations/class-clickmeeting-integration.php',
 		// Admin
-		'admin'                  => 'includes/admin/class-admin.php',
-		'admin-settings'         => 'includes/admin/class-admin-settings.php',
-		'setup'                  => 'includes/admin/class-setup.php',
-		'event-metabox'          => 'includes/admin/class-event-metabox.php',
-		'fieldset-builder'       => 'includes/admin/class-fieldset-builder.php',
-		'registrations-list'     => 'includes/admin/class-registrations-list.php',
+		'admin'                    => 'includes/admin/class-admin.php',
+		'admin-settings'           => 'includes/admin/class-admin-settings.php',
+		'setup'                    => 'includes/admin/class-setup.php',
+		'event-metabox'            => 'includes/admin/class-event-metabox.php',
+		'fieldset-builder'         => 'includes/admin/class-fieldset-builder.php',
+		'registrations-list'       => 'includes/admin/class-registrations-list.php',
 		// Shortcodes
-		'registration-shortcode' => 'includes/shortcodes/class-registration-shortcode.php',
-		'calendar-shortcode'     => 'includes/shortcodes/class-calendar-shortcode.php',
+		'registration-shortcode'   => 'includes/shortcodes/class-registration-shortcode.php',
+		'calendar-shortcode'       => 'includes/shortcodes/class-calendar-shortcode.php',
 		// Front end
-		'appearance'             => 'includes/frontend/class-appearance.php',
-		'single-event'           => 'includes/frontend/class-single-event.php',
-		'presenters'             => 'includes/frontend/class-presenters.php',
+		'appearance'               => 'includes/frontend/class-appearance.php',
+		'single-event'             => 'includes/frontend/class-single-event.php',
+		'presenters'               => 'includes/frontend/class-presenters.php',
+		'schema'                   => 'includes/frontend/class-schema.php',
+		'archive'                  => 'includes/frontend/class-archive.php',
+		'blocks'                   => 'includes/frontend/class-blocks.php',
 		// REST API
-		'rest-registrations'     => 'includes/api/class-rest-registrations.php',
-		'rest-fieldsets'         => 'includes/api/class-rest-fieldsets.php',
+		'rest-registrations'       => 'includes/api/class-rest-registrations.php',
+		'rest-fieldsets'           => 'includes/api/class-rest-fieldsets.php',
 		// Add-ons
-		'fluentcrm-addon'        => 'includes/addons/fluentcrm/class-fluentcrm-addon.php',
+		'fluentcrm-addon'          => 'includes/addons/fluentcrm/class-fluentcrm-addon.php',
 	);
 
 	if ( isset( $map[ $relative ] ) ) {
@@ -138,9 +153,8 @@ spl_autoload_register( function ( $class ) {
 
 // ---------- Activation / Deactivation ----------
 register_activation_hook( __FILE__, array( 'BLT_Events_Activator', 'activate' ) );
-register_deactivation_hook( __FILE__, function () {
-	flush_rewrite_rules();
-});
+register_deactivation_hook( __FILE__, array( 'BLT_Events_Activator', 'deactivate' ) );
+add_action( 'wp_initialize_site', array( 'BLT_Events_Activator', 'initialize_site' ), 20 );
 
 // ---------- i18n ----------
 function blt_events_load_textdomain() {
@@ -150,16 +164,21 @@ add_action( 'init', 'blt_events_load_textdomain' );
 
 // ---------- Boot ----------
 function blt_events_init() {
-	// Data layer is loaded on-demand via autoloader.
+	// Schema, roles, cron and seeded options for sites updated without
+	// re-activation. One option read when nothing has changed.
+	BLT_Events_Activator::maybe_upgrade();
 
 	// CPTs
 	BLT_Events_Event_CPT::init();
+	BLT_Events_Event_Meta::init();
 	BLT_Events_Coupon_CPT::init();
 
 	// Business logic
 	BLT_Events_Fieldsets::init();
 	BLT_Events_Registrations::init();
 	BLT_Events_Coupons::init();
+	BLT_Events_Emails::init();
+	BLT_Events_Reminders::init();
 
 	// Payment. Every enabled provider boots, not just the site default, so
 	// orders and refunds keep resolving for events that check out elsewhere.
@@ -187,17 +206,20 @@ function blt_events_init() {
 		BLT_Events_Registrations_List::init();
 	}
 
-	// Shortcodes
+	// Shortcodes and blocks
 	BLT_Events_Registration_Shortcode::init();
 	BLT_Events_Calendar_Shortcode::init();
+	BLT_Events_Blocks::init();
 
 	// Front-end styling mode and design tokens (registers the layer every
 	// other plugin stylesheet depends on, so it boots before them).
 	BLT_Events_Appearance::init();
 
-	// Front-end single event view
+	// Front-end single event view, archive, structured data
 	BLT_Events_Single_Event::init();
 	BLT_Events_Presenters::init();
+	BLT_Events_Schema::init();
+	BLT_Events_Archive::init();
 
 	// REST API
 	BLT_Events_REST_Registrations::init();
@@ -207,15 +229,20 @@ function blt_events_init() {
 	if ( defined( 'FLUENTCRM' ) ) {
 		BLT_Events_FluentCRM_Addon::init();
 	}
+
+	/**
+	 * Fires once the plugin has booted. Add-ons hook here.
+	 */
+	do_action( 'blt_events_loaded' );
 }
 add_action( 'plugins_loaded', 'blt_events_init' );
 
 // ---------- Assets ----------
 /**
  * Whether the current front-end request needs the plugin's assets:
- * event singles/archives, or content containing one of the shortcodes.
- * Use the blt_events_enqueue_assets filter to force-load them on pages
- * where the shortcode is rendered outside post content (widgets,
+ * event singles/archives, or content containing one of the shortcodes or
+ * blocks. Use the blt_events_enqueue_assets filter to force-load them on
+ * pages where the shortcode is rendered outside post content (widgets,
  * page-builder templates).
  */
 function blt_events_should_enqueue_assets() {
@@ -228,6 +255,8 @@ function blt_events_should_enqueue_assets() {
 		if ( $post && (
 			has_shortcode( $post->post_content, 'blt_event_registration' )
 			|| has_shortcode( $post->post_content, 'blt_events_calendar' )
+			|| has_block( 'blt-events/calendar', $post )
+			|| has_block( 'blt-events/registration-form', $post )
 		) ) {
 			return true;
 		}
@@ -273,23 +302,28 @@ function blt_events_enqueue_public_assets() {
 }
 add_action( 'wp_enqueue_scripts', 'blt_events_enqueue_public_assets' );
 
+/**
+ * The admin screens this plugin owns, by hook suffix. Matching against the
+ * exact list (rather than a "blt-" prefix) keeps this plugin's admin.css off
+ * the screens of the other BLT plugins on the same site.
+ *
+ * @return string[]
+ */
+function blt_events_admin_hooks() {
+	return (array) apply_filters( 'blt_events_admin_hooks', array(
+		'event_page_blt-registrations',
+		'event_page_blt-fieldsets',
+		'event_page_blt-events-settings',
+	) );
+}
+
 function blt_events_enqueue_admin_assets( $hook ) {
 	// Only load on the plugin's own screens: event/coupon editors and
-	// list tables, plus the blt-* submenu pages.
+	// list tables, plus the plugin's submenu pages.
 	$screen    = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 	$post_type = $screen->post_type ?? '';
 
-	// The shared "BLT" screen is owned by the family library, not by this
-	// plugin, but its hook (toplevel_page_blt-family) matches the blt- prefix
-	// below. Without this exclusion, opening it on a site with two or more BLT
-	// plugins would load this plugin's admin.css over it — and admin.css's
-	// unscoped `.widefat td { vertical-align: middle }` would restyle another
-	// plugin's table.
-	if ( 'toplevel_page_blt-family' === $hook ) {
-		return;
-	}
-
-	if ( ! in_array( $post_type, array( 'event', 'blt_coupon' ), true ) && strpos( $hook, 'blt-' ) === false ) {
+	if ( ! in_array( $post_type, array( 'event', 'blt_coupon' ), true ) && ! in_array( $hook, blt_events_admin_hooks(), true ) ) {
 		return;
 	}
 
@@ -318,7 +352,7 @@ function blt_events_enqueue_admin_assets( $hook ) {
 	);
 
 	// The Settings screen gets its own tabbed, card-based UI.
-	if ( strpos( $hook, 'blt-events-settings' ) !== false ) {
+	if ( 'event_page_blt-events-settings' === $hook ) {
 		wp_enqueue_style(
 			'blt-events-settings',
 			BLT_EVENTS_PLUGIN_URL . 'assets/css/settings.css',

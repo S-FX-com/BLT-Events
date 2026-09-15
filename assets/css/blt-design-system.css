@@ -392,6 +392,11 @@
 	color: var(--blt-neutral-fg);
 }
 
+.blt-badge-waitlisted {
+	background: var(--blt-primary-tint);
+	color: var(--blt-primary);
+}
+
 /* Why a registration is being held for review, under its status badge. */
 .blt-review-reason {
 	margin-top: 4px;

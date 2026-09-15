@@ -726,6 +726,11 @@ class BLT_Events_Event_Metabox {
 		$require_approval  = get_post_meta( $post->ID, $prefix . 'require_approval', true ) === '1';
 		$group_discount    = get_post_meta( $post->ID, $prefix . 'group_discount', true );
 
+		// New events collect every attendee's details by default; existing
+		// events keep whatever they had (missing meta means off).
+		$collect_raw       = get_post_meta( $post->ID, $prefix . 'collect_attendees', true );
+		$collect_attendees = '' === $collect_raw ? 'auto-draft' === get_post_status( $post ) : '1' === $collect_raw;
+
 		$unlimited = $capacity === 0;
 
 		$gd = is_string( $group_discount ) ? json_decode( $group_discount, true ) : $group_discount;
@@ -793,7 +798,18 @@ class BLT_Events_Event_Metabox {
 						'name'    => 'waitlist_enabled',
 						'checked' => $waitlist,
 						'title'   => __( 'Enable Waitlist', 'blt-events' ),
-						'desc'    => __( 'Allow people to join a waitlist when capacity is full', 'blt-events' ),
+						'desc'    => __( 'When the event is sold out, visitors can leave their details. You are emailed when a seat frees up and can confirm them from the Registrations screen.', 'blt-events' ),
+					) );
+					?>
+				</div>
+
+				<div class="blt-config-section">
+					<?php
+					self::render_toggle_row( array(
+						'name'    => 'collect_attendees',
+						'checked' => $collect_attendees,
+						'title'   => __( 'Collect Details for Each Attendee', 'blt-events' ),
+						'desc'    => __( 'When more than one ticket is bought, ask for the name and contact of every attendee, not just the buyer', 'blt-events' ),
 					) );
 					?>
 				</div>
@@ -937,10 +953,14 @@ class BLT_Events_Event_Metabox {
 		) );
 		$capacity = (int) get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'capacity', true );
 		?>
+		<?php $waitlisted = $reg_db->count_waitlisted( $post->ID ); ?>
 		<div class="blt-editor blt-editor-side blt-registrations-summary">
 			<div class="blt-stat-row"><span><?php esc_html_e( 'Total Registrations', 'blt-events' ); ?></span><strong><?php echo intval( $total ); ?></strong></div>
 			<div class="blt-stat-row"><span><?php esc_html_e( 'Confirmed', 'blt-events' ); ?></span><strong><?php echo intval( $confirmed ); ?></strong></div>
 			<div class="blt-stat-row"><span><?php esc_html_e( 'Pending', 'blt-events' ); ?></span><strong><?php echo intval( $pending ); ?></strong></div>
+			<?php if ( $waitlisted > 0 ) : ?>
+				<div class="blt-stat-row"><span><?php esc_html_e( 'Waitlisted', 'blt-events' ); ?></span><strong><?php echo intval( $waitlisted ); ?></strong></div>
+			<?php endif; ?>
 			<?php if ( $capacity > 0 ) : ?>
 				<div class="blt-stat-row"><span><?php esc_html_e( 'Capacity', 'blt-events' ); ?></span><strong><?php echo intval( $confirmed ) . ' / ' . intval( $capacity ); ?></strong></div>
 			<?php endif; ?>
@@ -1169,6 +1189,7 @@ class BLT_Events_Event_Metabox {
 
 		update_post_meta( $post_id, $prefix . 'waitlist_enabled', isset( $_POST['waitlist_enabled'] ) ? '1' : '0' );
 		update_post_meta( $post_id, $prefix . 'require_approval', isset( $_POST['require_approval'] ) ? '1' : '0' );
+		update_post_meta( $post_id, $prefix . 'collect_attendees', isset( $_POST['collect_attendees'] ) ? '1' : '0' );
 
 		// Per-event payment processor. The field is only rendered when the site
 		// has more than one enabled, so an absent key must leave the stored
@@ -1200,6 +1221,23 @@ class BLT_Events_Event_Metabox {
 		// Additional options
 		update_post_meta( $post_id, $prefix . 'featured', isset( $_POST['event_featured'] ) ? '1' : '0' );
 		update_post_meta( $post_id, $prefix . 'hide_from_calendar', isset( $_POST['event_hide_from_calendar'] ) ? '1' : '0' );
+
+		// A rescheduled event should get its reminders again.
+		$new_start = get_post_meta( $post_id, $prefix . 'event_date', true ) . ' ' . get_post_meta( $post_id, $prefix . 'event_start_time', true );
+		$old_start = get_post_meta( $post_id, $prefix . 'reminder_anchor', true );
+		if ( $old_start !== $new_start ) {
+			update_post_meta( $post_id, $prefix . 'reminder_anchor', $new_start );
+			delete_post_meta( $post_id, $prefix . 'reminder_24h_sent' );
+			delete_post_meta( $post_id, $prefix . 'reminder_1h_sent' );
+		}
+
+		/**
+		 * Fires after the event meta has been saved from the editor.
+		 *
+		 * @param int     $post_id The event post ID.
+		 * @param WP_Post $post    The event.
+		 */
+		do_action( 'blt_events_event_saved', $post_id, $post );
 
 		// Auto-create an online meeting room (Zoom/Teams/GoTo/ClickMeeting) and
 		// fill the join link in. Runs after all date/time/location meta is saved

@@ -92,14 +92,71 @@
 	color: var(--blt-danger-fg, #8a2424);
 }
 
+.blt-fitem-key {
+	font-size: 11px;
+	color: var(--blt-muted-fg, #646970);
+	background: transparent;
+	padding: 0;
+}
+
+.blt-fitem-required {
+	color: var(--blt-danger-fg, #8a2424);
+	font-weight: 700;
+}
+
 /* --- Field Settings Panel --- */
 .blt-field-settings {
 	padding: 1rem;
 	background: var(--blt-surface-muted, #f6f7f7);
 	border-top: 1px solid var(--blt-border, #dcdcde);
 	display: flex;
-	flex-wrap: wrap;
+	flex-direction: column;
 	gap: 0.75rem;
+}
+
+.blt-fs-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.blt-fs-group + .blt-fs-group {
+	padding-top: 0.75rem;
+	border-top: 1px dashed var(--blt-border, #dcdcde);
+}
+
+.blt-fs-group .blt-map-heading {
+	flex-basis: 100%;
+}
+
+.blt-fs-wide {
+	flex: 1 1 320px;
+}
+
+.blt-fs-wide input[type="text"] {
+	flex: 1;
+	min-width: 0;
+}
+
+.blt-fs-block {
+	flex-direction: column;
+	align-items: stretch;
+	white-space: normal;
+}
+
+.blt-fs-block textarea {
+	width: 100%;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+}
+
+.blt-field-settings input[type="number"].small-text {
+	width: 72px;
+}
+
+.blt-preset-cards {
+	margin-bottom: 4px;
 }
 
 .blt-field-settings label {
