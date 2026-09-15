@@ -140,7 +140,7 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 			$price_data = array(
 				'product'  => $product_ids[ $i ],
 				'amount'   => $price_amount_cents,
-				'currency' => strtolower( get_option( 'blt_events_currency', 'usd' ) ),
+				'currency' => strtolower( BLT_Events_Helpers::get_currency_code() ),
 			);
 
 			$price = self::api_request( 'prices', $price_data );

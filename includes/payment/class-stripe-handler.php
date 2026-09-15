@@ -113,7 +113,7 @@ class BLT_Events_Stripe_Handler extends BLT_Events_Payment_Provider {
 		check_ajax_referer( 'blt_stripe_nonce', 'nonce' );
 
 		$event_id = absint( $_POST['event_id'] ?? 0 );
-		$currency = strtolower( get_option( 'blt_events_currency', 'USD' ) );
+		$currency = strtolower( BLT_Events_Helpers::get_currency_code() );
 
 		if ( ! $event_id || get_post_type( $event_id ) !== 'event' || get_post_status( $event_id ) !== 'publish' ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid payment parameters.', 'blt-events' ) ) );

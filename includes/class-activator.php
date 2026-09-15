@@ -360,7 +360,6 @@ class BLT_Events_Activator {
 	private static function set_default_options() {
 		$defaults = array(
 			'blt_events_payment_provider' => 'none',
-			'blt_events_currency'         => 'USD',
 			'blt_events_date_format'      => 'F j, Y',
 		);
 

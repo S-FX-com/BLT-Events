@@ -259,7 +259,7 @@ class BLT_Events_Registrations {
 			'total_amount'    => $pricing['subtotal'],
 			'discount_amount' => $discount,
 			'amount_paid'     => $amount_paid,
-			'currency'        => get_option( 'blt_events_currency', 'USD' ),
+			'currency'        => BLT_Events_Helpers::get_currency_code(),
 			'coupon_id'       => $pricing['coupon_id'] ?? null,
 			'coupon_data'     => ! empty( $pricing['coupon_data'] ) ? wp_json_encode( $pricing['coupon_data'] ) : null,
 			'payment_provider' => $payment['provider'] ?? ( $is_free ? 'free' : BLT_Events_Helpers::get_event_payment_provider( $event_id ) ),

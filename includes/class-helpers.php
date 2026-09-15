@@ -13,43 +13,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 class BLT_Events_Helpers {
 
     /**
-     * Currency symbol mapping.
-     *
-     * @var array
-     */
-    private static $currency_symbols = array(
-        'USD' => '$',
-        'EUR' => "\u{20AC}",
-        'GBP' => "\u{00A3}",
-        'SAR' => "\u{FDFC}",
-        'AED' => "\u{062F}.\u{0625}",
-    );
-
-    /**
-     * The currency code shown to visitors: the custom override when set,
-     * otherwise the selected preset currency.
+     * The currency code. Always USD — BLT only ever transacts in US Dollars,
+     * and this is not configurable by design.
      *
      * @return string
      */
     public static function get_currency_code() {
-        $custom = trim( (string) get_option( 'blt_events_currency_code_custom', '' ) );
-        return $custom !== '' ? $custom : get_option( 'blt_events_currency', 'USD' );
+        return 'USD';
     }
 
     /**
-     * The currency symbol shown to visitors: the custom override when set,
-     * otherwise the symbol mapped from the selected preset currency.
+     * The currency symbol. Always the US Dollar sign. See get_currency_code().
      *
      * @return string
      */
     public static function get_currency_symbol() {
-        $custom = trim( (string) get_option( 'blt_events_currency_symbol_custom', '' ) );
-        if ( $custom !== '' ) {
-            return $custom;
-        }
-
-        $currency = get_option( 'blt_events_currency', 'USD' );
-        return self::$currency_symbols[ $currency ] ?? '';
+        return '$';
     }
 
     /**
@@ -101,7 +80,6 @@ class BLT_Events_Helpers {
             'showCurrency'   => get_option( 'blt_events_display_currency', '0' ),
             'showSymbol'     => get_option( 'blt_events_display_currency_sign', '0' ),
             'currencySymbol' => self::get_currency_symbol(),
-            'currencySymbols' => self::$currency_symbols,
         );
     }
 

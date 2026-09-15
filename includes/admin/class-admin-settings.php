@@ -49,20 +49,17 @@ class BLT_Events_Admin_Settings {
 		register_setting( 'blt_events_settings_general', 'blt_events_date_format', array(
 			'sanitize_callback' => 'sanitize_text_field',
 		) );
-		register_setting( 'blt_events_settings_general', 'blt_events_currency', array(
-			'sanitize_callback' => array( __CLASS__, 'sanitize_currency' ),
-		) );
+		// Currency is fixed at USD and is not configurable. blt_events_currency,
+		// blt_events_currency_code_custom and blt_events_currency_symbol_custom are
+		// legacy options: deliberately NOT registered, so options.php cannot write
+		// them and any stale DB value is simply ignored. Only the two display
+		// toggles below remain — they control whether the code and symbol are shown
+		// at all, not which currency is used.
 		register_setting( 'blt_events_settings_general', 'blt_events_display_currency', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
 		) );
 		register_setting( 'blt_events_settings_general', 'blt_events_display_currency_sign', array(
 			'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
-		) );
-		register_setting( 'blt_events_settings_general', 'blt_events_currency_code_custom', array(
-			'sanitize_callback' => array( __CLASS__, 'sanitize_currency_code' ),
-		) );
-		register_setting( 'blt_events_settings_general', 'blt_events_currency_symbol_custom', array(
-			'sanitize_callback' => array( __CLASS__, 'sanitize_currency_symbol' ),
 		) );
 		// blt_events_single_styles is deliberately NOT registered any more. It
 		// is a legacy option, read only to seed the new styling mode on an
@@ -233,11 +230,6 @@ class BLT_Events_Admin_Settings {
 		) );
 	}
 
-	public static function sanitize_currency( $value ) {
-		$allowed = array( 'USD', 'EUR', 'GBP', 'SAR', 'AED' );
-		return in_array( $value, $allowed, true ) ? $value : 'USD';
-	}
-
 	public static function sanitize_checkbox( $value ) {
 		return $value === '1' ? '1' : '0';
 	}
@@ -261,23 +253,6 @@ class BLT_Events_Admin_Settings {
 		return post_type_exists( $value ) ? $value : '';
 	}
 
-	/**
-	 * Custom currency code: letters only, uppercased, max 8 chars.
-	 * Empty means "use the selected preset currency's code".
-	 */
-	public static function sanitize_currency_code( $value ) {
-		$value = strtoupper( preg_replace( '/[^A-Za-z]/', '', (string) $value ) );
-		return substr( $value, 0, 8 );
-	}
-
-	/**
-	 * Custom currency symbol: any short text (so ر.س, kr, CHF all work),
-	 * max 8 characters. Empty means "use the preset currency's symbol".
-	 */
-	public static function sanitize_currency_symbol( $value ) {
-		$value = sanitize_text_field( (string) $value );
-		return mb_substr( $value, 0, 8 );
-	}
 
 	/**
 	 * Keep the previously stored secret when the field is submitted blank,
@@ -538,29 +513,10 @@ class BLT_Events_Admin_Settings {
 			<div class="blt-card">
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Currency', 'blt-events' ); ?></h2>
-					<p><?php esc_html_e( 'The currency used for ticket prices and how it is shown to visitors.', 'blt-events' ); ?></p>
+					<p><?php esc_html_e( 'Prices are always in US Dollars (USD). These settings only control how the currency is shown to visitors.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
 					<?php
-					self::render_field(
-						__( 'Currency', 'blt-events' ),
-						function () {
-							$currencies = array(
-								'USD' => __( 'US Dollar (USD)', 'blt-events' ),
-								'EUR' => __( 'Euro (EUR)', 'blt-events' ),
-								'GBP' => __( 'British Pound (GBP)', 'blt-events' ),
-								'SAR' => __( 'Saudi Riyal (SAR)', 'blt-events' ),
-								'AED' => __( 'UAE Dirham (AED)', 'blt-events' ),
-							);
-							$selected = get_option( 'blt_events_currency', 'USD' );
-							echo '<select name="blt_events_currency">';
-							foreach ( $currencies as $code => $name ) {
-								printf( '<option value="%s" %s>%s</option>', esc_attr( $code ), selected( $selected, $code, false ), esc_html( $name ) );
-							}
-							echo '</select>';
-						}
-					);
-
 					self::render_field(
 						__( 'Currency Display', 'blt-events' ),
 						function () {
@@ -573,26 +529,6 @@ class BLT_Events_Admin_Settings {
 							</div>
 							<?php
 						}
-					);
-
-					self::render_field(
-						__( 'Custom Currency Code', 'blt-events' ),
-						function () {
-							?>
-							<input type="text" name="blt_events_currency_code_custom" value="<?php echo esc_attr( get_option( 'blt_events_currency_code_custom', '' ) ); ?>" class="small-text" maxlength="8" placeholder="<?php echo esc_attr( get_option( 'blt_events_currency', 'USD' ) ); ?>" />
-							<?php
-						},
-						__( 'Overrides the code shown after prices. Leave blank to use the selected currency\'s code.', 'blt-events' )
-					);
-
-					self::render_field(
-						__( 'Custom Currency Symbol', 'blt-events' ),
-						function () {
-							?>
-							<input type="text" name="blt_events_currency_symbol_custom" value="<?php echo esc_attr( get_option( 'blt_events_currency_symbol_custom', '' ) ); ?>" class="small-text" maxlength="8" placeholder="$" />
-							<?php
-						},
-						__( 'Overrides the symbol shown before prices. Leave blank to use the selected currency\'s symbol.', 'blt-events' )
 					);
 					?>
 				</div>
