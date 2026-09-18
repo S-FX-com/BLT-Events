@@ -36,17 +36,20 @@ class BLT_Events_Event_Migration {
 	public static function sources() {
 		$sources = array(
 			'mec' => array(
-				'label'     => __( 'Modern Events Calendar', 'blt-events' ),
-				'post_type' => 'mec-events',
+				'label'        => __( 'Modern Events Calendar', 'blt-events' ),
+				'post_type'    => 'mec-events',
+				'plugin_names' => array( 'Modern Events Calendar', 'MEC' ),
 			),
 			'tec' => array(
-				'label'     => __( 'The Events Calendar', 'blt-events' ),
-				'post_type' => 'tribe_events',
+				'label'        => __( 'The Events Calendar', 'blt-events' ),
+				'post_type'    => 'tribe_events',
+				'plugin_names' => array( 'The Events Calendar' ),
 			),
 		);
 
 		foreach ( $sources as $slug => $source ) {
 			$sources[ $slug ]['detected'] = post_type_exists( $source['post_type'] );
+			$sources[ $slug ]['installed'] = self::plugin_installed( $source['plugin_names'] );
 			$sources[ $slug ]['count']    = self::source_count( $source['post_type'] );
 		}
 
@@ -59,6 +62,21 @@ class BLT_Events_Event_Migration {
 		 * @param array $sources Source definitions keyed by slug.
 		 */
 		return apply_filters( 'blt_events_migration_sources', $sources );
+	}
+
+	private static function plugin_installed( $names ) {
+		if ( ! function_exists( 'get_plugins' ) ) {
+			return false;
+		}
+		foreach ( get_plugins() as $plugin ) {
+			$name = $plugin['Name'] ?? '';
+			foreach ( $names as $expected ) {
+				if ( false !== stripos( $name, $expected ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private static function source_count( $post_type ) {
@@ -119,7 +137,7 @@ class BLT_Events_Event_Migration {
 										<input type="checkbox" name="sources[]" value="<?php echo esc_attr( $slug ); ?>" <?php disabled( empty( $source['detected'] ) ); ?> <?php checked( ! empty( $source['detected'] ) ); ?> />
 										<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
 										<span class="blt-toggle-text">
-											<span class="blt-toggle-label"><?php echo esc_html( $source['label'] ); ?> <?php self::status_badge( ! empty( $source['detected'] ), $source['count'] ?? 0 ); ?></span>
+											<span class="blt-toggle-label"><?php echo esc_html( $source['label'] ); ?> <?php self::status_badge( ! empty( $source['detected'] ), ! empty( $source['installed'] ), $source['count'] ?? 0 ); ?></span>
 											<span class="blt-toggle-desc">
 												<?php
 												echo ! empty( $source['detected'] )
@@ -128,7 +146,9 @@ class BLT_Events_Event_Migration {
 														_n( '%s source event found.', '%s source events found.', (int) $source['count'], 'blt-events' ),
 														number_format_i18n( (int) $source['count'] )
 													) )
-													: esc_html__( 'Not detected.', 'blt-events' );
+													: ( ! empty( $source['installed'] )
+														? esc_html__( 'Installed but inactive. Activate it to import its events.', 'blt-events' )
+														: esc_html__( 'Not installed.', 'blt-events' ) );
 												?>
 											</span>
 										</span>
@@ -148,11 +168,11 @@ class BLT_Events_Event_Migration {
 		<?php
 	}
 
-	private static function status_badge( $detected, $count ) {
+	private static function status_badge( $detected, $installed, $count ) {
 		printf(
 			'<span class="blt-badge %1$s">%2$s</span>',
 			$detected ? 'blt-badge-on' : 'blt-badge-off',
-			esc_html( $detected ? sprintf( _n( '%d event', '%d events', (int) $count, 'blt-events' ), (int) $count ) : __( 'Not detected', 'blt-events' ) )
+			esc_html( $detected ? sprintf( _n( '%d event', '%d events', (int) $count, 'blt-events' ), (int) $count ) : ( $installed ? __( 'Inactive', 'blt-events' ) : __( 'Not installed', 'blt-events' ) ) )
 		);
 	}
 
