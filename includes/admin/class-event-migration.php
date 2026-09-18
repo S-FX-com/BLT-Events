@@ -5,6 +5,8 @@
  * Source APIs are intentionally optional. The importer reads documented post
  * types and meta directly so an unavailable (or subsequently removed) source
  * plugin can never cause a fatal error.
+ *
+ * @package BLT_Events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -102,9 +104,12 @@ class BLT_Events_Event_Migration {
 		}
 
 		$sources  = self::sources();
-		$detected = array_filter( $sources, function ( $source ) {
-			return ! empty( $source['detected'] );
-		} );
+		$detected = array_filter(
+			$sources,
+			function ( $source ) {
+				return ! empty( $source['detected'] );
+			}
+		);
 		$result   = self::get_result();
 		?>
 		<div class="wrap blt-ui blt-events-migration">
@@ -169,10 +174,12 @@ class BLT_Events_Event_Migration {
 	}
 
 	private static function status_badge( $detected, $installed, $count ) {
+		/* translators: %d: number of source events. */
+		$count_label = sprintf( _n( '%d event', '%d events', (int) $count, 'blt-events' ), (int) $count );
 		printf(
 			'<span class="blt-badge %1$s">%2$s</span>',
 			$detected ? 'blt-badge-on' : 'blt-badge-off',
-			esc_html( $detected ? sprintf( _n( '%d event', '%d events', (int) $count, 'blt-events' ), (int) $count ) : ( $installed ? __( 'Inactive', 'blt-events' ) : __( 'Not installed', 'blt-events' ) ) )
+			esc_html( $detected ? $count_label : ( $installed ? __( 'Inactive', 'blt-events' ) : __( 'Not installed', 'blt-events' ) ) )
 		);
 	}
 
@@ -202,25 +209,29 @@ class BLT_Events_Event_Migration {
 
 		$key = wp_generate_uuid4();
 		set_transient( self::RESULTS_PREFIX . $key, $result, MINUTE_IN_SECONDS * 10 );
-		wp_safe_redirect( add_query_arg(
-			array(
-				'post_type'     => 'event',
-				'page'          => 'blt-migration',
-				'blt-migration' => $key,
-			),
-			admin_url( 'edit.php' )
-		) );
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'post_type'     => 'event',
+					'page'          => 'blt-migration',
+					'blt-migration' => $key,
+				),
+				admin_url( 'edit.php' )
+			)
+		);
 		exit;
 	}
 
 	private static function migrate_source( $slug, $source, $dry_run, $result ) {
-		$events = get_posts( array(
-			'post_type'      => $source['post_type'],
-			'post_status'    => 'any',
-			'posts_per_page' => -1,
-			'orderby'        => 'ID',
-			'order'          => 'ASC',
-		) );
+		$events = get_posts(
+			array(
+				'post_type'      => $source['post_type'],
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
+			)
+		);
 
 		foreach ( $events as $event ) {
 			$event_id = (int) $event->ID;
@@ -234,7 +245,7 @@ class BLT_Events_Event_Migration {
 				$result['errors'][] = sprintf(
 					/* translators: 1: event title, 2: source plugin. */
 					__( '%1$s was skipped because %2$s has no usable start date.', 'blt-events' ),
-					$event->post_title ?: '#' . $event_id,
+					$event->post_title ? $event->post_title : '#' . $event_id,
 					$source['label']
 				);
 				continue;
@@ -242,7 +253,7 @@ class BLT_Events_Event_Migration {
 
 			if ( $dry_run ) {
 				++$result['imported'];
-				$result['preview'][] = $event->post_title ?: '#' . $event_id;
+				$result['preview'][] = $event->post_title ? $event->post_title : '#' . $event_id;
 				continue;
 			}
 
@@ -251,7 +262,7 @@ class BLT_Events_Event_Migration {
 				$result['errors'][] = sprintf(
 					/* translators: %s: event title. */
 					__( '%s could not be imported.', 'blt-events' ),
-					$event->post_title ?: '#' . $event_id
+					$event->post_title ? $event->post_title : '#' . $event_id
 				);
 				continue;
 			}
@@ -262,17 +273,25 @@ class BLT_Events_Event_Migration {
 	}
 
 	private static function already_imported( $source, $source_id ) {
-		$matches = get_posts( array(
-			'post_type'      => 'event',
-			'post_status'    => 'any',
-			'fields'         => 'ids',
-			'posts_per_page' => 1,
-			'meta_query'     => array(
-				'relation' => 'AND',
-				array( 'key' => self::SOURCE_META, 'value' => $source ),
-				array( 'key' => self::SOURCE_ID_META, 'value' => (string) $source_id ),
-			),
-		) );
+		$matches = get_posts(
+			array(
+				'post_type'      => 'event',
+				'post_status'    => 'any',
+				'fields'         => 'ids',
+				'posts_per_page' => 1,
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required to make imports idempotent.
+					'relation' => 'AND',
+					array(
+						'key'   => self::SOURCE_META,
+						'value' => $source,
+					),
+					array(
+						'key'   => self::SOURCE_ID_META,
+						'value' => (string) $source_id,
+					),
+				),
+			)
+		);
 		return ! empty( $matches );
 	}
 
@@ -365,14 +384,17 @@ class BLT_Events_Event_Migration {
 		}
 		$event_days = self::multi_day_schedule( $data );
 
-		$new_id = wp_insert_post( array(
-			'post_type'    => 'event',
-			'post_status'  => in_array( $event->post_status, array( 'publish', 'draft', 'pending', 'private' ), true ) ? $event->post_status : 'draft',
-			'post_title'   => $event->post_title,
-			'post_content' => $content,
-			'post_excerpt' => $event->post_excerpt,
-			'post_author'  => $event->post_author,
-		), true );
+		$new_id = wp_insert_post(
+			array(
+				'post_type'    => 'event',
+				'post_status'  => in_array( $event->post_status, array( 'publish', 'draft', 'pending', 'private' ), true ) ? $event->post_status : 'draft',
+				'post_title'   => $event->post_title,
+				'post_content' => $content,
+				'post_excerpt' => $event->post_excerpt,
+				'post_author'  => $event->post_author,
+			),
+			true
+		);
 		if ( is_wp_error( $new_id ) ) {
 			return $new_id;
 		}
@@ -440,14 +462,16 @@ class BLT_Events_Event_Migration {
 			return array();
 		}
 
-		$days = array();
-		while ( $day <= $end && count( $days ) < 30 ) {
+		$days      = array();
+		$day_count = 0;
+		while ( $day <= $end && $day_count < 30 ) {
 			$date   = $day->format( 'Y-m-d' );
 			$days[] = array(
 				'date'  => $date,
 				'start' => $date === $data['date'] ? $data['start_time'] : '',
 				'end'   => $date === $data['end_date'] ? $data['end_time'] : '',
 			);
+			++$day_count;
 			$day = $day->modify( '+1 day' );
 		}
 
@@ -460,7 +484,10 @@ class BLT_Events_Event_Migration {
 		if ( $date && preg_match( '/(?:T|\s)([0-2]\d:[0-5]\d)/', (string) $value, $match ) ) {
 			$time = $match[1];
 		}
-		return array( 'date' => $date, 'time' => $time );
+		return array(
+			'date' => $date,
+			'time' => $time,
+		);
 	}
 
 	private static function mec_date( $value ) {
@@ -491,7 +518,12 @@ class BLT_Events_Event_Migration {
 	private static function mec_location( $location_id ) {
 		$location = get_term( $location_id, 'mec_location' );
 		if ( ! $location || is_wp_error( $location ) ) {
-			return array( 'name' => '', 'address' => '', 'latitude' => '', 'longitude' => '' );
+			return array(
+				'name'      => '',
+				'address'   => '',
+				'latitude'  => '',
+				'longitude' => '',
+			);
 		}
 		$latitude  = get_term_meta( $location_id, 'latitude', true );
 		$longitude = get_term_meta( $location_id, 'longitude', true );
@@ -505,7 +537,12 @@ class BLT_Events_Event_Migration {
 
 	private static function location_from_post( $id, $address_keys, $lat_key, $lng_key ) {
 		if ( ! $id || ! get_post( $id ) ) {
-			return array( 'name' => '', 'address' => '', 'latitude' => '', 'longitude' => '' );
+			return array(
+				'name'      => '',
+				'address'   => '',
+				'latitude'  => '',
+				'longitude' => '',
+			);
 		}
 		$address = array();
 		foreach ( $address_keys as $key ) {
@@ -621,14 +658,14 @@ class BLT_Events_Event_Migration {
 	}
 
 	private static function ticket_time( $ticket, $side ) {
-		$date = $ticket[ $side . '_date' ] ?? $ticket['ticket_' . $side . '_date'] ?? $ticket[ $side ] ?? '';
+		$date = $ticket[ $side . '_date' ] ?? $ticket[ 'ticket_' . $side . '_date' ] ?? $ticket[ $side ] ?? '';
 		$time = self::date_parts( $date )['time'];
 		if ( $time ) {
 			return $time;
 		}
-		$hour   = $ticket[ $side . '_time_hour' ] ?? $ticket['ticket_' . $side . '_time_hour'] ?? '';
-		$minute = $ticket[ $side . '_time_minutes' ] ?? $ticket['ticket_' . $side . '_time_minute'] ?? '';
-		$ampm   = strtolower( $ticket[ $side . '_time_ampm' ] ?? $ticket['ticket_' . $side . '_time_ampm'] ?? '' );
+		$hour   = $ticket[ $side . '_time_hour' ] ?? $ticket[ 'ticket_' . $side . '_time_hour' ] ?? '';
+		$minute = $ticket[ $side . '_time_minutes' ] ?? $ticket[ 'ticket_' . $side . '_time_minute' ] ?? '';
+		$ampm   = strtolower( $ticket[ $side . '_time_ampm' ] ?? $ticket[ 'ticket_' . $side . '_time_ampm' ] ?? '' );
 		if ( ! is_numeric( $hour ) || ! is_numeric( $minute ) ) {
 			return '';
 		}

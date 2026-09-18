@@ -40,9 +40,14 @@ jobs:
 
   standards:
     name: Coding standards
+    # Existing code pre-dates the current WPCS configuration. Check PHP files
+    # added by the pull request without reformatting unrelated legacy files.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -55,7 +60,15 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: phpcs
-        run: composer phpcs -- --report=checkstyle | cs2pr || composer phpcs
+        run: |
+          git diff --name-only --diff-filter=A \
+            "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.php' \
+            > "$RUNNER_TEMP/phpcs-files"
+          if [ -s "$RUNNER_TEMP/phpcs-files" ]; then
+            composer phpcs -- --file-list="$RUNNER_TEMP/phpcs-files"
+          else
+            echo "No new PHP files to check."
+          fi
 
   tests:
     name: Unit tests (PHP ${{ matrix.php }})

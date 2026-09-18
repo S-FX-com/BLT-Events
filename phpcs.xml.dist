@@ -65,8 +65,4 @@
 		</properties>
 	</rule>
 
-	<!-- Templates receive their data as local variables from the loader. -->
-	<rule ref="VariableAnalysis.CodeAnalysis.VariableAnalysis">
-		<exclude-pattern>*/templates/*</exclude-pattern>
-	</rule>
 </ruleset>
