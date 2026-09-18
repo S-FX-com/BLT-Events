@@ -15,12 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class BLT_Events_Event_Migration {
 
-	const ACTION          = 'blt_events_migrate';
-	const NONCE_ACTION    = 'blt_events_migrate_events';
-	const SOURCE_META     = '_blt_migration_source';
-	const SOURCE_ID_META  = '_blt_migration_source_id';
-	const ORGANIZER_META  = '_blt_migration_organizer';
-	const RESULTS_PREFIX  = 'blt_events_migration_';
+	const ACTION         = 'blt_events_migrate';
+	const NONCE_ACTION   = 'blt_events_migrate_events';
+	const SOURCE_META    = '_blt_migration_source';
+	const SOURCE_ID_META = '_blt_migration_source_id';
+	const ORGANIZER_META = '_blt_migration_organizer';
+	const RESULTS_PREFIX = 'blt_events_migration_';
 
 	public static function init() {
 		add_action( 'admin_post_' . self::ACTION, array( __CLASS__, 'handle_import' ) );
@@ -50,9 +50,9 @@ class BLT_Events_Event_Migration {
 		);
 
 		foreach ( $sources as $slug => $source ) {
-			$sources[ $slug ]['detected'] = post_type_exists( $source['post_type'] );
+			$sources[ $slug ]['detected']  = post_type_exists( $source['post_type'] );
 			$sources[ $slug ]['installed'] = self::plugin_installed( $source['plugin_names'] );
-			$sources[ $slug ]['count']    = self::source_count( $source['post_type'] );
+			$sources[ $slug ]['count']     = self::source_count( $source['post_type'] );
 		}
 
 		/**
@@ -330,22 +330,22 @@ class BLT_Events_Event_Migration {
 		}
 
 		return array(
-			'date'          => $start['date'],
-			'start_time'    => $all_day ? '' : $start['time'],
-			'end_date'      => $end['date'],
-			'end_time'      => $all_day ? '' : $end['time'],
-			'all_day'       => $all_day,
-			'venue'         => $venue['name'],
-			'location'      => $venue['address'],
-			'latitude'      => $venue['latitude'],
-			'longitude'     => $venue['longitude'],
-			'online_url'    => $url,
-			'event_type'    => $venue['name'] || $venue['address'] ? 'in-person' : ( $url ? 'online' : 'in-person' ),
-			'organizer'     => self::tec_organizer( (int) get_post_meta( $event->ID, '_EventOrganizerID', true ) ),
-			'terms'         => self::terms_for( $event->ID, array( 'tribe_events_cat', 'post_tag' ) ),
-			'tickets'       => self::tec_tickets( $event->ID ),
-			'capacity'      => absint( get_post_meta( $event->ID, '_EventCapacity', true ) ),
-			'thumbnail_id'  => get_post_thumbnail_id( $event->ID ),
+			'date'         => $start['date'],
+			'start_time'   => $all_day ? '' : $start['time'],
+			'end_date'     => $end['date'],
+			'end_time'     => $all_day ? '' : $end['time'],
+			'all_day'      => $all_day,
+			'venue'        => $venue['name'],
+			'location'     => $venue['address'],
+			'latitude'     => $venue['latitude'],
+			'longitude'    => $venue['longitude'],
+			'online_url'   => $url,
+			'event_type'   => $venue['name'] || $venue['address'] ? 'in-person' : ( $url ? 'online' : 'in-person' ),
+			'organizer'    => self::tec_organizer( (int) get_post_meta( $event->ID, '_EventOrganizerID', true ) ),
+			'terms'        => self::terms_for( $event->ID, array( 'tribe_events_cat', 'post_tag' ) ),
+			'tickets'      => self::tec_tickets( $event->ID ),
+			'capacity'     => absint( get_post_meta( $event->ID, '_EventCapacity', true ) ),
+			'thumbnail_id' => get_post_thumbnail_id( $event->ID ),
 		);
 	}
 
@@ -360,22 +360,22 @@ class BLT_Events_Event_Migration {
 		}
 
 		return array(
-			'date'          => $start_date,
-			'start_time'    => $all_day ? '' : self::mec_time( $event->ID, 'start' ),
-			'end_date'      => $end_date,
-			'end_time'      => $all_day ? '' : self::mec_time( $event->ID, 'end' ),
-			'all_day'       => $all_day,
-			'venue'         => $location['name'],
-			'location'      => $location['address'],
-			'latitude'      => $location['latitude'],
-			'longitude'     => $location['longitude'],
-			'online_url'    => $virtual,
-			'event_type'    => $location['name'] || $location['address'] ? ( $virtual ? 'hybrid' : 'in-person' ) : ( $virtual ? 'online' : 'in-person' ),
-			'organizer'     => self::mec_organizer( (int) get_post_meta( $event->ID, 'mec_organizer_id', true ) ),
-			'terms'         => self::terms_for( $event->ID, array( 'mec_category', 'mec_tag', 'post_tag' ) ),
-			'tickets'       => self::mec_tickets( $event->ID ),
-			'capacity'      => absint( get_post_meta( $event->ID, 'mec_capacity', true ) ),
-			'thumbnail_id'  => get_post_thumbnail_id( $event->ID ),
+			'date'         => $start_date,
+			'start_time'   => $all_day ? '' : self::mec_time( $event->ID, 'start' ),
+			'end_date'     => $end_date,
+			'end_time'     => $all_day ? '' : self::mec_time( $event->ID, 'end' ),
+			'all_day'      => $all_day,
+			'venue'        => $location['name'],
+			'location'     => $location['address'],
+			'latitude'     => $location['latitude'],
+			'longitude'    => $location['longitude'],
+			'online_url'   => $virtual,
+			'event_type'   => $location['name'] || $location['address'] ? ( $virtual ? 'hybrid' : 'in-person' ) : ( $virtual ? 'online' : 'in-person' ),
+			'organizer'    => self::mec_organizer( (int) get_post_meta( $event->ID, 'mec_organizer_id', true ) ),
+			'terms'        => self::terms_for( $event->ID, array( 'mec_category', 'mec_tag', 'post_tag' ) ),
+			'tickets'      => self::mec_tickets( $event->ID ),
+			'capacity'     => absint( get_post_meta( $event->ID, 'mec_capacity', true ) ),
+			'thumbnail_id' => get_post_thumbnail_id( $event->ID ),
 		);
 	}
 
@@ -402,26 +402,26 @@ class BLT_Events_Event_Migration {
 		}
 
 		$meta = array(
-			'_blt_event_date'         => $data['date'],
-			'_blt_event_end_date'     => $data['end_date'],
-			'_blt_event_start_time'   => $data['start_time'],
-			'_blt_event_end_time'     => $data['end_time'],
-			'_blt_event_all_day'      => $data['all_day'] ? '1' : '0',
-			'_blt_event_no_end_time'  => $data['end_time'] ? '0' : '1',
-			'_blt_multi_day'          => $data['end_date'] && $data['end_date'] !== $data['date'] ? '1' : '0',
-			'_blt_event_days'         => $event_days ? wp_json_encode( $event_days ) : '',
-			'_blt_event_type'         => $data['event_type'],
-			'_blt_event_venue'        => $data['venue'],
-			'_blt_event_location'     => $data['location'],
-			'_blt_event_latitude'     => $data['latitude'],
-			'_blt_event_longitude'    => $data['longitude'],
-			'_blt_event_online_url'   => $data['online_url'],
-			'_blt_capacity'           => $data['capacity'],
-			'_blt_registration_open'  => ! empty( $data['tickets'] ) ? '1' : '0',
-			'_blt_ticket_types'       => wp_json_encode( $data['tickets'] ),
-			self::SOURCE_META         => $source,
-			self::SOURCE_ID_META      => (string) $event->ID,
-			self::ORGANIZER_META      => wp_json_encode( $data['organizer'] ),
+			'_blt_event_date'        => $data['date'],
+			'_blt_event_end_date'    => $data['end_date'],
+			'_blt_event_start_time'  => $data['start_time'],
+			'_blt_event_end_time'    => $data['end_time'],
+			'_blt_event_all_day'     => $data['all_day'] ? '1' : '0',
+			'_blt_event_no_end_time' => $data['end_time'] ? '0' : '1',
+			'_blt_multi_day'         => $data['end_date'] && $data['end_date'] !== $data['date'] ? '1' : '0',
+			'_blt_event_days'        => $event_days ? wp_json_encode( $event_days ) : '',
+			'_blt_event_type'        => $data['event_type'],
+			'_blt_event_venue'       => $data['venue'],
+			'_blt_event_location'    => $data['location'],
+			'_blt_event_latitude'    => $data['latitude'],
+			'_blt_event_longitude'   => $data['longitude'],
+			'_blt_event_online_url'  => $data['online_url'],
+			'_blt_capacity'          => $data['capacity'],
+			'_blt_registration_open' => ! empty( $data['tickets'] ) ? '1' : '0',
+			'_blt_ticket_types'      => wp_json_encode( $data['tickets'] ),
+			self::SOURCE_META        => $source,
+			self::SOURCE_ID_META     => (string) $event->ID,
+			self::ORGANIZER_META     => wp_json_encode( $data['organizer'] ),
 		);
 		foreach ( $meta as $key => $value ) {
 			update_post_meta( $new_id, $key, $value );
