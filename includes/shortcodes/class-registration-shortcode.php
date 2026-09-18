@@ -75,10 +75,6 @@ class BLT_Events_Registration_Shortcode {
 
 		// Check capacity
 		if ( BLT_Events_Helpers::is_sold_out( $event_id ) ) {
-			if ( BLT_Events_Helpers::waitlist_enabled( $event_id ) ) {
-				return self::render_waitlist( $event_id, $event );
-			}
-
 			return self::closed( 'sold_out', $event_id );
 		}
 
@@ -181,8 +177,6 @@ class BLT_Events_Registration_Shortcode {
 				'complete'        => __( 'Registration Complete', 'blt-events' ),
 				'couponApplied'   => __( 'Coupon applied: %s', 'blt-events' ),
 				'genericError'    => __( 'An error occurred. Please try again.', 'blt-events' ),
-				'joining'         => __( 'Joining…', 'blt-events' ),
-				'joinWaitlist'    => __( 'Join the waitlist', 'blt-events' ),
 				/* translators: %d: attendee number. */
 				'attendeeN'       => __( 'Attendee %d', 'blt-events' ),
 				'chooseAtLeast'   => __( 'Please choose at least one option.', 'blt-events' ),
@@ -272,25 +266,6 @@ class BLT_Events_Registration_Shortcode {
 		$args = apply_filters( 'blt_events_registration_form_args', $args, $event_id );
 
 		return BLT_Events_Templates::render( 'registration/form.php', $args );
-	}
-
-	/**
-	 * Waitlist sign-up shown when an event with a waitlist is sold out.
-	 */
-	private static function render_waitlist( $event_id, $event ) {
-		wp_enqueue_script( 'blt-events-registration', BLT_EVENTS_PLUGIN_URL . 'assets/js/registration-form.js', array( 'jquery', 'blt-events' ), BLT_EVENTS_VERSION, true );
-		self::localize( $event_id, 'waitlist' );
-
-		$reg_db = new BLT_Events_Registrations_DB();
-
-		return BLT_Events_Templates::render( 'registration/waitlist.php', array(
-			'event_id'     => $event_id,
-			'event'        => $event,
-			'nonce'        => wp_create_nonce( 'blt_registration_nonce' ),
-			'max_quantity' => max( 1, (int) apply_filters( 'blt_events_waitlist_max_quantity', 10, $event_id ) ),
-			'waiting'      => $reg_db->count_waitlisted( $event_id ),
-			'message'      => self::closed_message( 'sold_out', $event_id ),
-		) );
 	}
 
 	/**

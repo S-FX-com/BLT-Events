@@ -40,8 +40,7 @@ class BLT_Events_FluentCRM_Addon {
 		}
 
 		/**
-		 * Filter whether a registration is synced to FluentCRM. Waitlist
-		 * sign-ups are synced by default; return false to skip them.
+		 * Filter whether a registration is synced to FluentCRM.
 		 *
 		 * @param bool   $sync Whether to sync.
 		 * @param object $reg  Registration row.

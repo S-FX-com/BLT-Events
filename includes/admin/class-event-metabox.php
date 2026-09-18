@@ -722,7 +722,6 @@ class BLT_Events_Event_Metabox {
 		$registration_open = get_post_meta( $post->ID, $prefix . 'registration_open', true ) === '1';
 		$cutoff_date       = get_post_meta( $post->ID, $prefix . 'registration_cutoff_date', true );
 		$cutoff_time       = get_post_meta( $post->ID, $prefix . 'registration_cutoff_time', true );
-		$waitlist          = get_post_meta( $post->ID, $prefix . 'waitlist_enabled', true ) === '1';
 		$require_approval  = get_post_meta( $post->ID, $prefix . 'require_approval', true ) === '1';
 		$group_discount    = get_post_meta( $post->ID, $prefix . 'group_discount', true );
 
@@ -790,17 +789,6 @@ class BLT_Events_Event_Metabox {
 						</div>
 					</div>
 					<p class="blt-help"><?php esc_html_e( 'Registration closes at this date and time. Leave blank for no automatic cutoff.', 'blt-events' ); ?></p>
-				</div>
-
-				<div class="blt-config-section">
-					<?php
-					self::render_toggle_row( array(
-						'name'    => 'waitlist_enabled',
-						'checked' => $waitlist,
-						'title'   => __( 'Enable Waitlist', 'blt-events' ),
-						'desc'    => __( 'When the event is sold out, visitors can leave their details. You are emailed when a seat frees up and can confirm them from the Registrations screen.', 'blt-events' ),
-					) );
-					?>
 				</div>
 
 				<div class="blt-config-section">
@@ -953,14 +941,10 @@ class BLT_Events_Event_Metabox {
 		) );
 		$capacity = (int) get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'capacity', true );
 		?>
-		<?php $waitlisted = $reg_db->count_waitlisted( $post->ID ); ?>
 		<div class="blt-editor blt-editor-side blt-registrations-summary">
 			<div class="blt-stat-row"><span><?php esc_html_e( 'Total Registrations', 'blt-events' ); ?></span><strong><?php echo intval( $total ); ?></strong></div>
 			<div class="blt-stat-row"><span><?php esc_html_e( 'Confirmed', 'blt-events' ); ?></span><strong><?php echo intval( $confirmed ); ?></strong></div>
 			<div class="blt-stat-row"><span><?php esc_html_e( 'Pending', 'blt-events' ); ?></span><strong><?php echo intval( $pending ); ?></strong></div>
-			<?php if ( $waitlisted > 0 ) : ?>
-				<div class="blt-stat-row"><span><?php esc_html_e( 'Waitlisted', 'blt-events' ); ?></span><strong><?php echo intval( $waitlisted ); ?></strong></div>
-			<?php endif; ?>
 			<?php if ( $capacity > 0 ) : ?>
 				<div class="blt-stat-row"><span><?php esc_html_e( 'Capacity', 'blt-events' ); ?></span><strong><?php echo intval( $confirmed ) . ' / ' . intval( $capacity ); ?></strong></div>
 			<?php endif; ?>
@@ -1187,7 +1171,6 @@ class BLT_Events_Event_Metabox {
 		update_post_meta( $post_id, $prefix . 'registration_cutoff_date', $cutoff_date );
 		update_post_meta( $post_id, $prefix . 'registration_cutoff_time', $cutoff_time );
 
-		update_post_meta( $post_id, $prefix . 'waitlist_enabled', isset( $_POST['waitlist_enabled'] ) ? '1' : '0' );
 		update_post_meta( $post_id, $prefix . 'require_approval', isset( $_POST['require_approval'] ) ? '1' : '0' );
 		update_post_meta( $post_id, $prefix . 'collect_attendees', isset( $_POST['collect_attendees'] ) ? '1' : '0' );
 

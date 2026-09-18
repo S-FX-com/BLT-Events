@@ -597,29 +597,8 @@
 	margin-bottom: 0;
 }
 
-/* --- Waitlist --- */
-.blt-waitlist .blt-registration-closed {
-	margin: 0 0 1.5rem;
-	padding: 1rem 1.25rem;
-	background: var(--blt-e-warning-bg);
-	border: 1px solid var(--blt-e-warning-border);
-	color: var(--blt-e-warning);
-}
-
-.blt-waitlist .blt-reg__step-title {
-	margin-bottom: 0.25rem;
-	color: var(--blt-e-fg);
-	font-size: 1.25rem;
-	font-weight: 600;
-}
-
-.blt-waitlist .blt-field-desc {
-	margin-bottom: 1rem;
-}
-
 /* --- Hidden attribute fallback --- */
-.blt-registration-form [hidden],
-.blt-waitlist [hidden] {
+.blt-registration-form [hidden] {
 	display: none !important;
 }
 

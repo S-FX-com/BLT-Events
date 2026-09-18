@@ -136,9 +136,8 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 
 	public function column_payment_provider( $item ) {
 		$labels = array(
-			'free'     => __( 'Free', 'blt-events' ),
-			'waitlist' => __( 'Waitlist', 'blt-events' ),
-			'none'     => __( 'N/A', 'blt-events' ),
+			'free' => __( 'Free', 'blt-events' ),
+			'none' => __( 'N/A', 'blt-events' ),
 		);
 		$slug = (string) ( $item->payment_provider ?: 'none' );
 

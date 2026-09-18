@@ -2,9 +2,9 @@
  * BLT Events - Registration Form JavaScript
  *
  * Handles ticket quantity changes, total calculation, coupon application,
- * per-attendee detail blocks, conditional fields, the waitlist form, and
- * submission of free registrations via AJAX. Paid Stripe registrations are
- * handed over to payment.js.
+ * per-attendee detail blocks, conditional fields, and submission of free
+ * registrations via AJAX. Paid Stripe registrations are handed over to
+ * payment.js.
  *
  * Every visible string comes from bltRegData.i18n (localized in PHP).
  */
@@ -361,45 +361,4 @@
 		});
 	});
 
-	/* ------------------------------------------------------------------
-	 * Waitlist
-	 * ---------------------------------------------------------------- */
-
-	$(document).on("submit", "#blt-waitlist-form", function (e) {
-		e.preventDefault();
-
-		var $form = $(this);
-		var $msg = $form.find("#blt-form-messages");
-		var $btn = $("#blt-waitlist-submit");
-
-		if (this.reportValidity && !this.reportValidity()) {
-			return;
-		}
-
-		$btn.prop("disabled", true).text(t("joining", "Joining…"));
-
-		var formData = $form.serializeArray();
-		formData.push({ name: "action", value: "blt_join_waitlist" });
-		formData.push({ name: "nonce", value: data.nonce });
-
-		$.ajax({
-			url: data.ajaxUrl,
-			method: "POST",
-			data: $.param(formData),
-			success: function (response) {
-				if (response.success) {
-					showMessage($msg, response.data.message, "success");
-					$form.find("input, select, button").prop("disabled", true);
-					$form.trigger("blt:waitlisted", [response.data]);
-				} else {
-					showMessage($msg, response.data.message, "error");
-					$btn.prop("disabled", false).text(t("joinWaitlist", "Join the waitlist"));
-				}
-			},
-			error: function () {
-				showMessage($msg, t("genericError", "An error occurred. Please try again."), "error");
-				$btn.prop("disabled", false).text(t("joinWaitlist", "Join the waitlist"));
-			}
-		});
-	});
 })(jQuery);

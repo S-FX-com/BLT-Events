@@ -89,6 +89,7 @@ class BLT_Events_Activator {
 
 		self::migrate_from_cmt();
 		self::create_tables();
+		self::remove_waitlist_data();
 		self::seed_default_fieldset();
 		self::set_default_options( $is_upgrade );
 		self::grant_capabilities();
@@ -126,6 +127,65 @@ class BLT_Events_Activator {
 		$table = $wpdb->prefix . 'blt_registrations';
 
 		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table;
+	}
+
+	/**
+	 * Remove data stored exclusively for the retired waitlist feature.
+	 *
+	 * Registrations that were already confirmed through the waitlist remain
+	 * valid registrations. Their retired payment provider and marker are
+	 * normalized so no waitlist-specific data remains after an upgrade.
+	 */
+	private static function remove_waitlist_data() {
+		global $wpdb;
+
+		$registrations_table = $wpdb->prefix . 'blt_registrations';
+		$attendees_table     = $wpdb->prefix . 'blt_attendees';
+		$registration_ids    = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT id FROM {$registrations_table} WHERE status = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				'waitlisted'
+			)
+		);
+
+		foreach ( $registration_ids as $registration_id ) {
+			$wpdb->delete( $attendees_table, array( 'registration_id' => (int) $registration_id ), array( '%d' ) );
+		}
+		$wpdb->delete( $registrations_table, array( 'status' => 'waitlisted' ), array( '%s' ) );
+
+		$legacy_registrations = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, custom_fields FROM {$registrations_table} WHERE payment_provider = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				'waitlist'
+			)
+		);
+		foreach ( $legacy_registrations as $registration ) {
+			$custom_fields = json_decode( $registration->custom_fields, true );
+			if ( ! is_array( $custom_fields ) || ! array_key_exists( '_waitlist', $custom_fields ) ) {
+				continue;
+			}
+
+			unset( $custom_fields['_waitlist'] );
+			$wpdb->update(
+				$registrations_table,
+				array( 'custom_fields' => wp_json_encode( $custom_fields ) ),
+				array( 'id' => (int) $registration->id ),
+				array( '%s' ),
+				array( '%d' )
+			);
+		}
+		$wpdb->update(
+			$registrations_table,
+			array( 'payment_provider' => 'free' ),
+			array( 'payment_provider' => 'waitlist' ),
+			array( '%s' ),
+			array( '%s' )
+		);
+
+		delete_post_meta_by_key( '_blt_waitlist_enabled' );
+		delete_option( 'blt_events_email_waitlist_enabled' );
+		delete_option( 'blt_events_email_subject_waitlist' );
+		delete_option( 'blt_events_email_template_waitlist' );
 	}
 
 	/**
@@ -416,7 +476,6 @@ class BLT_Events_Activator {
 			'blt_events_display_currency_sign'     => '1',
 			'blt_events_schema_enabled'            => '1',
 			'blt_events_email_pending_enabled'     => '1',
-			'blt_events_email_waitlist_enabled'    => '1',
 			'blt_events_single_show_featured'      => '1',
 			'blt_events_single_show_back'          => '1',
 			'blt_events_single_show_calendar_links' => '1',

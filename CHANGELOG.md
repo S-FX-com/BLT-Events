@@ -12,16 +12,15 @@ All notable changes to BLT Events. Versions follow [Semantic Versioning](https:/
 - **Manual confirmation sent nothing.** Every status change goes through `update_status()`, which fires `blt_registration_confirmed` / `blt_registration_cancelled` / `blt_registration_refunded` exactly once per transition. Confirming from the Registrations screen or the REST API now sends the confirmation email, tags the FluentCRM contact and cross-registers attendees into meeting rooms.
 - **Calendar invites and Google Calendar links were off by the site's UTC offset.** All date math uses the site timezone.
 - **Rate limit behind Cloudflare / proxies.** The client IP is read from forwarding headers (filterable), and a per-email limit was added, so one busy site no longer locks everyone out after ten registrations.
-- **Refunded and waitlisted registrations no longer count towards capacity**; refunded and cancelled emails may register again.
+- **Refunded registrations no longer count towards capacity**; refunded and cancelled emails may register again.
 - Admin styles loaded on other BLT plugins' screens because of a `blt-` prefix match.
 - Database, roles and cron are installed or upgraded on sites updated without re-activation (`BLT_EVENTS_DB_VERSION`).
 - Coupon validation is rate-limited.
 
 ### Added
 
-- **Waitlist.** When a sold-out event has its waitlist on, visitors leave their details, get a confirmation email, the admin is notified when a seat frees up, and "Confirm" from the Registrations screen promotes them (with the normal confirmation email).
 - **Reminder emails** (24 hours and 1 hour before) are actually sent, by a WP-Cron task every 15 minutes, once per event, with per-reminder toggles.
-- **Email overhaul.** From name / address / Reply-To, admin notification of new registrations, pending-approval and waitlist emails, optional branded HTML wrapper (overridable template), formatted dates in placeholders, and new placeholders (`{tickets}`, `{total}`, `{ics_url}`, `{event_online_url}`, `{site_name}`, ...). Every email passes through filters for recipient, subject, body, headers and attachments.
+- **Email overhaul.** From name / address / Reply-To, admin notification of new registrations, pending-approval emails, optional branded HTML wrapper (overridable template), formatted dates in placeholders, and new placeholders (`{tickets}`, `{total}`, `{ics_url}`, `{event_online_url}`, `{site_name}`, ...). Every email passes through filters for recipient, subject, body, headers and attachments.
 - **Multi-attendee details.** Per event, collect name/email/phone (filterable) for each additional ticket; attendee rows are stored per seat with their ticket type.
 - **Fieldset builder:** new field types (radio, checkbox group, country, hidden, text block), validation rules (length, pattern, min/max, custom message), conditional logic (show a field when another has a value), default values and help text, presets for new fieldsets, duplicate, set default. Server-side and client-side enforcement.
 - **Templates.** All front-end HTML lives in `templates/` and can be overridden from `your-theme/blt-events/`.
