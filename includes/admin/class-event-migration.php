@@ -331,7 +331,7 @@ class BLT_Events_Event_Migration {
 			'online_url'    => $virtual,
 			'event_type'    => $location['name'] || $location['address'] ? ( $virtual ? 'hybrid' : 'in-person' ) : ( $virtual ? 'online' : 'in-person' ),
 			'organizer'     => self::mec_organizer( (int) get_post_meta( $event->ID, 'mec_organizer_id', true ) ),
-			'terms'         => self::terms_for( $event->ID, array( 'mec_category', 'mec_tag' ) ),
+			'terms'         => self::terms_for( $event->ID, array( 'mec_category', 'mec_tag', 'post_tag' ) ),
 			'tickets'       => self::mec_tickets( $event->ID ),
 			'capacity'      => absint( get_post_meta( $event->ID, 'mec_capacity', true ) ),
 			'thumbnail_id'  => get_post_thumbnail_id( $event->ID ),
@@ -434,7 +434,18 @@ class BLT_Events_Event_Migration {
 	}
 
 	private static function mec_location( $location_id ) {
-		return self::location_from_post( $location_id, array( 'address' ), 'latitude', 'longitude' );
+		$location = get_term( $location_id, 'mec_location' );
+		if ( ! $location || is_wp_error( $location ) ) {
+			return array( 'name' => '', 'address' => '', 'latitude' => '', 'longitude' => '' );
+		}
+		$latitude  = get_term_meta( $location_id, 'latitude', true );
+		$longitude = get_term_meta( $location_id, 'longitude', true );
+		return array(
+			'name'      => sanitize_text_field( $location->name ),
+			'address'   => sanitize_text_field( get_term_meta( $location_id, 'address', true ) ),
+			'latitude'  => is_numeric( $latitude ) ? (string) $latitude : '',
+			'longitude' => is_numeric( $longitude ) ? (string) $longitude : '',
+		);
 	}
 
 	private static function location_from_post( $id, $address_keys, $lat_key, $lng_key ) {
@@ -463,7 +474,18 @@ class BLT_Events_Event_Migration {
 	}
 
 	private static function mec_organizer( $organizer_id ) {
-		return self::organizer_from_post( $organizer_id, array( 'tel', 'email', 'url' ) );
+		$organizer = get_term( $organizer_id, 'mec_organizer' );
+		if ( ! $organizer || is_wp_error( $organizer ) ) {
+			return array();
+		}
+		$result = array( 'name' => sanitize_text_field( $organizer->name ) );
+		foreach ( array( 'tel', 'email', 'url' ) as $key ) {
+			$value = get_term_meta( $organizer_id, $key, true );
+			if ( $value ) {
+				$result[ $key ] = sanitize_text_field( $value );
+			}
+		}
+		return $result;
 	}
 
 	private static function organizer_from_post( $id, $keys ) {
@@ -533,14 +555,33 @@ class BLT_Events_Event_Migration {
 				'name'            => sanitize_text_field( $name ),
 				'price'           => (float) ( $ticket['price'] ?? $ticket['cost'] ?? 0 ),
 				'description'     => sanitize_text_field( $ticket['description'] ?? '' ),
-				'sale_start_date' => self::mec_date( $ticket['start_date'] ?? $ticket['start'] ?? '' ),
-				'sale_start_time' => self::date_parts( $ticket['start_date'] ?? $ticket['start'] ?? '' )['time'],
-				'sale_end_date'   => self::mec_date( $ticket['end_date'] ?? $ticket['end'] ?? '' ),
-				'sale_end_time'   => self::date_parts( $ticket['end_date'] ?? $ticket['end'] ?? '' )['time'],
+				'sale_start_date' => self::mec_date( $ticket['start_date'] ?? $ticket['ticket_start_date'] ?? $ticket['start'] ?? '' ),
+				'sale_start_time' => self::ticket_time( $ticket, 'start' ),
+				'sale_end_date'   => self::mec_date( $ticket['end_date'] ?? $ticket['ticket_end_date'] ?? $ticket['end'] ?? '' ),
+				'sale_end_time'   => self::ticket_time( $ticket, 'end' ),
 				'roles'           => array(),
 			);
 		}
 		return $normalized;
+	}
+
+	private static function ticket_time( $ticket, $side ) {
+		$date = $ticket[ $side . '_date' ] ?? $ticket['ticket_' . $side . '_date'] ?? $ticket[ $side ] ?? '';
+		$time = self::date_parts( $date )['time'];
+		if ( $time ) {
+			return $time;
+		}
+		$hour   = $ticket[ $side . '_time_hour' ] ?? $ticket['ticket_' . $side . '_time_hour'] ?? '';
+		$minute = $ticket[ $side . '_time_minutes' ] ?? $ticket['ticket_' . $side . '_time_minute'] ?? '';
+		$ampm   = strtolower( $ticket[ $side . '_time_ampm' ] ?? $ticket['ticket_' . $side . '_time_ampm'] ?? '' );
+		if ( ! is_numeric( $hour ) || ! is_numeric( $minute ) ) {
+			return '';
+		}
+		$hour = (int) $hour;
+		if ( in_array( $ampm, array( 'am', 'pm' ), true ) ) {
+			$hour = $hour % 12 + ( 'pm' === $ampm ? 12 : 0 );
+		}
+		return $hour >= 0 && $hour <= 23 && (int) $minute <= 59 ? sprintf( '%02d:%02d', $hour, (int) $minute ) : '';
 	}
 
 	private static function truthy( $value ) {
