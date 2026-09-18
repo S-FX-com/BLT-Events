@@ -146,11 +146,13 @@ class BLT_Events_Event_Migration {
 											<span class="blt-toggle-desc">
 												<?php
 												echo ! empty( $source['detected'] )
-													? esc_html( sprintf(
-														/* translators: %s: number of events. */
-														_n( '%s source event found.', '%s source events found.', (int) $source['count'], 'blt-events' ),
-														number_format_i18n( (int) $source['count'] )
-													) )
+													? esc_html(
+														sprintf(
+															/* translators: %s: number of events. */
+															_n( '%s source event found.', '%s source events found.', (int) $source['count'], 'blt-events' ),
+															number_format_i18n( (int) $source['count'] )
+														)
+													)
 													: ( ! empty( $source['installed'] )
 														? esc_html__( 'Installed but inactive. Activate it to import its events.', 'blt-events' )
 														: esc_html__( 'Not installed.', 'blt-events' ) );
