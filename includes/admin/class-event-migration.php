@@ -363,6 +363,7 @@ class BLT_Events_Event_Migration {
 		if ( ! empty( $data['organizer'] ) ) {
 			$content .= "\n\n" . self::organizer_markup( $data['organizer'] );
 		}
+		$event_days = self::multi_day_schedule( $data );
 
 		$new_id = wp_insert_post( array(
 			'post_type'    => 'event',
@@ -384,6 +385,7 @@ class BLT_Events_Event_Migration {
 			'_blt_event_all_day'      => $data['all_day'] ? '1' : '0',
 			'_blt_event_no_end_time'  => $data['end_time'] ? '0' : '1',
 			'_blt_multi_day'          => $data['end_date'] && $data['end_date'] !== $data['date'] ? '1' : '0',
+			'_blt_event_days'         => $event_days ? wp_json_encode( $event_days ) : '',
 			'_blt_event_type'         => $data['event_type'],
 			'_blt_event_venue'        => $data['venue'],
 			'_blt_event_location'     => $data['location'],
@@ -417,6 +419,39 @@ class BLT_Events_Event_Migration {
 		 */
 		do_action( 'blt_events_migration_imported', $new_id, $source, $event, $data );
 		return $new_id;
+	}
+
+	/**
+	 * Expand a date span into the per-day schedule used by BLT's month view.
+	 *
+	 * The destination deliberately limits manually entered schedules to 30
+	 * dates; applying the same limit here avoids writing a shape the editor
+	 * cannot safely preserve.
+	 */
+	private static function multi_day_schedule( $data ) {
+		if ( empty( $data['end_date'] ) || $data['end_date'] <= $data['date'] ) {
+			return array();
+		}
+
+		try {
+			$day = new DateTimeImmutable( $data['date'] );
+			$end = new DateTimeImmutable( $data['end_date'] );
+		} catch ( Exception $e ) {
+			return array();
+		}
+
+		$days = array();
+		while ( $day <= $end && count( $days ) < 30 ) {
+			$date   = $day->format( 'Y-m-d' );
+			$days[] = array(
+				'date'  => $date,
+				'start' => $date === $data['date'] ? $data['start_time'] : '',
+				'end'   => $date === $data['end_date'] ? $data['end_time'] : '',
+			);
+			$day = $day->modify( '+1 day' );
+		}
+
+		return $days;
 	}
 
 	private static function date_parts( $value ) {
