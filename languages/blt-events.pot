@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: BLT Events 2.4.0\n"
 "Report-Msgid-Bugs-To: https://github.com/S-FX-com/BLT-Events/issues\n"
-"POT-Creation-Date: 2026-09-19 02:59+0000\n"
+"POT-Creation-Date: 2026-09-19 03:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -949,7 +949,7 @@ msgid "Maximum width of the calendar and event layouts. Leave blank to follow th
 msgstr ""
 
 #: includes/admin/class-admin-settings.php:870
-#: includes/admin/class-event-migration.php:879
+#: includes/admin/class-event-migration.php:881
 msgid "Preview"
 msgstr ""
 
@@ -1684,32 +1684,32 @@ msgstr ""
 msgid "Eventin"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:772
+#: includes/admin/class-event-migration.php:774
 msgid "Organizer:"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:879
+#: includes/admin/class-event-migration.php:881
 msgid "Import"
 msgstr ""
 
 #. translators: 1: import action, 2: imported event count, 3: skipped event count.
-#: includes/admin/class-event-migration.php:885
+#: includes/admin/class-event-migration.php:887
 msgid "%1$s complete: %2$s event(s) %3$s, %4$s already-imported event(s) skipped."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:888
+#: includes/admin/class-event-migration.php:890
 msgid "imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:888
+#: includes/admin/class-event-migration.php:890
 msgid "would be imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:894
+#: includes/admin/class-event-migration.php:896
 msgid "Events that would be imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:901
+#: includes/admin/class-event-migration.php:903
 msgid "Skipped events"
 msgstr ""
 
