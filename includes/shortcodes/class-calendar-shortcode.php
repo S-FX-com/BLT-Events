@@ -352,8 +352,8 @@ class BLT_Events_Calendar_Shortcode {
 		}
 
 		$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$range  = self::sanitize_range( $_POST['range'] ?? 'today' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$paged  = isset( $_POST['paged'] ) ? max( 1, absint( $_POST['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$range  = self::sanitize_range( isset( $_POST['range'] ) ? wp_unslash( $_POST['range'] ) : 'today' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$paged  = isset( $_POST['paged'] ) ? max( 1, absint( wp_unslash( $_POST['paged'] ) ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		wp_send_json_success( array(
 			'html' => self::render_list_results( $atts, self::sanitize_limit( $atts ), $paged, $search, $range ),
@@ -369,7 +369,7 @@ class BLT_Events_Calendar_Shortcode {
 		$limit  = self::sanitize_limit( $atts );
 		$paged  = max( 1, (int) ( $_GET['blt_paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$search = isset( $_GET['blt_search'] ) ? sanitize_text_field( wp_unslash( $_GET['blt_search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$range  = self::sanitize_range( $_GET['blt_range'] ?? 'today' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$range  = self::sanitize_range( isset( $_GET['blt_range'] ) ? wp_unslash( $_GET['blt_range'] ) : 'today' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		return self::render_list_results( $atts, $limit, $paged, $search, $range, true );
 	}
