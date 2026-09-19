@@ -37,12 +37,12 @@ class BLT_Events_Event_Migration {
 	 */
 	public static function sources() {
 		$sources = array(
-			'mec' => array(
+			'mec'     => array(
 				'label'        => __( 'Modern Events Calendar', 'blt-events' ),
 				'post_type'    => 'mec-events',
 				'plugin_names' => array( 'Modern Events Calendar', 'MEC' ),
 			),
-			'tec' => array(
+			'tec'     => array(
 				'label'        => __( 'The Events Calendar', 'blt-events' ),
 				'post_type'    => 'tribe_events',
 				'plugin_names' => array( 'The Events Calendar' ),
