@@ -3,7 +3,7 @@
  * Plugin Name:       BLT Events
  * Plugin URI:        https://github.com/S-FX-com/BLT-Events
  * Description:       Event registration for WordPress: calendar and list views, ticket types, configurable registration forms, multi-attendee bookings, waitlists, reminders, Stripe, SureCart and FluentCart checkout, and Zoom, Teams, GoTo and ClickMeeting rooms.
- * Version:           2.4.0
+ * Version:           2.4.1
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            S-FX.com
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.4.0' );
+define( 'BLT_EVENTS_VERSION', '2.4.1' );
 // Bumped whenever install()/upgrade work has to run on sites updated
 // without re-activation (schema, roles, cron, seeded options).
 define( 'BLT_EVENTS_DB_VERSION', '1.1' );
