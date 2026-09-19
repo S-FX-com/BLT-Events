@@ -45,9 +45,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="blt-event blt-event--<?php echo esc_attr( $event_type ); ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
-	<?php if ( $show_featured && $featured_image ) : ?>
-		<div class="blt-event__featured">
+	<?php if ( ( $show_featured && $featured_image ) || $show_back ) : ?>
+		<div class="blt-event__hero<?php echo $show_featured && $featured_image ? '' : ' blt-event__hero--plain'; ?>">
+			<?php BLT_Events_Templates::include_template( 'single/back-link.php', $args ); ?>
+			<?php if ( $show_featured && $featured_image ) : ?>
 			<?php echo $featured_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- core image HTML. ?>
+			<?php endif; ?>
 		</div>
 	<?php endif; ?>
 
@@ -61,7 +64,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 			 */
 			do_action( 'blt_events_single_before_main', $event_id );
 
-			BLT_Events_Templates::include_template( 'single/back-link.php', $args );
 			BLT_Events_Templates::include_template( 'single/categories.php', $args );
 			BLT_Events_Templates::include_template( 'single/title.php', $args );
 			BLT_Events_Templates::include_template( 'single/description.php', $args );

@@ -15,6 +15,10 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+if ( '' === $date_label && '' === $time_label ) {
+	return;
+}
 ?>
 <div class="blt-event__card blt-event__datebox">
 	<div class="blt-event__datebox-head">

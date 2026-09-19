@@ -479,8 +479,7 @@ class BLT_Events_Activator {
 			'blt_events_single_show_featured'      => '1',
 			'blt_events_single_show_back'          => '1',
 			'blt_events_single_show_calendar_links' => '1',
-			// Fresh vs upgrade below.
-			'blt_events_single_show_title'         => $is_upgrade ? '1' : '0',
+			'blt_events_single_show_title'         => '1',
 			'blt_events_archive_mode'              => $is_upgrade ? 'theme' : 'plugin',
 			'blt_events_reminder_24h_enabled'      => $is_upgrade ? '0' : '1',
 			'blt_events_reminder_1h_enabled'       => $is_upgrade ? '0' : '1',

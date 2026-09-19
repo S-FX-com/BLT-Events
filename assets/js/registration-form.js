@@ -99,6 +99,39 @@
 		$("#blt-payment-section").prop("hidden", !(totalPrice > 0));
 
 		rebuildAttendees();
+		renderReview();
+	}
+
+	function renderReview() {
+		$(".blt-registration-form").each(function () {
+			var $form = $(this);
+			var $list = $form.find(".blt-reg__review-tickets");
+			var $empty = $form.find(".blt-reg__review-empty");
+			var $total = $form.find(".blt-reg__review-total");
+			var tickets = [];
+
+			$form.find(".blt-ticket-quantity").each(function () {
+				var $input = $(this);
+				var qty = parseInt($input.val(), 10) || 0;
+				if (qty > 0) {
+					tickets.push({
+						name: String($input.data("name") || ""),
+						qty: qty,
+						price: parseFloat($input.data("price")) || 0
+					});
+				}
+			});
+
+			$list.empty();
+			tickets.forEach(function (ticket) {
+				$("<li>")
+					.append($("<span>").text(ticket.qty + " × " + ticket.name))
+					.append($("<strong>").text(formatPrice(ticket.qty * ticket.price, false)))
+					.appendTo($list);
+			});
+			$empty.prop("hidden", tickets.length > 0);
+			$total.text(tickets.length ? formatPrice(totalPrice, true) : "");
+		});
 	}
 
 	$(document).on("change", ".blt-registration-form .blt-ticket-quantity", recalculateTotal);

@@ -606,3 +606,139 @@
 	color: var(--blt-e-danger);
 	padding: 1rem;
 }
+
+/* --- Registration review flow --- */
+.blt-reg__progress {
+	gap: 1rem;
+}
+
+.blt-reg__progress-step {
+	font-size: 0.85rem;
+}
+
+.blt-ticket-selection {
+	padding: 0;
+	background: transparent;
+	border-radius: 0;
+}
+
+.blt-ticket-header,
+.blt-ticket-type {
+	display: grid;
+	grid-template-columns: minmax(120px, 1.2fr) minmax(120px, 1.6fr) minmax(75px, 0.7fr) minmax(130px, 0.8fr);
+	column-gap: 1rem;
+	align-items: center;
+}
+
+.blt-ticket-header {
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--blt-e-border);
+	color: var(--blt-e-fg-muted);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+}
+
+.blt-ticket-type {
+	padding: 0.875rem 0;
+	gap: 0;
+}
+
+.blt-ticket-name {
+	min-width: 0;
+	font-weight: 600;
+}
+
+.blt-ticket-desc {
+	flex-basis: auto;
+	order: 0;
+}
+
+.blt-ticket-price {
+	margin: 0;
+}
+
+.blt-quantity-controls {
+	justify-content: flex-end;
+}
+
+.blt-reg__review-summary {
+	padding: 1rem 0;
+	border-top: 1px solid var(--blt-e-border);
+	border-bottom: 1px solid var(--blt-e-border);
+}
+
+.blt-reg__review-empty {
+	margin: 0;
+	color: var(--blt-e-fg-muted);
+}
+
+.blt-reg__review-tickets {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-reg__review-tickets li {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.55rem 0;
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-reg__review-total {
+	margin: 0.75rem 0 0;
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--blt-e-border);
+	text-align: right;
+	font-size: 1.05rem;
+	font-weight: 700;
+}
+
+@media (max-width: 700px) {
+	.blt-registration-form {
+		margin: 1.5rem 0;
+		padding: 1.25rem;
+	}
+
+	.blt-reg__progress {
+		gap: 0.35rem;
+	}
+
+	.blt-reg__progress-step {
+		gap: 0.3rem;
+		font-size: 0.68rem;
+	}
+
+	.blt-reg__progress-step::before {
+		width: 18px;
+		height: 18px;
+		font-size: 0.65rem;
+	}
+
+	.blt-ticket-header {
+		display: none;
+	}
+
+	.blt-ticket-type {
+		grid-template-columns: 1fr auto;
+		row-gap: 0.4rem;
+	}
+
+	.blt-ticket-desc {
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
+
+	.blt-ticket-price {
+		grid-column: 1;
+		grid-row: 3;
+	}
+
+	.blt-quantity-controls {
+		grid-column: 2;
+		grid-row: 1 / span 3;
+	}
+}

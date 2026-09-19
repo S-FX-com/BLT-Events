@@ -885,7 +885,7 @@ class BLT_Events_Admin_Settings {
 			<div class="blt-card">
 				<div class="blt-card-header">
 					<h2><?php esc_html_e( 'Single Event Page', 'blt-events' ); ?></h2>
-					<p><?php esc_html_e( 'The event layout renders inside your theme\'s own single template, which usually prints the title and featured image already. Switch the plugin\'s copies off to avoid duplicates.', 'blt-events' ); ?></p>
+					<p><?php esc_html_e( 'The event layout renders inside your theme\'s own single template. The plugin prints the event title and featured image by default; switch either off if your theme already supplies it.', 'blt-events' ); ?></p>
 				</div>
 				<div class="blt-card-body">
 					<?php
@@ -895,7 +895,7 @@ class BLT_Events_Admin_Settings {
 							?>
 							<div class="blt-toggle-stack">
 								<?php
-								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_TITLE, __( 'Print the event title', 'blt-events' ), __( 'Off by default: nearly every theme already shows the title above the content.', 'blt-events' ), '0' );
+								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_TITLE, __( 'Print the event title', 'blt-events' ), __( 'On by default for the standalone event layout. Turn it off if your theme already prints the title.', 'blt-events' ), '1' );
 								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_FEATURED, __( 'Print the featured image', 'blt-events' ), __( 'Turn off if your theme shows the featured image on single posts.', 'blt-events' ), '1' );
 								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_BACK, __( 'Show the "All events" back link', 'blt-events' ), '', '1' );
 								self::render_toggle( BLT_Events_Single_Event::OPTION_SHOW_CALENDAR, __( 'Show "Add to calendar" links', 'blt-events' ), __( 'A .ics download and a Google Calendar link in the date box.', 'blt-events' ), '1' );

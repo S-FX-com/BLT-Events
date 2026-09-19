@@ -10,6 +10,10 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+if ( '' === trim( wp_strip_all_tags( $description ) ) ) {
+	return;
+}
 ?>
 <div class="blt-event__description">
 	<?php echo $description; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already-filtered post content. ?>
