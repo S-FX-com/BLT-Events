@@ -30,8 +30,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<?php if ( $stepped ) : ?>
 		<ol class="blt-reg__progress" aria-hidden="true">
-			<li class="blt-reg__progress-step is-current" data-step-label="1"><?php esc_html_e( 'Tickets', 'blt-events' ); ?></li>
-			<li class="blt-reg__progress-step" data-step-label="2"><?php esc_html_e( 'Your details', 'blt-events' ); ?></li>
+			<li class="blt-reg__progress-step is-current" data-step-label="1"><?php esc_html_e( 'Select tickets', 'blt-events' ); ?></li>
+			<li class="blt-reg__progress-step" data-step-label="2"><?php esc_html_e( 'Attendee details', 'blt-events' ); ?></li>
+			<li class="blt-reg__progress-step" data-step-label="3"><?php esc_html_e( 'Review & payment', 'blt-events' ); ?></li>
 		</ol>
 		<?php endif; ?>
 
@@ -49,6 +50,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 					?>
 				</p>
 			<?php endif; ?>
+			<div class="blt-ticket-header" aria-hidden="true">
+				<span><?php esc_html_e( 'Ticket Type', 'blt-events' ); ?></span>
+				<span><?php esc_html_e( 'Description', 'blt-events' ); ?></span>
+				<span><?php esc_html_e( 'Price', 'blt-events' ); ?></span>
+				<span><?php esc_html_e( 'Quantity', 'blt-events' ); ?></span>
+			</div>
 			<?php foreach ( $ticket_types as $i => $ticket ) : ?>
 			<div class="blt-ticket-type" data-ticket-index="<?php echo (int) $i; ?>">
 				<span class="blt-ticket-name"><?php echo esc_html( $ticket['name'] ); ?></span>
@@ -117,6 +124,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</div>
 			<?php endif; ?>
 
+			<?php if ( ! $stepped ) : ?>
+			<div id="blt-form-messages" role="status" aria-live="polite" hidden></div>
+			<div class="blt-form-actions">
+				<button type="submit" class="blt-submit-btn" id="blt-submit-btn">
+					<?php esc_html_e( 'Register — Free', 'blt-events' ); ?>
+				</button>
+			</div>
+			<?php endif; ?>
+		</div>
+
+		<?php if ( $stepped ) : ?>
+		<div class="blt-reg__step blt-reg__review" data-step="review">
+			<h3 class="blt-reg__step-title"><?php esc_html_e( 'Review & payment', 'blt-events' ); ?></h3>
+			<div class="blt-reg__review-summary" aria-live="polite">
+				<p class="blt-reg__review-empty"><?php esc_html_e( 'Your selected tickets will appear here.', 'blt-events' ); ?></p>
+				<ul class="blt-reg__review-tickets"></ul>
+				<p class="blt-reg__review-total"></p>
+			</div>
 			<?php if ( $provider === 'stripe' && $has_paid_tickets ) : ?>
 			<div class="blt-payment-section" id="blt-payment-section" hidden>
 				<h3><?php esc_html_e( 'Payment', 'blt-events' ); ?></h3>
@@ -133,6 +158,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</button>
 			</div>
 		</div>
+		<?php endif; ?>
 
 		<?php if ( $stepped ) : ?>
 		<div class="blt-reg__nav">

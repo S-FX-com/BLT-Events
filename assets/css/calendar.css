@@ -316,7 +316,7 @@
 	line-height: 1;
 	color: var(--blt-e-fg);
 	text-decoration: none;
-	border: 1px solid var(--blt-e-border-strong);
+	border: 0;
 	border-radius: var(--blt-e-radius-sm);
 	transition: border-color 0.15s, color 0.15s;
 }
@@ -341,6 +341,42 @@
 	text-decoration: none;
 	border: 1px solid var(--blt-e-border-strong);
 	border-radius: var(--blt-e-radius-sm);
+}
+
+.blt-list-range {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	height: 34px;
+	border: 1px solid var(--blt-e-border-strong);
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface);
+}
+
+.blt-list-range::after {
+	content: "⌄";
+	padding: 0 0.65rem 0 0.2rem;
+	pointer-events: none;
+	color: var(--blt-e-fg);
+}
+
+.blt-list-range select {
+	height: 100%;
+	padding: 0 0 0 0.8rem;
+	border: 0;
+	outline: 0;
+	appearance: none;
+	background: transparent;
+	color: var(--blt-e-fg);
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.blt-events-listing.is-loading .blt-list-results {
+	opacity: 0.52;
+	transition: opacity 0.15s ease;
 }
 
 .blt-list-today:hover {
@@ -491,9 +527,9 @@
 /* Event row */
 .blt-list-event {
 	display: grid;
-	grid-template-columns: 56px minmax(0, 1fr) 320px;
-	gap: 1.5rem;
-	padding: 1.75rem 0;
+	grid-template-columns: 46px minmax(0, 1fr) minmax(220px, 294px);
+	gap: clamp(1rem, 3vw, 2.5rem);
+	padding: 1.5rem 0 2rem;
 	border-bottom: 1px solid var(--blt-e-border);
 }
 
@@ -504,7 +540,7 @@
 
 .blt-list-day {
 	display: block;
-	font-size: 1.9rem;
+	font-size: 1.45rem;
 	font-weight: 700;
 	line-height: 1;
 	color: var(--blt-e-fg);
@@ -521,12 +557,12 @@
 .blt-list-datetime {
 	margin: 0 0 0.4rem;
 	font-size: 0.85rem;
-	color: var(--blt-e-link);
+	color: var(--blt-e-fg-muted);
 }
 
 .blt-list-title {
 	margin: 0 0 0.6rem;
-	font-size: 1.05rem;
+	font-size: 1.1rem;
 	line-height: 1.35;
 	font-weight: 700;
 }
@@ -557,7 +593,7 @@
 	gap: 0.4rem;
 	margin: 0;
 	font-size: 0.85rem;
-	color: var(--blt-e-link);
+	color: var(--blt-e-fg-soft);
 }
 
 .blt-list-location .blt-list-icon {
@@ -567,13 +603,14 @@
 .blt-list-image {
 	display: block;
 	overflow: hidden;
-	border-radius: 2px;
+	aspect-ratio: 3 / 2;
+	border-radius: 0;
+	background: var(--blt-e-surface-sunken);
 }
 
 .blt-list-image img {
 	width: 100%;
 	height: 100%;
-	max-height: 200px;
 	object-fit: cover;
 	display: block;
 }
@@ -611,7 +648,7 @@
 	display: flex;
 	align-items: center;
 	gap: 1rem;
-	padding: 1rem 1.25rem;
+	padding: 1.25rem 1.5rem;
 	border-bottom: 1px solid var(--blt-e-border);
 }
 
@@ -658,7 +695,7 @@
 
 .blt-cal-title {
 	margin: 0;
-	font-size: 1.4rem;
+	font-size: 1.7rem;
 	font-weight: 700;
 	color: var(--blt-e-fg);
 }
@@ -669,9 +706,9 @@
 }
 
 .blt-cal-dow {
-	padding: 0.6rem 0.5rem;
+	padding: 0.85rem 0.75rem;
 	text-align: left;
-	font-size: 0.75rem;
+	font-size: 0.8rem;
 	font-weight: 600;
 	letter-spacing: 0.05em;
 	color: var(--blt-e-fg-muted);
@@ -679,8 +716,8 @@
 }
 
 .blt-cal-day {
-	min-height: 110px;
-	padding: 0.5rem;
+	min-height: 150px;
+	padding: 0.75rem;
 	border-bottom: 1px solid var(--blt-e-surface-alt);
 	border-right: 1px solid var(--blt-e-surface-alt);
 	font-size: 0.85rem;
@@ -698,8 +735,8 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 26px;
-	height: 26px;
+	min-width: 30px;
+	height: 30px;
 	font-weight: 600;
 	color: var(--blt-e-fg);
 	border-radius: 50%;
@@ -717,7 +754,7 @@
 }
 
 .blt-cal-event {
-	margin: 0 0 0.35rem;
+	margin: 0 0 0.5rem;
 	line-height: 1.35;
 }
 
@@ -728,13 +765,13 @@
 
 .blt-cal-event-time {
 	display: block;
-	font-size: 0.7rem;
+	font-size: 0.75rem;
 	color: var(--blt-e-fg-muted);
 }
 
 .blt-cal-event-title {
 	display: block;
-	font-size: 0.78rem;
+	font-size: 0.9rem;
 	font-weight: 500;
 	color: var(--blt-e-fg);
 }
@@ -746,9 +783,17 @@
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
+	.blt-list-toolbar {
+		align-items: stretch;
+	}
+
+	.blt-list-nav {
+		justify-content: space-between;
+	}
+
 	.blt-cal-day {
-		min-height: 64px;
-		padding: 0.3rem;
+		min-height: 94px;
+		padding: 0.4rem;
 	}
 
 	.blt-cal-event-time {
@@ -756,14 +801,14 @@
 	}
 
 	.blt-cal-event-title {
-		font-size: 0.68rem;
+		font-size: 0.75rem;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
 	.blt-cal-title {
-		font-size: 1.1rem;
+		font-size: 1.25rem;
 	}
 
 	.blt-events-list .blt-event-card {
@@ -782,5 +827,34 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		align-items: flex-start;
+	}
+}
+
+@media (max-width: 520px) {
+	.blt-list-event {
+		grid-template-columns: 42px minmax(0, 1fr);
+		gap: 0.9rem;
+		padding: 1.25rem 0;
+	}
+
+	.blt-list-image {
+		grid-column: 1 / -1;
+	}
+
+	.blt-list-month {
+		margin-top: 1.5rem;
+	}
+
+	.blt-cal-header {
+		flex-wrap: wrap;
+		padding: 1rem;
+	}
+
+	.blt-cal-grid {
+		min-width: 620px;
+	}
+
+	.blt-events-month {
+		overflow-x: auto;
 	}
 }

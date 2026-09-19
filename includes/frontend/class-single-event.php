@@ -12,10 +12,8 @@
  * follows BEM under the `blt-event` block so it folds cleanly into a theme
  * or utility framework (e.g. ACSS).
  *
- * Because it renders inside the theme's own single template, the theme
- * usually prints the title and featured image already. Settings >
- * Appearance controls whether the plugin prints its own (off by default
- * on new installs), and the blt_events_single_show_* filters do the same
+ * Settings > Appearance controls whether the plugin prints the title and
+ * featured image, and the blt_events_single_show_* filters do the same
  * from code.
  *
  * Themes/plugins can add sidebar content (e.g. presenters) via the
@@ -140,13 +138,12 @@ class BLT_Events_Single_Event {
 	/**
 	 * Whether the plugin prints its own H1 on the event page.
 	 *
-	 * Off by default on new installs: nearly every theme prints the title
-	 * itself, and two H1s is the single most common complaint about
-	 * plugins that render through the_content. Upgrades keep the old
-	 * behaviour (see BLT_Events_Activator::set_default_options).
+	 * On by default so the standalone event layout contains the event's
+	 * essential heading. Sites that print a theme title above the content can
+	 * still disable it in Appearance.
 	 */
 	public static function show_title( $event_id ) {
-		$show = '1' === (string) get_option( self::OPTION_SHOW_TITLE, '0' );
+		$show = '1' === (string) get_option( self::OPTION_SHOW_TITLE, '1' );
 
 		/**
 		 * Filter whether the plugin prints the event title on the single page.
