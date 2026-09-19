@@ -126,6 +126,7 @@ spl_autoload_register( function ( $class ) {
 		'event-metabox'            => 'includes/admin/class-event-metabox.php',
 		'fieldset-builder'         => 'includes/admin/class-fieldset-builder.php',
 		'registrations-list'       => 'includes/admin/class-registrations-list.php',
+		'event-migration'          => 'includes/admin/class-event-migration.php',
 		// Shortcodes
 		'registration-shortcode'   => 'includes/shortcodes/class-registration-shortcode.php',
 		'calendar-shortcode'       => 'includes/shortcodes/class-calendar-shortcode.php',
@@ -204,6 +205,7 @@ function blt_events_init() {
 		BLT_Events_Event_Metabox::init();
 		BLT_Events_Fieldset_Builder::init();
 		BLT_Events_Registrations_List::init();
+		BLT_Events_Event_Migration::init();
 	}
 
 	// Shortcodes and blocks
@@ -314,6 +316,7 @@ function blt_events_admin_hooks() {
 		'event_page_blt-registrations',
 		'event_page_blt-fieldsets',
 		'event_page_blt-events-settings',
+		'event_page_blt-migration',
 	) );
 }
 

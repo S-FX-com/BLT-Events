@@ -45,6 +45,16 @@ class BLT_Events_Admin {
 			array( 'BLT_Events_Fieldset_Builder', 'render_page' )
 		);
 
+		// Migration submenu.
+		add_submenu_page(
+			'edit.php?post_type=event',
+			__( 'Migration', 'blt-events' ),
+			__( 'Migration', 'blt-events' ),
+			BLT_Events_Helpers::menu_capability(),
+			'blt-migration',
+			array( 'BLT_Events_Event_Migration', 'render_page' )
+		);
+
 		// Settings submenu
 		add_submenu_page(
 			'edit.php?post_type=event',

@@ -40,6 +40,7 @@ require_once BLT_EVENTS_PLUGIN_DIR . 'includes/class-helpers.php';
 require_once BLT_EVENTS_PLUGIN_DIR . 'includes/class-fieldsets.php';
 require_once BLT_EVENTS_PLUGIN_DIR . 'includes/class-templates.php';
 require_once BLT_EVENTS_PLUGIN_DIR . 'includes/frontend/class-appearance.php';
+require_once BLT_EVENTS_PLUGIN_DIR . 'includes/admin/class-event-migration.php';
 
 /**
  * Base test case: boots Brain\Monkey and stubs the functions almost every
