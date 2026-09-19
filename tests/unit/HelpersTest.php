@@ -42,6 +42,13 @@ class HelpersTest extends BLT_Events_TestCase {
 		$this->assertSame( '', BLT_Events_Helpers::sanitize_phone( '   ' ) );
 	}
 
+	public function test_registration_statuses_include_supported_statuses(): void {
+		$this->assertSame(
+			array( 'pending', 'confirmed', 'cancelled', 'refunded' ),
+			array_keys( BLT_Events_Helpers::registration_statuses() )
+		);
+	}
+
 	public function test_site_datetime_uses_site_timezone(): void {
 		$dt = BLT_Events_Helpers::site_datetime( '2026-05-14', '14:00' );
 

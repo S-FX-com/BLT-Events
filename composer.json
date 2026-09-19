@@ -1,6 +1,6 @@
 {
     "name": "s-fx/blt-events",
-    "description": "Event registration for WordPress: calendars, tickets, configurable forms, waitlists, reminders and payment integrations.",
+    "description": "Event registration for WordPress: calendars, tickets, configurable forms, reminders and payment integrations.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/S-FX-com/BLT-Events",

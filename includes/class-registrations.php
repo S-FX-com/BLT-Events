@@ -2,10 +2,9 @@
 /**
  * BLT Events - Registrations Business Logic
  *
- * Processes new registrations, handles multi-attendee logic,
- * coupon application, the waitlist, status transitions, and the public
- * AJAX endpoints. Emails are sent by BLT_Events_Emails, which listens to
- * the actions fired here.
+ * Processes new registrations, handles multi-attendee logic, coupon
+ * application, status transitions, and the public AJAX endpoints. Emails
+ * are sent by BLT_Events_Emails, which listens to the actions fired here.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,9 +28,6 @@ class BLT_Events_Registrations {
 		add_action( 'wp_ajax_blt_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
 		add_action( 'wp_ajax_nopriv_blt_validate_coupon', array( __CLASS__, 'ajax_validate_coupon' ) );
 
-		// AJAX endpoint for the waitlist
-		add_action( 'wp_ajax_blt_join_waitlist', array( __CLASS__, 'ajax_join_waitlist' ) );
-		add_action( 'wp_ajax_nopriv_blt_join_waitlist', array( __CLASS__, 'ajax_join_waitlist' ) );
 	}
 
 	/* ------------------------------------------------------------------
@@ -89,36 +85,6 @@ class BLT_Events_Registrations {
 	}
 
 	/**
-	 * AJAX handler for joining the waitlist of a sold-out event.
-	 */
-	public static function ajax_join_waitlist() {
-		check_ajax_referer( 'blt_registration_nonce', 'nonce' );
-
-		$data  = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized per field below.
-		$email = sanitize_email( $data['email'] ?? '' );
-
-		if ( ! self::check_rate_limit( $email ) ) {
-			wp_send_json_error( array( 'message' => __( 'Too many attempts. Please try again in a few minutes.', 'blt-events' ) ) );
-		}
-
-		$event_id = absint( $data['event_id'] ?? 0 );
-		$result   = self::join_waitlist( $event_id, $data );
-
-		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array(
-				'message' => $result->get_error_message(),
-				'code'    => $result->get_error_code(),
-			) );
-		}
-
-		wp_send_json_success( array(
-			'message'         => self::success_message( 'waitlisted' ),
-			'status'          => 'waitlisted',
-			'registration_id' => $result['registration_id'],
-		) );
-	}
-
-	/**
 	 * AJAX handler for coupon validation.
 	 */
 	public static function ajax_validate_coupon() {
@@ -164,9 +130,6 @@ class BLT_Events_Registrations {
 		switch ( $status ) {
 			case 'pending':
 				$message = __( 'Your registration has been received and is awaiting approval. We will email you once it is confirmed.', 'blt-events' );
-				break;
-			case 'waitlisted':
-				$message = __( 'You have been added to the waitlist. We will email you if a spot opens up.', 'blt-events' );
 				break;
 			default:
 				$message = __( 'Registration successful! A confirmation email is on its way.', 'blt-events' );
@@ -347,11 +310,7 @@ class BLT_Events_Registrations {
 				if ( ! $captured ) {
 					self::release_lock( $locked, $lock_name );
 
-					$message = BLT_Events_Helpers::waitlist_enabled( $event_id )
-						? __( 'Sorry, there are not enough spots available. You can join the waitlist instead.', 'blt-events' )
-						: __( 'Sorry, there are not enough spots available.', 'blt-events' );
-
-					return new WP_Error( 'capacity_exceeded', $message, array( 'waitlist' => BLT_Events_Helpers::waitlist_enabled( $event_id ) ) );
+					return new WP_Error( 'capacity_exceeded', __( 'Sorry, there are not enough spots available.', 'blt-events' ) );
 				}
 				$review[] = __( 'The event was already at capacity when this payment completed; it may need a refund or a raised capacity.', 'blt-events' );
 			}
@@ -506,125 +465,6 @@ class BLT_Events_Registrations {
 			global $wpdb;
 			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
 		}
-	}
-
-	/**
-	 * Put someone on the waitlist of a sold-out event.
-	 *
-	 * @param int   $event_id The event post ID.
-	 * @param array $data     Submitted data: first_name, last_name, email, quantity, phone.
-	 * @return array|WP_Error
-	 */
-	public static function join_waitlist( $event_id, $data ) {
-		if ( ! $event_id || get_post_type( $event_id ) !== 'event' || get_post_status( $event_id ) !== 'publish' ) {
-			return new WP_Error( 'invalid_event', __( 'Invalid event.', 'blt-events' ) );
-		}
-
-		if ( get_post_meta( $event_id, '_blt_registration_open', true ) !== '1' || BLT_Events_Helpers::registration_cutoff_passed( $event_id ) ) {
-			return new WP_Error( 'registration_closed', __( 'Registration is closed for this event.', 'blt-events' ) );
-		}
-
-		if ( ! BLT_Events_Helpers::waitlist_enabled( $event_id ) ) {
-			return new WP_Error( 'no_waitlist', __( 'This event does not have a waitlist.', 'blt-events' ) );
-		}
-
-		if ( ! BLT_Events_Helpers::is_sold_out( $event_id ) ) {
-			return new WP_Error( 'not_sold_out', __( 'Spots are available for this event. Please register instead.', 'blt-events' ) );
-		}
-
-		$first = sanitize_text_field( $data['first_name'] ?? '' );
-		$last  = sanitize_text_field( $data['last_name'] ?? '' );
-		$email = sanitize_email( $data['email'] ?? '' );
-		$phone = BLT_Events_Helpers::sanitize_phone( $data['phone'] ?? ( $data['mobile_number'] ?? '' ) );
-
-		if ( '' === $first || ! is_email( $email ) ) {
-			return new WP_Error( 'validation_error', __( 'Please enter your name and a valid email address.', 'blt-events' ) );
-		}
-
-		/**
-		 * Filter the maximum seats one person may request on the waitlist.
-		 *
-		 * @param int $max      Default 10.
-		 * @param int $event_id The event post ID.
-		 */
-		$max_qty  = max( 1, (int) apply_filters( 'blt_events_waitlist_max_quantity', 10, $event_id ) );
-		$quantity = min( $max_qty, max( 1, absint( $data['quantity'] ?? 1 ) ) );
-
-		if ( self::$reg_db->email_registered_for_event( $email, $event_id ) ) {
-			return new WP_Error( 'duplicate_registration', __( 'This email is already registered or on the waitlist for this event.', 'blt-events' ) );
-		}
-
-		$custom = array(
-			'first_name'    => $first,
-			'last_name'     => $last,
-			'email'         => $email,
-			'mobile_number' => $phone,
-			'_consents'     => array(),
-			'_waitlist'     => true,
-		);
-
-		$registration_id = self::$reg_db->insert( array(
-			'event_id'         => $event_id,
-			'group_id'         => null,
-			'customer_name'    => trim( $first . ' ' . $last ),
-			'customer_email'   => $email,
-			'customer_phone'   => $phone,
-			'attendee_count'   => $quantity,
-			'custom_fields'    => wp_json_encode( $custom ),
-			'total_amount'     => 0,
-			'discount_amount'  => 0,
-			'amount_paid'      => 0,
-			'currency'         => BLT_Events_Helpers::get_currency_code(),
-			'payment_provider' => 'waitlist',
-			'status'           => 'waitlisted',
-		) );
-
-		if ( ! $registration_id ) {
-			return new WP_Error( 'db_error', __( 'Could not join the waitlist. Please try again.', 'blt-events' ) );
-		}
-
-		$attendees = array( array(
-			'attendee_name'  => trim( $first . ' ' . $last ),
-			'attendee_email' => $email,
-			'attendee_phone' => $phone,
-			'ticket_type'    => null,
-			'ticket_price'   => 0,
-			'custom_fields'  => wp_json_encode( $custom ),
-		) );
-		for ( $i = 1; $i < $quantity; $i++ ) {
-			$attendees[] = array(
-				'attendee_name'  => '',
-				'attendee_email' => '',
-				'attendee_phone' => '',
-				'ticket_type'    => null,
-				'ticket_price'   => 0,
-				'custom_fields'  => null,
-			);
-		}
-		self::$att_db->bulk_insert( $registration_id, $event_id, $attendees );
-
-		$result = array(
-			'registration_id' => $registration_id,
-			'group_id'        => null,
-			'total'           => 0,
-			'amount_paid'     => 0,
-			'status'          => 'waitlisted',
-			'review'          => array(),
-		);
-
-		/** This action is documented above in process_registration(). */
-		do_action( 'blt_registration_created', $registration_id, $result );
-
-		/**
-		 * Fires when someone joins an event's waitlist.
-		 *
-		 * @param int $registration_id The waitlist registration ID.
-		 * @param int $event_id        The event post ID.
-		 * @param int $quantity        Seats requested.
-		 */
-		do_action( 'blt_events_waitlist_joined', $registration_id, $event_id, $quantity );
-
-		return $result;
 	}
 
 	/**
@@ -1114,39 +954,5 @@ class BLT_Events_Registrations {
 				break;
 		}
 
-		// A seat was freed: if people are waiting, tell whoever manages the event.
-		$seat_statuses = BLT_Events_Helpers::seat_holding_statuses();
-		if ( in_array( $old_status, $seat_statuses, true ) && ! in_array( $status, $seat_statuses, true ) ) {
-			self::maybe_notify_waitlist( (int) $event_id );
-		}
-	}
-
-	/**
-	 * Fire the waitlist notice when an event with a waitlist has room again.
-	 *
-	 * @param int $event_id The event post ID.
-	 */
-	public static function maybe_notify_waitlist( $event_id ) {
-		if ( ! BLT_Events_Helpers::waitlist_enabled( $event_id ) ) {
-			return;
-		}
-
-		$waiting = self::$reg_db->count_waitlisted( $event_id );
-		if ( $waiting < 1 ) {
-			return;
-		}
-
-		$left = BLT_Events_Helpers::spots_left( $event_id );
-		if ( null !== $left && $left <= 0 ) {
-			return;
-		}
-
-		/**
-		 * Fires when a seat opens up on an event that has people waitlisted.
-		 *
-		 * @param int $event_id       The event post ID.
-		 * @param int $waitlist_count People currently on the waitlist.
-		 */
-		do_action( 'blt_events_waitlist_spot_opened', $event_id, $waiting );
 	}
 }

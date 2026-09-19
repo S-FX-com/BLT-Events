@@ -258,7 +258,7 @@ class BLT_Events_Helpers {
 		/**
 		 * Filter the registration statuses.
 		 *
-		 * Add-ons may add their own; the five built-in ones cannot be removed
+		 * Add-ons may add their own; the four built-in ones cannot be removed
 		 * because core flows write them.
 		 *
 		 * @param array $statuses Slug => label.
@@ -266,7 +266,6 @@ class BLT_Events_Helpers {
 		$statuses = apply_filters( 'blt_events_registration_statuses', array(
 			'pending'    => __( 'Pending', 'blt-events' ),
 			'confirmed'  => __( 'Confirmed', 'blt-events' ),
-			'waitlisted' => __( 'Waitlisted', 'blt-events' ),
 			'cancelled'  => __( 'Cancelled', 'blt-events' ),
 			'refunded'   => __( 'Refunded', 'blt-events' ),
 		) );
@@ -287,8 +286,8 @@ class BLT_Events_Helpers {
 	}
 
 	/**
-	 * Statuses that hold a seat. Anything else (cancelled, refunded,
-	 * waitlisted) does not count towards capacity.
+	 * Statuses that hold a seat. Cancelled and refunded registrations do not
+	 * count towards capacity.
 	 *
 	 * @return string[]
 	 */
@@ -870,16 +869,6 @@ class BLT_Events_Helpers {
 		$left = self::spots_left( $event_id );
 
 		return null !== $left && $left <= 0;
-	}
-
-	/**
-	 * Whether the event accepts waitlist sign-ups when full.
-	 *
-	 * @param int $event_id The event post ID.
-	 * @return bool
-	 */
-	public static function waitlist_enabled( $event_id ) {
-		return get_post_meta( $event_id, '_blt_waitlist_enabled', true ) === '1';
 	}
 
 	/* ------------------------------------------------------------------

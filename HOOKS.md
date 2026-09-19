@@ -22,15 +22,13 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 
 | Hook | Type | Parameters | Fires when |
 |---|---|---|---|
-| `blt_registration_created` | action | `$registration_id, $result` | A registration (or waitlist entry) was stored |
+| `blt_registration_created` | action | `$registration_id, $result` | A registration was stored |
 | `blt_registration_needs_review` | action | `$registration_id, $review, $result` | A captured payment tripped a guard and was stored pending |
 | `blt_registration_status_changed` | action | `$registration_id, $status, $old_status` | Any status change |
 | `blt_registration_confirmed` | action | `$registration_id` | Status became `confirmed` |
 | `blt_registration_cancelled` | action | `$registration_id` | Status became `cancelled` |
 | `blt_registration_refunded` | action | `$registration_id` | Status became `refunded` |
 | `blt_registration_partially_refunded` | action | `$registration_id, $refunded_amount, $order` | FluentCart partial refund |
-| `blt_events_waitlist_joined` | action | `$registration_id, $event_id, $quantity` | Someone joined a waitlist |
-| `blt_events_waitlist_spot_opened` | action | `$event_id, $waitlist_count` | A seat freed up on an event with people waiting |
 | `blt_events_payment_orphaned` | action | `$provider, $payment_id, $event_id, WP_Error $error` | A completed payment produced no registration |
 | `blt_events_registration_data` | filter | `$data, $event_id, $payment` | Submitted data before validation |
 | `blt_events_new_registration_status` | filter | `$status, $event_id, $payment` | Status a new registration is stored with |
@@ -44,7 +42,6 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_registration_rate_limit` | filter | `10, $bucket` | Requests per IP per 10 minutes (`register` or `coupon`); 0 disables |
 | `blt_events_registration_email_rate_limit` | filter | `5` | Submissions per email per 10 minutes |
 | `blt_events_trusted_ip_headers` | filter | `$headers` | `$_SERVER` keys trusted for the client IP |
-| `blt_events_waitlist_max_quantity` | filter | `10, $event_id` | Max seats one person can request on the waitlist |
 
 ## Fieldsets and validation
 
@@ -145,4 +142,4 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 
 ## JavaScript events
 
-The registration form triggers jQuery events on the form element: `blt:registered` (payload: server response) after a successful registration and `blt:waitlisted` after joining a waitlist.
+The registration form triggers `blt:registered` on the form element after a successful registration (payload: server response).

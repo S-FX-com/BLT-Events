@@ -1,6 +1,6 @@
 # BLT Events
 
-Event registration for WordPress. Calendar, list and grid views, ticket types with sale windows and role restrictions, configurable registration forms, multi-attendee bookings, waitlists, reminders, coupons, and checkout through Stripe, SureCart or FluentCart. Online and hybrid events can auto-create Zoom, Microsoft Teams, GoTo or ClickMeeting rooms.
+Event registration for WordPress. Calendar, list and grid views, ticket types with sale windows and role restrictions, configurable registration forms, multi-attendee bookings, reminders, coupons, and checkout through Stripe, SureCart or FluentCart. Online and hybrid events can auto-create Zoom, Microsoft Teams, GoTo or ClickMeeting rooms.
 
 Part of the S-FX.com **BLT** plugin family. Conventions shared across the family live in [DESIGN.md](DESIGN.md); the admin component library in [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md); every hook in [HOOKS.md](HOOKS.md).
 
@@ -27,7 +27,7 @@ Updates are served from GitHub releases through the bundled update checker; the 
 | `/event/` archive | Rendered by the plugin with search and a view switcher; category archives too |
 | Event page | Renders inside your theme's single template: date box, add-to-calendar links, CTA, address with map, join link for confirmed registrants, presenters, agenda, registration form |
 | Registration form | Name, email, phone, privacy consent; tickets when the event has them; per-attendee details for group bookings |
-| Emails | Confirmation with .ics attached, pending and waitlist notices, admin notification, 24h/1h reminders |
+| Emails | Confirmation with .ics attached, pending notices, admin notification, 24h/1h reminders |
 | Styling | Styled mode with its own design; Skeleton mode inherits your framework's CSS variables; No-CSS mode leaves BEM markup |
 | SEO | schema.org Event JSON-LD on every event page |
 
@@ -73,7 +73,7 @@ templates/
 ├── single-event.php            Event page layout
 ├── single/                     Its parts: title, datebox, cta, address, virtual, agenda, presenters, ...
 ├── calendar/                   list-item, grid-card, month-event, empty
-├── registration/               form, attendee, closed, waitlist, surecart, fluentcart
+├── registration/               form, attendee, closed, surecart, fluentcart
 ├── emails/wrapper.php          HTML shell around every email
 └── archive-event.php           Classic-theme event archive
 ```

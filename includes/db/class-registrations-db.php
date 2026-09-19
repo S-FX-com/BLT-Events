@@ -137,9 +137,8 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 	 * Check if an email is already registered for a specific event.
 	 *
 	 * Used for duplicate registration prevention. Cancelled and refunded
-	 * registrations do not count: that person may legitimately register
-	 * again. A waitlisted registration does count, so nobody joins the
-	 * waitlist twice.
+	 * registrations do not count, so that person may legitimately register
+	 * again.
 	 *
 	 * @param string $email    The customer email.
 	 * @param int    $event_id The event post ID.
@@ -233,8 +232,8 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 	 * Get the total number of attendees holding a seat on an event.
 	 *
 	 * Sums the attendee_count column for registrations in a seat-holding
-	 * status (pending or confirmed by default). Cancelled, refunded and
-	 * waitlisted registrations do not occupy capacity.
+	 * status (pending or confirmed by default). Cancelled and refunded
+	 * registrations do not occupy capacity.
 	 *
 	 * @param int $event_id The event post ID.
 	 * @return int Total attendee count.
@@ -265,35 +264,4 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 		return (int) $count;
 	}
 
-	/**
-	 * Waitlisted registrations for an event, oldest first.
-	 *
-	 * @param int $event_id The event post ID.
-	 * @param int $limit    Max rows.
-	 * @return array
-	 */
-	public function get_waitlist( $event_id, $limit = 100 ) {
-		return $this->get_all( array(
-			'orderby' => 'created_at',
-			'order'   => 'ASC',
-			'limit'   => $limit,
-			'where'   => array(
-				array( 'column' => 'event_id', 'value' => absint( $event_id ) ),
-				array( 'column' => 'status', 'value' => 'waitlisted' ),
-			),
-		) );
-	}
-
-	/**
-	 * Number of waitlisted registrations for an event.
-	 *
-	 * @param int $event_id The event post ID.
-	 * @return int
-	 */
-	public function count_waitlisted( $event_id ) {
-		return $this->count( array(
-			array( 'column' => 'event_id', 'value' => absint( $event_id ) ),
-			array( 'column' => 'status', 'value' => 'waitlisted' ),
-		) );
-	}
 }

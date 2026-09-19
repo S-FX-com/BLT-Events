@@ -44,7 +44,6 @@ class BLT_Events_Event_Meta {
 			'_blt_registration_open'        => array( 'type' => 'string', 'description' => __( '"1" when registration is open.', 'blt-events' ) ),
 			'_blt_registration_cutoff_date' => array( 'type' => 'string', 'description' => __( 'Registration cutoff date.', 'blt-events' ) ),
 			'_blt_require_approval'         => array( 'type' => 'string', 'description' => __( '"1" when registrations need approval.', 'blt-events' ) ),
-			'_blt_waitlist_enabled'         => array( 'type' => 'string', 'description' => __( '"1" when the waitlist is on.', 'blt-events' ) ),
 			'_blt_featured'                 => array( 'type' => 'string', 'description' => __( '"1" for featured events.', 'blt-events' ) ),
 			'_blt_hide_from_calendar'       => array( 'type' => 'string', 'description' => __( '"1" to hide from listings.', 'blt-events' ) ),
 			'_blt_ticket_types'             => array( 'type' => 'string', 'description' => __( 'Ticket types (JSON).', 'blt-events' ) ),

@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'BLT_EVENTS_VERSION', '2.4.1' );
 // Bumped whenever install()/upgrade work has to run on sites updated
 // without re-activation (schema, roles, cron, seeded options).
-define( 'BLT_EVENTS_DB_VERSION', '1.1' );
+define( 'BLT_EVENTS_DB_VERSION', '1.2' );
 define( 'BLT_EVENTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'BLT_EVENTS_PLUGIN_FILE', __FILE__ );

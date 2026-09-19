@@ -9,10 +9,10 @@
  *
  * Sending is driven by registration lifecycle actions:
  *
- *   blt_registration_created    -> confirmation, pending or waitlist email
- *                                  (by status) + admin notification
- *   blt_registration_confirmed  -> confirmation email (manual approval,
- *                                  waitlist promotion, delayed payment)
+ *   blt_registration_created    -> confirmation or pending email (by status)
+ *                                  + admin notification
+ *   blt_registration_confirmed  -> confirmation email (manual approval or
+ *                                  delayed payment)
  *
  * Reminders are sent by BLT_Events_Reminders through send().
  */
@@ -26,7 +26,6 @@ class BLT_Events_Emails {
 	public static function init() {
 		add_action( 'blt_registration_created', array( __CLASS__, 'on_created' ), 10, 2 );
 		add_action( 'blt_registration_confirmed', array( __CLASS__, 'on_confirmed' ), 10, 1 );
-		add_action( 'blt_events_waitlist_spot_opened', array( __CLASS__, 'on_spot_opened' ), 10, 2 );
 	}
 
 	/* ------------------------------------------------------------------
@@ -63,17 +62,6 @@ class BLT_Events_Emails {
 				'body_def'        => __( "Hello {customer_name},\n\nThanks for registering for {event_name} on {event_date}. Your registration is being reviewed and you will receive a confirmation as soon as it is approved.", 'blt-events' ),
 				'to'              => 'customer',
 				'enabled_key'     => 'blt_events_email_pending_enabled',
-				'enabled_default' => '1',
-			),
-			'waitlist' => array(
-				'title'           => __( 'Waitlist Confirmation', 'blt-events' ),
-				'desc'            => __( 'Sent when someone joins the waitlist of a sold-out event.', 'blt-events' ),
-				'subject_key'     => 'blt_events_email_subject_waitlist',
-				'subject_def'     => __( 'You are on the waitlist for {event_name}', 'blt-events' ),
-				'body_key'        => 'blt_events_email_template_waitlist',
-				'body_def'        => __( "Hello {customer_name},\n\n{event_name} on {event_date} is currently full. You have been added to the waitlist and we will email you if a spot opens up.", 'blt-events' ),
-				'to'              => 'customer',
-				'enabled_key'     => 'blt_events_email_waitlist_enabled',
 				'enabled_default' => '1',
 			),
 			'reminder_24h' => array(
@@ -182,9 +170,6 @@ class BLT_Events_Emails {
 			case 'confirmed':
 				self::send( 'registration', $reg );
 				break;
-			case 'waitlisted':
-				self::send( 'waitlist', $reg );
-				break;
 			case 'pending':
 				self::send( 'pending', $reg );
 				break;
@@ -200,44 +185,6 @@ class BLT_Events_Emails {
 		}
 
 		self::send( 'registration', $reg );
-	}
-
-	/**
-	 * A seat freed up on an event with a waitlist: tell the admin.
-	 *
-	 * @param int $event_id       The event post ID.
-	 * @param int $waitlist_count How many people are waiting.
-	 */
-	public static function on_spot_opened( $event_id, $waitlist_count ) {
-		if ( ! self::is_enabled( 'admin_new' ) ) {
-			return;
-		}
-
-		$event = get_post( $event_id );
-		if ( ! $event ) {
-			return;
-		}
-
-		$subject = sprintf(
-			/* translators: %s: event title. */
-			__( '[%1$s] A spot opened up on %2$s', 'blt-events' ),
-			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
-			$event->post_title
-		);
-		$body = sprintf(
-			/* translators: 1: number of people waiting, 2: event title, 3: admin URL. */
-			_n(
-				'%1$d person is on the waitlist for %2$s. Confirm them from the registrations screen: %3$s',
-				'%1$d people are on the waitlist for %2$s. Confirm them from the registrations screen: %3$s',
-				$waitlist_count,
-				'blt-events'
-			),
-			(int) $waitlist_count,
-			$event->post_title,
-			self::admin_registrations_url( $event_id, 'waitlisted' )
-		);
-
-		self::mail( self::admin_recipient(), $subject, $body, array(), 'waitlist_spot_opened', null );
 	}
 
 	/* ------------------------------------------------------------------
