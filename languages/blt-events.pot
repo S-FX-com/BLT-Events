@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: BLT Events 2.4.0\n"
 "Report-Msgid-Bugs-To: https://github.com/S-FX-com/BLT-Events/issues\n"
-"POT-Creation-Date: 2026-09-18 03:37+0000\n"
+"POT-Creation-Date: 2026-09-19 02:59+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -676,7 +676,7 @@ msgid "Check for Updates"
 msgstr ""
 
 #: includes/admin/class-admin-settings.php:477
-#: includes/admin/class-event-migration.php:117
+#: includes/admin/class-event-migration.php:122
 #: includes/admin/class-setup.php:262
 #: includes/frontend/class-blocks.php:36
 msgid "BLT Events"
@@ -949,7 +949,7 @@ msgid "Maximum width of the calendar and event layouts. Leave blank to follow th
 msgstr ""
 
 #: includes/admin/class-admin-settings.php:870
-#: includes/admin/class-event-migration.php:699
+#: includes/admin/class-event-migration.php:879
 msgid "Preview"
 msgstr ""
 
@@ -1063,7 +1063,7 @@ msgstr ""
 
 #: includes/admin/class-admin.php:51
 #: includes/admin/class-admin.php:52
-#: includes/admin/class-event-migration.php:117
+#: includes/admin/class-event-migration.php:122
 msgid "Migration"
 msgstr ""
 
@@ -1595,80 +1595,80 @@ msgstr ""
 msgid "View All Registrations"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:103
-#: includes/admin/class-event-migration.php:190
+#: includes/admin/class-event-migration.php:108
+#: includes/admin/class-event-migration.php:195
 msgid "You do not have permission to migrate events."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:123
+#: includes/admin/class-event-migration.php:128
 msgid "Import safely"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:124
+#: includes/admin/class-event-migration.php:129
 msgid "Preview first to see what would be created. Imports never alter source events and skip source events that were already imported."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:129
+#: includes/admin/class-event-migration.php:134
 msgid "Supported event plugins"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:130
+#: includes/admin/class-event-migration.php:135
 msgid "Activate a supported plugin to make its events available here. This screen does not deactivate or delete anything from the source plugin."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:134
-msgid "No supported event plugins are active. Activate Modern Events Calendar or The Events Calendar, then return to this page."
+#: includes/admin/class-event-migration.php:139
+msgid "No supported event plugins are active. Activate Modern Events Calendar, The Events Calendar, or Eventin, then return to this page."
 msgstr ""
 
 #. translators: %s: number of events.
-#: includes/admin/class-event-migration.php:152
+#: includes/admin/class-event-migration.php:157
 msgid "%s source event found."
 msgid_plural "%s source events found."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-event-migration.php:157
+#: includes/admin/class-event-migration.php:162
 msgid "Installed but inactive. Activate it to import its events."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:158
+#: includes/admin/class-event-migration.php:163
 msgid "Not installed."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:165
+#: includes/admin/class-event-migration.php:170
 msgid "Categories and tags become BLT Event Categories. Venue, organizer, images and ticket details are carried over when the source provides them. BLT Events does not support recurring event rules or existing registrations, so those remain in the source plugin."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:167
+#: includes/admin/class-event-migration.php:172
 msgid "Preview Import"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:168
+#: includes/admin/class-event-migration.php:173
 msgid "Import Events"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:180
+#: includes/admin/class-event-migration.php:185
 msgid "%d event"
 msgid_plural "%d events"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-event-migration.php:184
+#: includes/admin/class-event-migration.php:189
 #: includes/cpt/class-coupon-cpt.php:446
 msgid "Inactive"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:184
+#: includes/admin/class-event-migration.php:189
 msgid "Not installed"
 msgstr ""
 
 #. translators: 1: event title, 2: source plugin.
-#: includes/admin/class-event-migration.php:249
+#: includes/admin/class-event-migration.php:254
 msgid "%1$s was skipped because %2$s has no usable start date."
 msgstr ""
 
 #. translators: %s: event title.
-#: includes/admin/class-event-migration.php:266
+#: includes/admin/class-event-migration.php:271
 msgid "%s could not be imported."
 msgstr ""
 
@@ -1680,32 +1680,36 @@ msgstr ""
 msgid "The Events Calendar"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:601
+#: includes/admin/class-event-migration.php:51
+msgid "Eventin"
+msgstr ""
+
+#: includes/admin/class-event-migration.php:772
 msgid "Organizer:"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:699
+#: includes/admin/class-event-migration.php:879
 msgid "Import"
 msgstr ""
 
 #. translators: 1: import action, 2: imported event count, 3: skipped event count.
-#: includes/admin/class-event-migration.php:705
+#: includes/admin/class-event-migration.php:885
 msgid "%1$s complete: %2$s event(s) %3$s, %4$s already-imported event(s) skipped."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:708
+#: includes/admin/class-event-migration.php:888
 msgid "imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:708
+#: includes/admin/class-event-migration.php:888
 msgid "would be imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:714
+#: includes/admin/class-event-migration.php:894
 msgid "Events that would be imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:721
+#: includes/admin/class-event-migration.php:901
 msgid "Skipped events"
 msgstr ""
 

@@ -47,6 +47,11 @@ class BLT_Events_Event_Migration {
 				'post_type'    => 'tribe_events',
 				'plugin_names' => array( 'The Events Calendar' ),
 			),
+			'eventin' => array(
+				'label'        => __( 'Eventin', 'blt-events' ),
+				'post_type'    => 'etn',
+				'plugin_names' => array( 'Eventin' ),
+			),
 		);
 
 		foreach ( $sources as $slug => $source ) {
@@ -131,7 +136,7 @@ class BLT_Events_Event_Migration {
 				</div>
 				<div class="blt-card-body">
 					<?php if ( empty( $detected ) ) : ?>
-						<p class="blt-field-desc"><?php esc_html_e( 'No supported event plugins are active. Activate Modern Events Calendar or The Events Calendar, then return to this page.', 'blt-events' ); ?></p>
+						<p class="blt-field-desc"><?php esc_html_e( 'No supported event plugins are active. Activate Modern Events Calendar, The Events Calendar, or Eventin, then return to this page.', 'blt-events' ); ?></p>
 					<?php else : ?>
 						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 							<?php wp_nonce_field( self::NONCE_ACTION ); ?>
@@ -305,6 +310,8 @@ class BLT_Events_Event_Migration {
 	public static function normalize_event( $source, $event ) {
 		if ( 'tec' === $source ) {
 			$data = self::normalize_tec_event( $event );
+		} elseif ( 'eventin' === $source ) {
+			$data = self::normalize_eventin_event( $event );
 		} else {
 			$data = self::normalize_mec_event( $event );
 		}
@@ -379,6 +386,43 @@ class BLT_Events_Event_Migration {
 		);
 	}
 
+	private static function normalize_eventin_event( $event ) {
+		$start_date = self::mec_date( get_post_meta( $event->ID, 'etn_start_date', true ) );
+		$end_date   = self::mec_date( get_post_meta( $event->ID, 'etn_end_date', true ) );
+		$start_time = self::eventin_time( get_post_meta( $event->ID, 'etn_start_time', true ) );
+		$end_time   = self::eventin_time( get_post_meta( $event->ID, 'etn_end_time', true ) );
+		$location   = self::eventin_location( $event->ID );
+		$type       = self::eventin_type( get_post_meta( $event->ID, 'etn_event_location_type', true ) );
+		$online_url = self::eventin_online_url( $event->ID );
+
+		if ( ! $end_date ) {
+			$end_date = $start_date;
+		}
+		if ( ! $online_url && 'in-person' !== $type && $location['name'] ) {
+			$type = 'hybrid';
+		}
+
+		return array(
+			'date'                     => $start_date,
+			'start_time'               => $start_time,
+			'end_date'                 => $end_date,
+			'end_time'                 => $end_time,
+			'all_day'                  => '' === $start_time,
+			'venue'                    => $location['name'],
+			'location'                 => $location['address'],
+			'latitude'                 => $location['latitude'],
+			'longitude'                => $location['longitude'],
+			'online_url'               => $online_url,
+			'event_type'               => $type,
+			'organizer'                => self::eventin_organizer( $event->ID ),
+			'terms'                    => self::terms_for( $event->ID, array( 'etn_category', 'etn_tag' ) ),
+			'tickets'                  => self::eventin_tickets( $event->ID ),
+			'capacity'                 => absint( get_post_meta( $event->ID, 'etn_total_avaiilable_tickets', true ) ),
+			'thumbnail_id'             => self::eventin_thumbnail_id( $event->ID ),
+			'registration_cutoff_date' => self::mec_date( get_post_meta( $event->ID, 'etn_registration_deadline', true ) ),
+		);
+	}
+
 	private static function insert_event( $source, $event, $data ) {
 		$content = $event->post_content;
 		if ( ! empty( $data['organizer'] ) ) {
@@ -402,26 +446,27 @@ class BLT_Events_Event_Migration {
 		}
 
 		$meta = array(
-			'_blt_event_date'        => $data['date'],
-			'_blt_event_end_date'    => $data['end_date'],
-			'_blt_event_start_time'  => $data['start_time'],
-			'_blt_event_end_time'    => $data['end_time'],
-			'_blt_event_all_day'     => $data['all_day'] ? '1' : '0',
-			'_blt_event_no_end_time' => $data['end_time'] ? '0' : '1',
-			'_blt_multi_day'         => $data['end_date'] && $data['end_date'] !== $data['date'] ? '1' : '0',
-			'_blt_event_days'        => $event_days ? wp_json_encode( $event_days ) : '',
-			'_blt_event_type'        => $data['event_type'],
-			'_blt_event_venue'       => $data['venue'],
-			'_blt_event_location'    => $data['location'],
-			'_blt_event_latitude'    => $data['latitude'],
-			'_blt_event_longitude'   => $data['longitude'],
-			'_blt_event_online_url'  => $data['online_url'],
-			'_blt_capacity'          => $data['capacity'],
-			'_blt_registration_open' => ! empty( $data['tickets'] ) ? '1' : '0',
-			'_blt_ticket_types'      => wp_json_encode( $data['tickets'] ),
-			self::SOURCE_META        => $source,
-			self::SOURCE_ID_META     => (string) $event->ID,
-			self::ORGANIZER_META     => wp_json_encode( $data['organizer'] ),
+			'_blt_event_date'                 => $data['date'],
+			'_blt_event_end_date'             => $data['end_date'],
+			'_blt_event_start_time'           => $data['start_time'],
+			'_blt_event_end_time'             => $data['end_time'],
+			'_blt_event_all_day'              => $data['all_day'] ? '1' : '0',
+			'_blt_event_no_end_time'          => $data['end_time'] ? '0' : '1',
+			'_blt_multi_day'                  => $data['end_date'] && $data['end_date'] !== $data['date'] ? '1' : '0',
+			'_blt_event_days'                 => $event_days ? wp_json_encode( $event_days ) : '',
+			'_blt_event_type'                 => $data['event_type'],
+			'_blt_event_venue'                => $data['venue'],
+			'_blt_event_location'             => $data['location'],
+			'_blt_event_latitude'             => $data['latitude'],
+			'_blt_event_longitude'            => $data['longitude'],
+			'_blt_event_online_url'           => $data['online_url'],
+			'_blt_capacity'                   => $data['capacity'],
+			'_blt_registration_open'          => ! empty( $data['tickets'] ) ? '1' : '0',
+			'_blt_registration_cutoff_date' => $data['registration_cutoff_date'] ?? '',
+			'_blt_ticket_types'               => wp_json_encode( $data['tickets'] ),
+			self::SOURCE_META                 => $source,
+			self::SOURCE_ID_META              => (string) $event->ID,
+			self::ORGANIZER_META              => wp_json_encode( $data['organizer'] ),
 		);
 		foreach ( $meta as $key => $value ) {
 			update_post_meta( $new_id, $key, $value );
@@ -511,6 +556,132 @@ class BLT_Events_Event_Migration {
 			$hour = $hour % 12 + ( 'pm' === $ampm ? 12 : 0 );
 		}
 		return $hour >= 0 && $hour <= 23 && (int) $minute <= 59 ? sprintf( '%02d:%02d', $hour, (int) $minute ) : '';
+	}
+
+	private static function eventin_time( $value ) {
+		$value = trim( (string) $value );
+		return preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/', $value ) ? $value : '';
+	}
+
+	private static function eventin_type( $value ) {
+		$value = sanitize_key( $value );
+		if ( 'online' === $value ) {
+			return 'online';
+		}
+		if ( 'hybrid' === $value ) {
+			return 'hybrid';
+		}
+		return 'in-person';
+	}
+
+	private static function eventin_location( $event_id ) {
+		$location = get_post_meta( $event_id, 'etn_event_location', true );
+		if ( ! $location ) {
+			$location = get_post_meta( $event_id, 'etn_event_location_list', true );
+		}
+		$location = self::eventin_record( $location );
+
+		if ( is_string( $location ) ) {
+			return array(
+				'name'      => sanitize_text_field( $location ),
+				'address'   => '',
+				'latitude'  => '',
+				'longitude' => '',
+			);
+		}
+		if ( ! is_array( $location ) ) {
+			return array(
+				'name'      => '',
+				'address'   => '',
+				'latitude'  => '',
+				'longitude' => '',
+			);
+		}
+
+		$name      = self::eventin_value( $location, array( 'name', 'location_name', 'venue', 'title' ) );
+		$address   = self::eventin_value( $location, array( 'address', 'location_address', 'full_address' ) );
+		$latitude  = self::eventin_value( $location, array( 'lat', 'latitude' ) );
+		$longitude = self::eventin_value( $location, array( 'lng', 'longitude', 'lon' ) );
+
+		return array(
+			'name'      => $name,
+			'address'   => $address,
+			'latitude'  => is_numeric( $latitude ) ? $latitude : '',
+			'longitude' => is_numeric( $longitude ) ? $longitude : '',
+		);
+	}
+
+	private static function eventin_online_url( $event_id ) {
+		foreach ( array( 'etn_google_meet_link', 'etn_zoom_join_url', 'etn_zoom_link' ) as $key ) {
+			$url = esc_url_raw( get_post_meta( $event_id, $key, true ) );
+			if ( $url ) {
+				return $url;
+			}
+		}
+		return '';
+	}
+
+	private static function eventin_organizer( $event_id ) {
+		$organizer = self::eventin_record( get_post_meta( $event_id, 'etn_event_organizer', true ) );
+		if ( is_numeric( $organizer ) && get_post( (int) $organizer ) ) {
+			return array( 'name' => get_the_title( (int) $organizer ) );
+		}
+		if ( ! is_array( $organizer ) ) {
+			return array();
+		}
+
+		$result = array();
+		$fields = array(
+			'name'    => array( 'name', 'organizer_name', 'etn_organizer_name', 'title' ),
+			'email'   => array( 'email', 'organizer_email', 'etn_organizer_email' ),
+			'phone'   => array( 'phone', 'organizer_phone', 'etn_organizer_phone' ),
+			'website' => array( 'website', 'url', 'company_url' ),
+		);
+		foreach ( $fields as $destination => $keys ) {
+			$value = self::eventin_value( $organizer, $keys );
+			if ( $value ) {
+				$result[ $destination ] = $value;
+			}
+		}
+		return $result;
+	}
+
+	private static function eventin_thumbnail_id( $event_id ) {
+		$thumbnail_id = get_post_thumbnail_id( $event_id );
+		if ( $thumbnail_id ) {
+			return $thumbnail_id;
+		}
+		foreach ( array( 'etn_banner', 'etn_event_logo' ) as $key ) {
+			$thumbnail_id = absint( get_post_meta( $event_id, $key, true ) );
+			if ( $thumbnail_id ) {
+				return $thumbnail_id;
+			}
+		}
+		return 0;
+	}
+
+	private static function eventin_record( $value ) {
+		if ( ! is_array( $value ) ) {
+			return $value;
+		}
+		foreach ( $value as $key => $item ) {
+			if ( is_string( $key ) ) {
+				return $value;
+			}
+			if ( is_array( $item ) || is_scalar( $item ) ) {
+				return $item;
+			}
+		}
+		return array();
+	}
+
+	private static function eventin_value( $data, $keys ) {
+		foreach ( $keys as $key ) {
+			if ( isset( $data[ $key ] ) && is_scalar( $data[ $key ] ) ) {
+				return sanitize_text_field( $data[ $key ] );
+			}
+		}
+		return '';
 	}
 
 	private static function tec_venue( $venue_id ) {
@@ -628,6 +799,11 @@ class BLT_Events_Event_Migration {
 		return self::tickets_from_source( is_array( $tickets ) ? $tickets : array() );
 	}
 
+	private static function eventin_tickets( $event_id ) {
+		$tickets = get_post_meta( $event_id, 'etn_ticket_variations', true );
+		return self::tickets_from_source( is_array( $tickets ) ? $tickets : array() );
+	}
+
 	/**
 	 * Convert the common ticket properties exposed by TEC and MEC.
 	 *
@@ -641,17 +817,17 @@ class BLT_Events_Event_Migration {
 			if ( ! is_array( $ticket ) ) {
 				continue;
 			}
-			$name = $ticket['name'] ?? $ticket['title'] ?? $ticket['ticket_name'] ?? '';
+			$name = $ticket['name'] ?? $ticket['title'] ?? $ticket['ticket_name'] ?? $ticket['etn_ticket_name'] ?? '';
 			if ( ! $name ) {
 				continue;
 			}
 			$normalized[] = array(
 				'name'            => sanitize_text_field( $name ),
-				'price'           => (float) ( $ticket['price'] ?? $ticket['cost'] ?? 0 ),
-				'description'     => sanitize_text_field( $ticket['description'] ?? '' ),
-				'sale_start_date' => self::mec_date( $ticket['start_date'] ?? $ticket['ticket_start_date'] ?? $ticket['start'] ?? '' ),
+				'price'           => (float) ( $ticket['price'] ?? $ticket['cost'] ?? $ticket['etn_ticket_price'] ?? 0 ),
+				'description'     => sanitize_text_field( $ticket['description'] ?? $ticket['etn_ticket_description'] ?? '' ),
+				'sale_start_date' => self::mec_date( $ticket['start_date'] ?? $ticket['ticket_start_date'] ?? $ticket['etn_ticket_start_date'] ?? $ticket['start'] ?? '' ),
 				'sale_start_time' => self::ticket_time( $ticket, 'start' ),
-				'sale_end_date'   => self::mec_date( $ticket['end_date'] ?? $ticket['ticket_end_date'] ?? $ticket['end'] ?? '' ),
+				'sale_end_date'   => self::mec_date( $ticket['end_date'] ?? $ticket['ticket_end_date'] ?? $ticket['etn_ticket_end_date'] ?? $ticket['end'] ?? '' ),
 				'sale_end_time'   => self::ticket_time( $ticket, 'end' ),
 				'roles'           => array(),
 			);
@@ -660,14 +836,18 @@ class BLT_Events_Event_Migration {
 	}
 
 	private static function ticket_time( $ticket, $side ) {
-		$date = $ticket[ $side . '_date' ] ?? $ticket[ 'ticket_' . $side . '_date' ] ?? $ticket[ $side ] ?? '';
+		$date = $ticket[ $side . '_date' ] ?? $ticket[ 'ticket_' . $side . '_date' ] ?? $ticket[ 'etn_ticket_' . $side . '_date' ] ?? $ticket[ $side ] ?? '';
 		$time = self::date_parts( $date )['time'];
 		if ( $time ) {
 			return $time;
 		}
-		$hour   = $ticket[ $side . '_time_hour' ] ?? $ticket[ 'ticket_' . $side . '_time_hour' ] ?? '';
-		$minute = $ticket[ $side . '_time_minutes' ] ?? $ticket[ 'ticket_' . $side . '_time_minute' ] ?? '';
-		$ampm   = strtolower( $ticket[ $side . '_time_ampm' ] ?? $ticket[ 'ticket_' . $side . '_time_ampm' ] ?? '' );
+		$time = self::eventin_time( $ticket[ $side . '_time' ] ?? $ticket[ 'ticket_' . $side . '_time' ] ?? $ticket[ 'etn_ticket_' . $side . '_time' ] ?? '' );
+		if ( $time ) {
+			return $time;
+		}
+		$hour   = $ticket[ $side . '_time_hour' ] ?? $ticket[ 'ticket_' . $side . '_time_hour' ] ?? $ticket[ 'etn_ticket_' . $side . '_time_hour' ] ?? '';
+		$minute = $ticket[ $side . '_time_minutes' ] ?? $ticket[ 'ticket_' . $side . '_time_minute' ] ?? $ticket[ 'etn_ticket_' . $side . '_time_minute' ] ?? '';
+		$ampm   = strtolower( $ticket[ $side . '_time_ampm' ] ?? $ticket[ 'ticket_' . $side . '_time_ampm' ] ?? $ticket[ 'etn_ticket_' . $side . '_time_ampm' ] ?? '' );
 		if ( ! is_numeric( $hour ) || ! is_numeric( $minute ) ) {
 			return '';
 		}

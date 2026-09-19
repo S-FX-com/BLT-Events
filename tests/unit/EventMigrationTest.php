@@ -17,6 +17,15 @@ final class EventMigrationTest extends BLT_Events_TestCase {
 				'title' => 'Free RSVP',
 				'cost'  => 0,
 			),
+			array(
+				'etn_ticket_name'        => 'Eventin admission',
+				'etn_ticket_price'       => '18',
+				'etn_ticket_description' => 'Door entry',
+				'etn_ticket_start_date'  => '2026-06-01',
+				'etn_ticket_start_time'  => '08:00',
+				'etn_ticket_end_date'    => '2026-06-10',
+				'etn_ticket_end_time'    => '20:00',
+			),
 			array( 'price' => 10 ),
 		) );
 
@@ -39,6 +48,16 @@ final class EventMigrationTest extends BLT_Events_TestCase {
 				'sale_start_time' => '',
 				'sale_end_date'   => '',
 				'sale_end_time'   => '',
+				'roles'           => array(),
+			),
+			array(
+				'name'            => 'Eventin admission',
+				'price'           => 18.0,
+				'description'     => 'Door entry',
+				'sale_start_date' => '2026-06-01',
+				'sale_start_time' => '08:00',
+				'sale_end_date'   => '2026-06-10',
+				'sale_end_time'   => '20:00',
 				'roles'           => array(),
 			),
 		), $tickets );
