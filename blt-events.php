@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       BLT Events
  * Plugin URI:        https://github.com/S-FX-com/BLT-Events
- * Description:       Event registration for WordPress: calendar and list views, ticket types, configurable registration forms, multi-attendee bookings, reminders, Stripe, SureCart and FluentCart checkout, and Zoom, Teams, GoTo and ClickMeeting rooms.
- * Version:           2.4.0
+ * Description:       Event registration for WordPress: calendar and list views, ticket types, configurable registration forms, multi-attendee bookings, waitlists, reminders, Stripe, SureCart and FluentCart checkout, and Zoom, Teams, GoTo and ClickMeeting rooms.
+ * Version:           2.4.1
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            S-FX.com
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.4.0' );
+define( 'BLT_EVENTS_VERSION', '2.4.1' );
 // Bumped whenever install()/upgrade work has to run on sites updated
 // without re-activation (schema, roles, cron, seeded options).
 define( 'BLT_EVENTS_DB_VERSION', '1.2' );
@@ -126,6 +126,7 @@ spl_autoload_register( function ( $class ) {
 		'event-metabox'            => 'includes/admin/class-event-metabox.php',
 		'fieldset-builder'         => 'includes/admin/class-fieldset-builder.php',
 		'registrations-list'       => 'includes/admin/class-registrations-list.php',
+		'event-migration'          => 'includes/admin/class-event-migration.php',
 		// Shortcodes
 		'registration-shortcode'   => 'includes/shortcodes/class-registration-shortcode.php',
 		'calendar-shortcode'       => 'includes/shortcodes/class-calendar-shortcode.php',
@@ -204,6 +205,7 @@ function blt_events_init() {
 		BLT_Events_Event_Metabox::init();
 		BLT_Events_Fieldset_Builder::init();
 		BLT_Events_Registrations_List::init();
+		BLT_Events_Event_Migration::init();
 	}
 
 	// Shortcodes and blocks
@@ -314,6 +316,7 @@ function blt_events_admin_hooks() {
 		'event_page_blt-registrations',
 		'event_page_blt-fieldsets',
 		'event_page_blt-events-settings',
+		'event_page_blt-migration',
 	) );
 }
 
