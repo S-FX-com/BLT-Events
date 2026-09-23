@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: BLT Events 2.4.4\n"
 "Report-Msgid-Bugs-To: https://github.com/S-FX-com/BLT-Events/issues\n"
-"POT-Creation-Date: 2026-09-23 19:05+0000\n"
+"POT-Creation-Date: 2026-09-23 21:28+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -110,7 +110,7 @@ msgstr ""
 #: includes/admin/class-event-metabox.php:582
 #: includes/admin/class-registrations-list.php:139
 #: includes/admin/class-registrations-list.php:446
-#: includes/class-emails.php:424
+#: includes/class-emails.php:425
 #: includes/shortcodes/class-calendar-shortcode.php:564
 #: includes/shortcodes/class-registration-shortcode.php:199
 #: templates/registration/fluentcart.php:36
@@ -960,7 +960,7 @@ msgid "Maximum width of the calendar and event layouts. Leave blank to follow th
 msgstr ""
 
 #: includes/admin/class-admin-settings.php:870
-#: includes/admin/class-event-migration.php:881
+#: includes/admin/class-event-migration.php:883
 msgid "Preview"
 msgstr ""
 
@@ -1247,7 +1247,8 @@ msgstr ""
 
 #: includes/admin/class-event-metabox.php:389
 #: includes/admin/class-registrations-list.php:373
-#: includes/class-helpers.php:525
+#: includes/class-helpers.php:529
+#: includes/class-helpers.php:535
 #: includes/cpt/class-event-cpt.php:202
 #: includes/shortcodes/class-calendar-shortcode.php:633
 #: includes/shortcodes/class-registration-shortcode.php:426
@@ -1733,32 +1734,32 @@ msgstr ""
 msgid "Eventin"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:774
+#: includes/admin/class-event-migration.php:776
 msgid "Organizer:"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:881
+#: includes/admin/class-event-migration.php:883
 msgid "Import"
 msgstr ""
 
 #. translators: 1: import action, 2: imported event count, 3: skipped event count.
-#: includes/admin/class-event-migration.php:887
+#: includes/admin/class-event-migration.php:889
 msgid "%1$s complete: %2$s event(s) %3$s, %4$s already-imported event(s) skipped."
 msgstr ""
 
-#: includes/admin/class-event-migration.php:890
+#: includes/admin/class-event-migration.php:892
 msgid "imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:890
+#: includes/admin/class-event-migration.php:892
 msgid "would be imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:896
+#: includes/admin/class-event-migration.php:898
 msgid "Events that would be imported"
 msgstr ""
 
-#: includes/admin/class-event-migration.php:903
+#: includes/admin/class-event-migration.php:905
 msgid "Skipped events"
 msgstr ""
 
@@ -2172,7 +2173,7 @@ msgstr ""
 
 #: includes/admin/class-registrations-list.php:390
 #: includes/admin/class-registrations-list.php:682
-#: includes/class-emails.php:403
+#: includes/class-emails.php:404
 #: includes/class-registrations.php:522
 #: includes/class-registrations.php:614
 #: includes/frontend/class-schema.php:145
@@ -2591,7 +2592,7 @@ msgid "Link to the registrations screen (admin emails)"
 msgstr ""
 
 #. translators: %d: number of attendees.
-#: includes/class-emails.php:413
+#: includes/class-emails.php:414
 msgid "%d attendee"
 msgid_plural "%d attendees"
 msgstr[0] ""
@@ -2892,7 +2893,7 @@ msgstr ""
 msgid "Refunded"
 msgstr ""
 
-#: includes/class-helpers.php:558
+#: includes/class-helpers.php:568
 msgid ""
 "You are registered for {event_name}.\n"
 "\n"

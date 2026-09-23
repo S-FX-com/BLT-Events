@@ -467,8 +467,10 @@ class BLT_Events_Event_Migration {
 			self::SOURCE_ID_META     => (string) $event->ID,
 			self::ORGANIZER_META     => wp_json_encode( $data['organizer'] ),
 		);
+		// update_post_meta() unslashes; slash first so the JSON values (and any
+		// backslash in a venue or address) are stored exactly as built.
 		foreach ( $meta as $key => $value ) {
-			update_post_meta( $new_id, $key, $value );
+			update_post_meta( $new_id, $key, wp_slash( $value ) );
 		}
 		if ( ! empty( $data['registration_cutoff_date'] ) ) {
 			update_post_meta( $new_id, '_blt_registration_cutoff_date', $data['registration_cutoff_date'] );

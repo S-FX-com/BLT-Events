@@ -93,6 +93,62 @@ class HelpersTest extends BLT_Events_TestCase {
 		$this->assertStringContainsString( 'LOCATION:Grand Hall\\, 1 Main St', $ics );
 	}
 
+	/**
+	 * Stub an online or hybrid event whose join link must stay private.
+	 */
+	private function online_event( string $type ): object {
+		$meta = array(
+			'_blt_event_date'       => '2026-05-14',
+			'_blt_event_start_time' => '14:00',
+			'_blt_event_end_time'   => '15:30',
+			'_blt_event_all_day'    => '0',
+			'_blt_event_end_date'   => '',
+			'_blt_event_type'       => $type,
+			'_blt_event_venue'      => 'Grand Hall',
+			'_blt_event_location'   => '1 Main St',
+			'_blt_event_online_url' => 'https://zoom.us/j/123456789?pwd=secret',
+		);
+
+		Functions\when( 'get_post_meta' )->alias( function ( $id, $key ) use ( $meta ) {
+			return $meta[ $key ] ?? '';
+		} );
+		Functions\when( 'get_permalink' )->justReturn( 'https://example.test/event/launch/' );
+		Functions\when( 'home_url' )->justReturn( 'https://example.test' );
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'get_option' )->alias( function ( $name, $default = false ) {
+			return $default;
+		} );
+
+		return (object) array( 'ID' => 7, 'post_title' => 'Launch', 'post_content' => 'Join us.' );
+	}
+
+	public function test_public_ics_leaves_out_the_join_link(): void {
+		$event = $this->online_event( 'online' );
+
+		$ics = BLT_Events_Helpers::generate_ics_content( $event );
+
+		$this->assertStringNotContainsString( 'zoom.us', $ics );
+		$this->assertStringContainsString( 'LOCATION:Online', $ics );
+	}
+
+	public function test_google_calendar_link_leaves_out_the_join_link(): void {
+		$online = BLT_Events_Helpers::get_google_calendar_url( $this->online_event( 'online' ) );
+		$hybrid = BLT_Events_Helpers::get_google_calendar_url( $this->online_event( 'hybrid' ) );
+
+		$this->assertStringNotContainsString( 'zoom.us', $online );
+		$this->assertStringNotContainsString( 'zoom.us', $hybrid );
+		$this->assertStringContainsString( 'location=Online', $online );
+		$this->assertStringContainsString( 'location=' . urlencode( 'Grand Hall, 1 Main St / Online' ), $hybrid );
+	}
+
+	public function test_registrant_ics_can_carry_the_join_link(): void {
+		$event = $this->online_event( 'hybrid' );
+
+		$ics = BLT_Events_Helpers::generate_ics_content( $event, true );
+
+		$this->assertStringContainsString( 'LOCATION:Grand Hall\\, 1 Main St / https://zoom.us/j/123456789?pwd=secret', $ics );
+	}
+
 	public function test_client_ip_prefers_cloudflare_header(): void {
 		$_SERVER['REMOTE_ADDR']           = '10.0.0.1';
 		$_SERVER['HTTP_CF_CONNECTING_IP'] = '203.0.113.9';

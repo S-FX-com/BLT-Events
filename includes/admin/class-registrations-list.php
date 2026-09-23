@@ -367,7 +367,7 @@ class BLT_Events_Registrations_List {
 
 		$event_type = get_post_meta( $event->ID, '_blt_event_type', true ) ?: 'in-person';
 		$capacity   = (int) get_post_meta( $event->ID, '_blt_capacity', true );
-		$venue      = BLT_Events_Helpers::get_event_location_string( $event->ID );
+		$venue      = BLT_Events_Helpers::get_event_location_string( $event->ID, true );
 
 		$type_labels = array(
 			'online'    => __( 'Online', 'blt-events' ),

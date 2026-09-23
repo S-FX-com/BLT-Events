@@ -31,6 +31,11 @@ All notable changes to BLT Events. Versions follow [Semantic Versioning](https:/
 - New templates `registration/summary.php` and `registration/member-login.php`; new filters `blt_events_registration_ticket_rows`, `blt_events_member_login_url`, `blt_events_registration_summary` and `blt_events_registration_help_email`.
 - The "Need help?" box in the checkout shows the Reply-To (or From) address from Settings > Emails, and is hidden when neither is set.
 
+### Fixed
+
+- **Ticket types, agenda, speakers, sponsors, event days and group discounts could be corrupted on save.** `update_post_meta()` strips backslashes from what it is given, so any value whose JSON contained one (a quote in a ticket name, an accented character, a line break in a description) was stored as broken JSON and read back as empty: `Café "VIP"` lost its tickets. JSON meta is now slashed before saving (new `BLT_Events_Helpers::update_json_meta()`), and so are the meeting room details and the values copied by the event migration. Events already saved with broken JSON can't be repaired automatically: re-enter the affected ticket types, agenda, speakers or sponsors and save the event again.
+- **The online join link was public.** The "Add to Google Calendar" link, the public .ics download (event page and REST route), the `blt_event` REST summary and the calendar shortcode put the join URL in the event location, so anyone could read it. They now say "Online" (online events) or the venue and address followed by "Online" (hybrid events). The link still reaches registrants: the confirmation email's `{event_location}` and attached .ics include it for confirmed registrations only, the same rule as `{event_online_url}`, and the admin registrations dashboard still shows it. `BLT_Events_Helpers::get_event_location_string()`, `get_calendar_invite_description()` and `generate_ics_content()` take a new `$include_online_url` argument (default `false`), and `blt_events_ics_content` receives it as a third parameter.
+
 ## 2.4.0
 
 ### Fixed

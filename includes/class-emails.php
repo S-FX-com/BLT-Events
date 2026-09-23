@@ -236,7 +236,7 @@ class BLT_Events_Emails {
 		$attachments = array();
 		$ics_path    = '';
 		if ( ! empty( $def['attach_ics'] ) && get_option( 'blt_events_calendar_invite_enabled', '1' ) === '1' ) {
-			$ics_path = self::write_ics( $event );
+			$ics_path = self::write_ics( $event, 'confirmed' === $reg->status );
 			if ( $ics_path ) {
 				$attachments[] = $ics_path;
 			}
@@ -364,7 +364,8 @@ class BLT_Events_Emails {
 			'{event_name}'          => $event->post_title,
 			'{event_date}'          => BLT_Events_Helpers::event_date_label( $event->ID ),
 			'{event_time}'          => BLT_Events_Helpers::event_time_label( $event->ID ),
-			'{event_location}'      => BLT_Events_Helpers::get_event_location_string( $event->ID ),
+			// The join link only for confirmed registrations, like {event_online_url}.
+			'{event_location}'      => BLT_Events_Helpers::get_event_location_string( $event->ID, '' !== $online_url ),
 			'{event_online_url}'    => $online_url,
 			'{event_url}'           => get_permalink( $event->ID ),
 			'{tickets}'             => self::tickets_summary( $reg ),
@@ -485,10 +486,12 @@ class BLT_Events_Emails {
 	/**
 	 * Write the event's .ics to a temp file for attaching.
 	 *
+	 * @param WP_Post $event              The event.
+	 * @param bool    $include_online_url Include the join link (confirmed registrations only).
 	 * @return string Path, or '' on failure.
 	 */
-	private static function write_ics( $event ) {
-		$content = BLT_Events_Helpers::generate_ics_content( $event );
+	private static function write_ics( $event, $include_online_url = false ) {
+		$content = BLT_Events_Helpers::generate_ics_content( $event, $include_online_url );
 		$path    = get_temp_dir() . 'blt-event-' . $event->ID . '-' . wp_generate_password( 8, false ) . '.ics';
 
 		if ( file_put_contents( $path, $content ) === false ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents

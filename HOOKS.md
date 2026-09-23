@@ -97,7 +97,7 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_archive_shortcode_atts` | filter | `$atts` | Shortcode attributes of the classic archive template |
 | `blt_events_archive_before` / `_after` | action | | Around the archive listing |
 | `blt_events_events_page_content` | filter | `$content` | Content of the auto-created Events page |
-| `blt_events_ics_content` | filter | `$ics, $event` | Generated .ics text |
+| `blt_events_ics_content` | filter | `$ics, $event, $include_online_url` | Generated .ics text (`$include_online_url` is true only for a confirmed registrant's copy) |
 | `blt_events_google_calendar_url` | filter | `$url, $event` | Google Calendar link |
 
 ## Emails and reminders

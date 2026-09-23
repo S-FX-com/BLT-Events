@@ -1181,7 +1181,7 @@ class BLT_Events_Event_Metabox {
 			$last  = $days[ count( $days ) - 1 ];
 
 			update_post_meta( $post_id, $prefix . 'multi_day', '1' );
-			update_post_meta( $post_id, $prefix . 'event_days', wp_json_encode( $days ) );
+			BLT_Events_Helpers::update_json_meta( $post_id, $prefix . 'event_days', $days );
 			update_post_meta( $post_id, $prefix . 'event_date', $first['date'] );
 			update_post_meta( $post_id, $prefix . 'event_end_date', $last['date'] !== $first['date'] ? $last['date'] : '' );
 			update_post_meta( $post_id, $prefix . 'event_start_time', $first['start'] );
@@ -1277,7 +1277,7 @@ class BLT_Events_Event_Metabox {
 				);
 			}
 		}
-		update_post_meta( $post_id, $prefix . 'ticket_types', wp_json_encode( $ticket_types ) );
+		BLT_Events_Helpers::update_json_meta( $post_id, $prefix . 'ticket_types', $ticket_types );
 
 		// Agenda / schedule
 		update_post_meta( $post_id, $prefix . 'agenda_enabled', isset( $_POST['agenda_enabled'] ) ? '1' : '0' );
@@ -1303,7 +1303,7 @@ class BLT_Events_Event_Metabox {
 				);
 			}
 		}
-		update_post_meta( $post_id, $prefix . 'agenda', wp_json_encode( $agenda ) );
+		BLT_Events_Helpers::update_json_meta( $post_id, $prefix . 'agenda', $agenda );
 
 		// Presenters
 		update_post_meta( $post_id, $prefix . 'presenters_enabled', isset( $_POST['presenters_enabled'] ) ? '1' : '0' );
@@ -1330,7 +1330,7 @@ class BLT_Events_Event_Metabox {
 					'image_id' => absint( $row['image_id'] ?? 0 ),
 				);
 			}
-			update_post_meta( $post_id, $prefix . 'presenters', wp_json_encode( $presenters ) );
+			BLT_Events_Helpers::update_json_meta( $post_id, $prefix . 'presenters', $presenters );
 		}
 
 		// Sponsors. Only when the box was on the form, so a screen without it
@@ -1355,9 +1355,7 @@ class BLT_Events_Event_Metabox {
 				}
 			}
 
-			// update_post_meta() unslashes its value, which would strip the
-			// JSON's escapes; slash it first so it round-trips intact.
-			update_post_meta( $post_id, $prefix . 'sponsors', wp_slash( wp_json_encode( array_slice( $sponsors, 0, 60 ) ) ) );
+			BLT_Events_Helpers::update_json_meta( $post_id, $prefix . 'sponsors', array_slice( $sponsors, 0, 60 ) );
 		}
 
 		// Registration config
@@ -1400,7 +1398,7 @@ class BLT_Events_Event_Metabox {
 			'type'          => $gd_type,
 			'amount'        => $gd_amount,
 		);
-		update_post_meta( $post_id, $prefix . 'group_discount', wp_json_encode( $group_discount ) );
+		BLT_Events_Helpers::update_json_meta( $post_id, $prefix . 'group_discount', $group_discount );
 
 		// Additional options
 		update_post_meta( $post_id, $prefix . 'featured', isset( $_POST['event_featured'] ) ? '1' : '0' );

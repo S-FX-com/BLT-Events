@@ -500,13 +500,19 @@ class BLT_Events_Helpers {
 	 * ---------------------------------------------------------------- */
 
 	/**
-	 * Human-readable location for an event: the physical venue/address,
-	 * the online join link, or both for hybrid events.
+	 * Human-readable location for an event: the venue/address, "Online", or
+	 * both for hybrid events.
 	 *
-	 * @param int $event_id The event post ID.
+	 * The online join link is gated (confirmed registrants only, see
+	 * blt_events_can_see_online_url), so it is only put in the string when the
+	 * caller asks for it. Everything public (the Google Calendar link, the
+	 * .ics download, REST, listings) uses the default.
+	 *
+	 * @param int  $event_id           The event post ID.
+	 * @param bool $include_online_url Put the join link in place of "Online".
 	 * @return string
 	 */
-	public static function get_event_location_string( $event_id ) {
+	public static function get_event_location_string( $event_id, $include_online_url = false ) {
 		$venue      = get_post_meta( $event_id, '_blt_event_venue', true );
 		$location   = get_post_meta( $event_id, '_blt_event_location', true );
 		$online_url = get_post_meta( $event_id, '_blt_event_online_url', true );
@@ -516,8 +522,12 @@ class BLT_Events_Helpers {
 		if ( in_array( $event_type, array( 'in-person', 'hybrid' ), true ) ) {
 			$location_parts[] = trim( $venue . ( $venue && $location ? ', ' : '' ) . $location );
 		}
-		if ( in_array( $event_type, array( 'online', 'hybrid' ), true ) && $online_url ) {
-			$location_parts[] = $online_url;
+		if ( in_array( $event_type, array( 'online', 'hybrid' ), true ) ) {
+			if ( $include_online_url && $online_url ) {
+				$location_parts[] = $online_url;
+			} elseif ( 'hybrid' === $event_type ) {
+				$location_parts[] = __( 'Online', 'blt-events' );
+			}
 		}
 
 		$location_string = implode( ' / ', array_filter( $location_parts ) );
@@ -565,10 +575,11 @@ class BLT_Events_Helpers {
 	 * Build the calendar invite description for an event from the
 	 * customizable template, falling back to basic event details.
 	 *
-	 * @param WP_Post $event The event post object.
+	 * @param WP_Post $event              The event post object.
+	 * @param bool    $include_online_url Include the join link in {event_location}.
 	 * @return string Plain-text description for the ICS DESCRIPTION field.
 	 */
-	public static function get_calendar_invite_description( $event ) {
+	public static function get_calendar_invite_description( $event, $include_online_url = false ) {
 		$template = get_option( 'blt_events_calendar_invite_description', '' );
 		if ( trim( (string) $template ) === '' ) {
 			$template = self::default_calendar_invite_template();
@@ -578,7 +589,7 @@ class BLT_Events_Helpers {
 			'{event_name}'     => $event->post_title,
 			'{event_date}'     => self::event_date_label( $event->ID ),
 			'{event_time}'     => self::event_time_label( $event->ID ),
-			'{event_location}' => self::get_event_location_string( $event->ID ),
+			'{event_location}' => self::get_event_location_string( $event->ID, $include_online_url ),
 			'{event_url}'      => get_permalink( $event->ID ),
 		);
 
@@ -592,16 +603,20 @@ class BLT_Events_Helpers {
 	 * site timezone, so a 14:00 event in New York lands at 14:00 New York in
 	 * every calendar client. All-day events use DATE values.
 	 *
-	 * @param WP_Post $event The event post object.
+	 * The public download never carries the online join link; confirmation
+	 * emails to confirmed registrants pass $include_online_url.
+	 *
+	 * @param WP_Post $event              The event post object.
+	 * @param bool    $include_online_url Include the join link in LOCATION and the description.
 	 * @return string The iCalendar file content.
 	 */
-	public static function generate_ics_content( $event ) {
+	public static function generate_ics_content( $event, $include_online_url = false ) {
 		$event_date     = get_post_meta( $event->ID, '_blt_event_date', true );
 		$event_end_date = get_post_meta( $event->ID, '_blt_event_end_date', true ) ?: $event_date;
 		$all_day        = self::event_is_all_day( $event->ID );
 
 		$summary     = self::escape_ical_text( $event->post_title );
-		$description = self::escape_ical_text( self::get_calendar_invite_description( $event ) );
+		$description = self::escape_ical_text( self::get_calendar_invite_description( $event, $include_online_url ) );
 		$url         = get_permalink( $event->ID );
 		$uid         = $event->ID . '@' . wp_parse_url( home_url(), PHP_URL_HOST );
 		$now         = gmdate( 'Ymd\THis\Z' );
@@ -640,7 +655,7 @@ class BLT_Events_Helpers {
 		$ics .= "SUMMARY:{$summary}\r\n";
 		$ics .= "DESCRIPTION:{$description}\r\n";
 
-		$ics_location = self::escape_ical_text( self::get_event_location_string( $event->ID ) );
+		$ics_location = self::escape_ical_text( self::get_event_location_string( $event->ID, $include_online_url ) );
 		if ( $ics_location !== '' ) {
 			$ics .= "LOCATION:{$ics_location}\r\n";
 		}
@@ -652,10 +667,11 @@ class BLT_Events_Helpers {
 		/**
 		 * Filter the generated .ics content.
 		 *
-		 * @param string  $ics   The iCalendar text.
-		 * @param WP_Post $event The event.
+		 * @param string  $ics                The iCalendar text.
+		 * @param WP_Post $event              The event.
+		 * @param bool    $include_online_url Whether this copy may carry the join link (a confirmed registrant's email).
 		 */
-		return apply_filters( 'blt_events_ics_content', $ics, $event );
+		return apply_filters( 'blt_events_ics_content', $ics, $event, $include_online_url );
 	}
 
 	/**
@@ -727,6 +743,23 @@ class BLT_Events_Helpers {
 	/* ------------------------------------------------------------------
 	 * Tickets and registration windows
 	 * ---------------------------------------------------------------- */
+
+	/**
+	 * Store a value as JSON post meta.
+	 *
+	 * The value is slashed first because update_post_meta() unslashes its
+	 * input, which strips the backslashes JSON uses to escape quotes,
+	 * backslashes, non-ASCII characters and line breaks: `Café "VIP"` would
+	 * come back as undecodable `Cafu00e9 "VIP"`.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key     Meta key.
+	 * @param mixed  $value   Value to encode.
+	 * @return int|bool Result of update_post_meta().
+	 */
+	public static function update_json_meta( $post_id, $key, $value ) {
+		return update_post_meta( $post_id, $key, wp_slash( wp_json_encode( $value ) ) );
+	}
 
 	/**
 	 * Get an event's ticket types as an array (stored as JSON post meta).
