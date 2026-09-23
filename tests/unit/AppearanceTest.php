@@ -42,6 +42,30 @@ class AppearanceTest extends BLT_Events_TestCase {
 		$this->assertStringNotContainsString( 'url(', $css );
 	}
 
+	public function test_corner_radius_derives_the_whole_scale(): void {
+		Functions\when( 'get_option' )->alias( function ( $name, $default = false ) {
+			return 'blt_events_style_radius' === $name ? '10' : $default;
+		} );
+
+		$css = BLT_Events_Appearance::build_override_css();
+
+		$this->assertStringContainsString( '--blt-e-radius-xs: 4px;', $css );
+		$this->assertStringContainsString( '--blt-e-radius-sm: 6px;', $css );
+		$this->assertStringContainsString( '--blt-e-radius: 10px;', $css );
+		$this->assertStringContainsString( '--blt-e-radius-lg: 12px;', $css );
+	}
+
+	public function test_zero_corner_radius_squares_every_step(): void {
+		Functions\when( 'get_option' )->alias( function ( $name, $default = false ) {
+			return 'blt_events_style_radius' === $name ? '0' : $default;
+		} );
+
+		$css = BLT_Events_Appearance::build_override_css();
+
+		$this->assertStringContainsString( '--blt-e-radius-xs: 0;', $css );
+		$this->assertStringContainsString( '--blt-e-radius-lg: 0;', $css );
+	}
+
 	public function test_mode_falls_back_to_full(): void {
 		Functions\when( 'get_option' )->alias( function ( $name, $default = false ) {
 			return 'blt_events_style_mode' === $name ? 'nonsense' : $default;

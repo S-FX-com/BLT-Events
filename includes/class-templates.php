@@ -156,7 +156,7 @@ class BLT_Events_Templates {
 	 * A small decorative line icon (24px grid, stroked in currentColor) for
 	 * templates. The markup is a fixed string, safe to echo unescaped.
 	 *
-	 * @param string $name arrow-right | arrow-left | calendar | clock | pin | lock | trash | edit | help | check | image.
+	 * @param string $name arrow-right | arrow-left | calendar | clock | pin | lock | trash | edit | help | check | image | chevron | video | tag.
 	 * @return string SVG markup, or '' for an unknown name.
 	 */
 	public static function icon( $name ) {
@@ -172,6 +172,9 @@ class BLT_Events_Templates {
 			'help'        => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>',
 			'check'       => '<path d="M5 12.5l4.5 4.5L19 7"/>',
 			'image'       => '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+			'chevron'     => '<path d="M6 9l6 6 6-6"/>',
+			'video'       => '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10.5l5-3v9l-5-3"/>',
+			'tag'         => '<path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
 		);
 
 		if ( ! isset( $paths[ $name ] ) ) {

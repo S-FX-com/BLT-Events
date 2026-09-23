@@ -45,6 +45,7 @@ class BLT_Events_Event_Metabox {
 			'blt_event_tickets',
 			'blt_event_agenda',
 			'blt_event_presenters',
+			'blt_event_sponsors',
 			'blt_event_registration_config',
 			'blt_event_options',
 			'blt_event_registrations_summary',
@@ -119,6 +120,15 @@ class BLT_Events_Event_Metabox {
 			'blt_event_presenters',
 			__( 'Presenters', 'blt-events' ),
 			array( __CLASS__, 'render_presenters_box' ),
+			'event',
+			'normal',
+			'default'
+		);
+
+		add_meta_box(
+			'blt_event_sponsors',
+			__( 'Sponsors', 'blt-events' ),
+			array( __CLASS__, 'render_sponsors_box' ),
 			'event',
 			'normal',
 			'default'
@@ -812,6 +822,69 @@ class BLT_Events_Event_Metabox {
 	}
 
 	/* ----------------------------------------------------------------
+	 * Sponsors
+	 * ---------------------------------------------------------------- */
+
+	public static function render_sponsors_box( $post ) {
+		$enabled = get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'sponsors_enabled', true ) === '1';
+
+		$raw  = get_post_meta( $post->ID, BLT_EVENTS_PREFIX . 'sponsors', true );
+		$rows = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+		$rows = is_array( $rows ) ? array_values( array_filter( $rows, 'is_array' ) ) : array();
+		?>
+		<div class="blt-editor blt-sponsors">
+			<?php // Tells save_meta() this box was on the form, so an empty list is a real "no sponsors". ?>
+			<input type="hidden" name="blt_sponsors_box" value="1" />
+			<?php
+			self::render_toggle_row( array(
+				'name'    => 'sponsors_enabled',
+				'id'      => 'blt-sponsors-enabled',
+				'checked' => $enabled,
+				'title'   => __( 'Show sponsors on the event page', 'blt-events' ),
+				'desc'    => __( 'A grid of sponsor logos below the agenda.', 'blt-events' ),
+			) );
+			?>
+
+			<div class="blt-sponsors-panel" id="blt-sponsors-panel" <?php echo $enabled ? '' : 'style="display:none;"'; ?>>
+				<div class="blt-sponsor-rows" id="blt-sponsor-rows" data-next-index="<?php echo (int) count( $rows ); ?>">
+					<?php foreach ( $rows as $i => $row ) : ?>
+						<?php self::render_sponsor_row( $i, $row ); ?>
+					<?php endforeach; ?>
+				</div>
+				<p class="blt-sponsors-empty" id="blt-sponsors-empty" <?php echo empty( $rows ) ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'No sponsors added yet.', 'blt-events' ); ?></p>
+				<button type="button" class="blt-btn-dashed" id="blt-add-sponsors">+ <?php esc_html_e( 'Add Sponsor Logos', 'blt-events' ); ?></button>
+				<p class="blt-help"><?php esc_html_e( 'Logos show as square tiles in this order; drag a logo to reorder. With a link, the logo opens the sponsor\'s site in a new tab; without one, it opens larger in a lightbox.', 'blt-events' ); ?></p>
+
+				<script type="text/html" id="tmpl-blt-sponsor">
+					<?php self::render_sponsor_row( '__i__', array() ); ?>
+				</script>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * One sponsor row: logo preview, the attachment ID and an optional link.
+	 * Also the JS template for new rows, with $i = '__i__'.
+	 */
+	private static function render_sponsor_row( $i, $row ) {
+		$image_id  = absint( $row['image_id'] ?? 0 );
+		$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
+		?>
+		<div class="blt-sponsor-row">
+			<div class="blt-sponsor-thumb" title="<?php esc_attr_e( 'Drag to reorder', 'blt-events' ); ?>">
+				<?php if ( $image_url ) : ?>
+					<img src="<?php echo esc_url( $image_url ); ?>" alt="" />
+				<?php endif; ?>
+			</div>
+			<input type="hidden" class="blt-sponsor-image-id" name="sponsors[<?php echo esc_attr( $i ); ?>][image_id]" value="<?php echo esc_attr( $image_id ?: '' ); ?>" />
+			<input type="url" class="blt-input" name="sponsors[<?php echo esc_attr( $i ); ?>][url]" value="<?php echo esc_attr( $row['url'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Sponsor link (optional), https://…', 'blt-events' ); ?>" aria-label="<?php esc_attr_e( 'Sponsor link', 'blt-events' ); ?>" />
+			<button type="button" class="blt-sponsor-remove dashicons dashicons-trash" aria-label="<?php esc_attr_e( 'Remove sponsor', 'blt-events' ); ?>"></button>
+		</div>
+		<?php
+	}
+
+	/* ----------------------------------------------------------------
 	 * Registration Configuration
 	 * ---------------------------------------------------------------- */
 
@@ -1257,6 +1330,33 @@ class BLT_Events_Event_Metabox {
 				);
 			}
 			update_post_meta( $post_id, $prefix . 'presenters', wp_json_encode( $presenters ) );
+		}
+
+		// Sponsors. Only when the box was on the form, so a screen without it
+		// can never wipe the list.
+		if ( isset( $_POST['blt_sponsors_box'] ) ) {
+			update_post_meta( $post_id, $prefix . 'sponsors_enabled', isset( $_POST['sponsors_enabled'] ) ? '1' : '0' );
+
+			$sponsors = array();
+			if ( isset( $_POST['sponsors'] ) && is_array( $_POST['sponsors'] ) ) {
+				foreach ( wp_unslash( $_POST['sponsors'] ) as $row ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized per field.
+					if ( ! is_array( $row ) ) {
+						continue;
+					}
+					$image_id = absint( $row['image_id'] ?? 0 );
+					if ( ! $image_id || ! wp_attachment_is_image( $image_id ) ) {
+						continue;
+					}
+					$sponsors[] = array(
+						'image_id' => $image_id,
+						'url'      => esc_url_raw( trim( (string) ( $row['url'] ?? '' ) ) ),
+					);
+				}
+			}
+
+			// update_post_meta() unslashes its value, which would strip the
+			// JSON's escapes; slash it first so it round-trips intact.
+			update_post_meta( $post_id, $prefix . 'sponsors', wp_slash( wp_json_encode( array_slice( $sponsors, 0, 60 ) ) ) );
 		}
 
 		// Registration config

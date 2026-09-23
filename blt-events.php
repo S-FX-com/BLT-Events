@@ -374,7 +374,7 @@ function blt_events_enqueue_admin_assets( $hook ) {
 
 	// The Add/Edit Event screen gets its own card-based editor UI.
 	if ( $screen && 'post' === $screen->base && 'event' === $post_type ) {
-		// Presenter repeater photos use the WordPress media library.
+		// Presenter photos and sponsor logos use the WordPress media library.
 		wp_enqueue_media();
 
 		wp_enqueue_style(
@@ -387,7 +387,8 @@ function blt_events_enqueue_admin_assets( $hook ) {
 		wp_enqueue_script(
 			'blt-events-event-editor',
 			BLT_EVENTS_PLUGIN_URL . 'assets/js/event-editor.js',
-			array( 'jquery' ),
+			// jquery-ui-sortable reorders sponsor logos by dragging.
+			array( 'jquery', 'jquery-ui-sortable' ),
 			BLT_EVENTS_VERSION,
 			true
 		);
@@ -401,6 +402,8 @@ function blt_events_enqueue_admin_assets( $hook ) {
 			'noEndNotice'    => __( 'End date and end time are hidden because no end time is set.', 'blt-events' ),
 			'mapPlaceholder' => __( 'Map preview after address is entered', 'blt-events' ),
 			'mapTitle'       => __( 'Venue map preview', 'blt-events' ),
+			'sponsorTitle'   => __( 'Select sponsor logos', 'blt-events' ),
+			'sponsorButton'  => __( 'Add to sponsors', 'blt-events' ),
 		) );
 	}
 }

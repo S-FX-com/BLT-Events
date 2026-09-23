@@ -71,8 +71,10 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_cta_label` | filter | `$label, $event_id, $range` | CTA button text |
 | `blt_events_can_see_online_url` | filter | `$can_see, $event_id` | Whether the visitor may see the join link |
 | `blt_events_map_src` | filter | `$src, $event_id, $provider` | Map iframe URL |
-| `blt_events_single_before_main` / `_after_main` / `_before_sidebar` / `blt_events_single_sidebar` | action | `$event_id` | Insertion points on the event page |
-| `blt_events_presenters` | filter | `$presenters, $event_id` | Presenters shown on the event page |
+| `blt_events_single_before_main` / `_after_main` | action | `$event_id` | Top / bottom of the main column on the event page |
+| `blt_events_single_before_sidebar` / `blt_events_single_sidebar` | action | `$event_id` | Inside the event card: before the date / above the register button (the speakers render on `blt_events_single_sidebar`) |
+| `blt_events_presenters` | filter | `$presenters, $event_id` | Speakers (presenters) shown in the event card |
+| `blt_events_sponsors` | filter | `$sponsors, $event_id` | Sponsor logos on the event page (`id`, `url`, `full`, `alt`); runs even when the section is off |
 | `blt_events_calendar_query_args` | filter | `$args, $view, $atts` | `WP_Query` args of a calendar view |
 | `blt_events_calendar_views` | filter | `$views` | View switcher labels |
 | `blt_events_calendar_html` | filter | `$html, $view, $atts` | Rendered calendar/listing |

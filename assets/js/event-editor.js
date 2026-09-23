@@ -595,6 +595,66 @@ jQuery(document).ready(function ($) {
 	}
 
 	/* ----------------------------------------------------------------
+	 * Sponsors: logos picked from the media library, in drag order
+	 * ---------------------------------------------------------------- */
+	$("#blt-sponsors-enabled").on("change", function () {
+		$("#blt-sponsors-panel").toggle(this.checked);
+	});
+
+	var $sponsorRows = $("#blt-sponsor-rows");
+	var sponsorIndex = parseInt($sponsorRows.attr("data-next-index"), 10) || 0;
+
+	var refreshSponsorsEmpty = function () {
+		$("#blt-sponsors-empty").toggle(!$sponsorRows.children(".blt-sponsor-row").length);
+	};
+
+	$("#blt-add-sponsors").on("click", function () {
+		if (typeof wp === "undefined" || !wp.media) {
+			return;
+		}
+
+		var frame = wp.media({
+			title: i18n.sponsorTitle || "Select sponsor logos",
+			button: { text: i18n.sponsorButton || "Add to sponsors" },
+			multiple: "add",
+			library: { type: "image" },
+		});
+
+		frame.on("select", function () {
+			var tmpl = $("#tmpl-blt-sponsor").html();
+			if (!tmpl) {
+				return;
+			}
+			frame.state().get("selection").each(function (model) {
+				var att = model.toJSON();
+				var url = att.sizes && att.sizes.thumbnail ? att.sizes.thumbnail.url : att.url;
+				var $row = $(tmpl.replace(/__i__/g, sponsorIndex++));
+				$row.find(".blt-sponsor-image-id").val(att.id);
+				$row.find(".blt-sponsor-thumb").empty().append($("<img>", { src: url, alt: "" }));
+				$sponsorRows.append($row);
+			});
+			refreshSponsorsEmpty();
+		});
+
+		frame.open();
+	});
+
+	$sponsorRows.on("click", ".blt-sponsor-remove", function () {
+		$(this).closest(".blt-sponsor-row").remove();
+		refreshSponsorsEmpty();
+	});
+
+	// Posted in DOM order, so dragging a row is all reordering takes.
+	if ($.fn.sortable && $sponsorRows.length) {
+		$sponsorRows.sortable({
+			items: "> .blt-sponsor-row",
+			handle: ".blt-sponsor-thumb",
+			axis: "y",
+			tolerance: "pointer",
+		});
+	}
+
+	/* ----------------------------------------------------------------
 	 * Registration configuration
 	 * ---------------------------------------------------------------- */
 	$("#blt-registration-open").on("change", function () {

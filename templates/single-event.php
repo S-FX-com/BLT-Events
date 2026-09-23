@@ -2,6 +2,12 @@
 /**
  * Single event layout, rendered in place of the event's content.
  *
+ * Hero: the featured image (16:9) with a "Back to events" button over it.
+ * Body: a 2:1 grid. The main column holds the category chips, title,
+ * description, agenda, sponsors, location map and registration; the event
+ * card beside it (sticky on wide screens, lifted over the hero image) holds
+ * the date, the event facts, the speakers and the register button.
+ *
  * Override: your-theme/blt-events/single-event.php
  * The parts under templates/single/ can be overridden one by one instead.
  *
@@ -15,6 +21,7 @@
  * @var bool    $is_physical
  * @var bool    $show_title
  * @var bool    $show_featured
+ * @var bool    $has_image          The featured image is shown.
  * @var bool    $show_back
  * @var bool    $show_calendar
  * @var string  $featured_image     <img> HTML.
@@ -23,9 +30,12 @@
  * @var string  $date_label
  * @var string  $time_label
  * @var string  $day
+ * @var string  $event_date         Start date, Y-m-d.
+ * @var string  $excerpt            A stored excerpt (events no longer have an Excerpt box), or ''.
  * @var string  $ics_url
  * @var string  $google_url
  * @var array   $agenda             label, start, end, time
+ * @var array   $sponsors           id, url, full, alt
  * @var bool    $has_shortcode      The description already contains the form.
  * @var bool    $registration_open
  * @var bool    $has_paid
@@ -43,13 +53,18 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+$has_image = ! empty( $has_image ) || ( $show_featured && $featured_image );
+$has_hero  = $has_image || ( $show_back && $events_url );
 ?>
-<div class="blt-event blt-event--<?php echo esc_attr( $event_type ); ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
-	<?php if ( ( $show_featured && $featured_image ) || $show_back ) : ?>
-		<div class="blt-event__hero<?php echo $show_featured && $featured_image ? '' : ' blt-event__hero--plain'; ?>">
+<div class="blt-event blt-event--<?php echo esc_attr( $event_type ); ?> <?php echo $has_image ? 'blt-event--has-image' : 'blt-event--no-image'; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
+	<?php if ( $has_hero ) : ?>
+		<div class="blt-event__hero<?php echo $has_image ? '' : ' blt-event__hero--plain'; ?>">
 			<?php BLT_Events_Templates::include_template( 'single/back-link.php', $args ); ?>
-			<?php if ( $show_featured && $featured_image ) : ?>
-			<?php echo $featured_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- core image HTML. ?>
+			<?php if ( $has_image ) : ?>
+				<figure class="blt-event__hero-media">
+					<?php echo $featured_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- core image HTML. ?>
+				</figure>
 			<?php endif; ?>
 		</div>
 	<?php endif; ?>
@@ -68,6 +83,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 			BLT_Events_Templates::include_template( 'single/title.php', $args );
 			BLT_Events_Templates::include_template( 'single/description.php', $args );
 			BLT_Events_Templates::include_template( 'single/agenda.php', $args );
+			BLT_Events_Templates::include_template( 'single/sponsors.php', $args );
+			BLT_Events_Templates::include_template( 'single/address.php', $args );
 			BLT_Events_Templates::include_template( 'single/registration.php', $args );
 
 			/**
@@ -79,27 +96,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 			?>
 		</div>
 
-		<aside class="blt-event__sidebar">
-			<?php
-			/**
-			 * Fires at the top of the sidebar, before the date box.
-			 *
-			 * @param int $event_id
-			 */
-			do_action( 'blt_events_single_before_sidebar', $event_id );
+		<aside class="blt-event__sidebar" aria-labelledby="blt-event-card-title-<?php echo esc_attr( $event_id ); ?>">
+			<div class="blt-event__card blt-event__summary">
+				<h2 class="blt-event__sr-only" id="blt-event-card-title-<?php echo esc_attr( $event_id ); ?>"><?php esc_html_e( 'Event details', 'blt-events' ); ?></h2>
+				<?php
+				/**
+				 * Fires at the top of the event card, before the date.
+				 *
+				 * @param int $event_id
+				 */
+				do_action( 'blt_events_single_before_sidebar', $event_id );
 
-			BLT_Events_Templates::include_template( 'single/datebox.php', $args );
-			BLT_Events_Templates::include_template( 'single/cta.php', $args );
-			BLT_Events_Templates::include_template( 'single/address.php', $args );
-			BLT_Events_Templates::include_template( 'single/virtual.php', $args );
+				BLT_Events_Templates::include_template( 'single/datebox.php', $args );
+				BLT_Events_Templates::include_template( 'single/excerpt.php', $args );
+				BLT_Events_Templates::include_template( 'single/info.php', $args );
 
-			/**
-			 * Extra sidebar content — presenters, sponsors, etc.
-			 *
-			 * @param int $event_id
-			 */
-			do_action( 'blt_events_single_sidebar', $event_id );
-			?>
+				/**
+				 * Extra content inside the event card, above the register
+				 * button. The speakers (presenters) render here.
+				 *
+				 * @param int $event_id
+				 */
+				do_action( 'blt_events_single_sidebar', $event_id );
+
+				BLT_Events_Templates::include_template( 'single/cta.php', $args );
+				?>
+			</div>
 		</aside>
 	</div>
 </div>

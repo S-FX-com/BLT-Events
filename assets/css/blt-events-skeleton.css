@@ -51,6 +51,7 @@
 	--blt-e-warning: var(--warning, #92400e);
 
 	/* --- Shape --- */
+	--blt-e-radius-xs: var(--radius-xs, 4px);
 	--blt-e-radius-sm: var(--radius-s, var(--radius-sm, var(--radius, 6px)));
 	--blt-e-radius: var(--radius-m, var(--radius, 10px));
 	--blt-e-radius-lg: var(--radius-l, var(--radius-lg, var(--radius, 12px)));
@@ -66,6 +67,36 @@
 	--blt-e-font: var(--body-font, var(--font-body, inherit));
 	--blt-e-font-heading: var(--heading-font, var(--font-heading, var(--body-font, inherit)));
 
+	/* --- Spacing and type scale (single event page) --- */
+	--blt-e-space-xs: var(--space-xs, clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem));
+	--blt-e-space-s: var(--space-s, clamp(1rem, 0.9rem + 0.4vw, 1.25rem));
+	--blt-e-space-m: var(--space-m, clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem));
+	--blt-e-content-gap: var(--content-gap, var(--blt-e-space-m));
+	--blt-e-grid-gap: var(--grid-gap, var(--blt-e-space-m));
+	--blt-e-section-space-m: var(--section-space-m, clamp(3.75rem, 3.2rem + 2.4vw, 5rem));
+	--blt-e-text-s: var(--text-s, clamp(0.833rem, 0.8rem + 0.15vw, 0.9rem));
+	--blt-e-text-m: var(--text-m, clamp(1rem, 0.93rem + 0.3vw, 1.125rem));
+	--blt-e-text-l: var(--text-l, clamp(1.2rem, 1.1rem + 0.45vw, 1.406rem));
+
+	/* --- Neutrals (single event page) --- */
+	--blt-e-neutral: var(--neutral, var(--blt-e-fg-strong));
+	--blt-e-neutral-light: var(--neutral-light, var(--blt-e-border));
+	--blt-e-neutral-ultra-light: var(--neutral-ultra-light, var(--blt-e-surface-sunken));
+	--blt-e-neutral-semi-light: var(--neutral-semi-light, var(--blt-e-fg-muted));
+	--blt-e-divider: var(--black-trans-20, rgba(0, 0, 0, 0.2));
+	--blt-e-chip-bg: var(--neutral-trans-10, rgba(17, 24, 39, 0.1));
+	--blt-e-chip-bg-hover: var(--neutral-trans-20, rgba(17, 24, 39, 0.2));
+
 	/* --- Layout --- */
 	--blt-e-content-width: var(--content-width, var(--width-content, 960px));
+}
+
+/* Where color-mix() is supported, tint the chips from the framework's own
+   neutral instead of the baked grey (ACSS transparencies still win). */
+@supports (color: color-mix(in oklch, red 10%, transparent)) {
+	:root {
+		--blt-e-chip-bg: var(--neutral-trans-10, color-mix(in oklch, var(--blt-e-neutral) 10%, transparent));
+		--blt-e-chip-bg-hover: var(--neutral-trans-20, color-mix(in oklch, var(--blt-e-neutral) 20%, transparent));
+		--blt-e-divider: var(--black-trans-20, color-mix(in oklch, var(--black, #000) 20%, transparent));
+	}
 }

@@ -1,10 +1,10 @@
 <?php
 /**
- * Event category chips.
+ * Event category chips above the title.
  *
  * Override: your-theme/blt-events/single/categories.php
  *
- * @var WP_Term[] $categories
+ * @var array $categories WP_Term[]
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,8 +15,10 @@ if ( empty( $categories ) ) {
 	return;
 }
 ?>
-<div class="blt-event__categories">
+<ul class="blt-event__categories" role="list">
 	<?php foreach ( $categories as $term ) : ?>
-		<a class="blt-event__category" href="<?php echo esc_url( (string) get_term_link( $term ) ); ?>"><?php echo esc_html( $term->name ); ?></a>
+		<li class="blt-event__category-item">
+			<a class="blt-event__category" href="<?php echo esc_url( (string) get_term_link( $term ) ); ?>"><?php echo esc_html( $term->name ); ?></a>
+		</li>
 	<?php endforeach; ?>
-</div>
+</ul>
