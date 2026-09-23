@@ -2,6 +2,25 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Changed
+
+- **Event editor layout.** The main column now reads Event Details, Event Description, Event Type, Registration Configuration, Ticket Types, then everything else. The content editor sits in its own **Event Description** card. Each user's saved drag-and-drop box order is cleared once so the new order shows; boxes can be rearranged again afterwards.
+- **No Excerpt box.** Events no longer support excerpts. Excerpts saved on existing events are still stored and still shown in listings and structured data, but can no longer be edited.
+- **Registration is a three-step checkout** (Stripe and free events): Registration (ticket table with per-row and running totals), Attendee details (a card per attendee with the ticket type, price and a "Remove attendee" action, beside an event summary), and Review & payment (ticket and attendee summaries with edit links, then the card form). When the order total is zero the payment step is skipped and the order completes from Attendee details. Events without ticket types open straight on the details step.
+- The Stripe card is collected as separate cardholder name, card number, expiry and CVC fields. Theme overrides that still print `#blt-card-element` keep the single combined field.
+- Tickets whose sale window has closed or not yet opened are listed disabled ("Sales ended", "On sale …") instead of being hidden. Remove them with `blt_events_registration_ticket_rows`.
+- Additional attendees are asked for first and last name (joined into the attendee name) instead of a single full-name field.
+- The checkout summary includes the event's group discount, so the total shown matches what is charged.
+- `templates/registration/form.php` and `attendee.php` were rewritten. Theme overrides of them need updating to the new markup.
+
+### Added
+
+- **Log in for Member Rates.** Logged-out visitors see a prompt, and locked "Members only" rows, when a role-restricted ticket type is on sale; logging in returns them to the form. SureCart and FluentCart checkouts show the prompt too. Filter the link with `blt_events_member_login_url`.
+- New templates `registration/summary.php` and `registration/member-login.php`; new filters `blt_events_registration_ticket_rows`, `blt_events_member_login_url`, `blt_events_registration_summary` and `blt_events_registration_help_email`.
+- The "Need help?" box in the checkout shows the Reply-To (or From) address from Settings > Emails, and is hidden when neither is set.
+
 ## 2.4.0
 
 ### Fixed

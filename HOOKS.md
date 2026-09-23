@@ -54,7 +54,7 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_render_field` | filter | `$html, $field, $value, $prefix` | Rendered HTML of one field |
 | `blt_events_prefill_value` | filter | `$value, $field, $user` | Prefilled value for a field |
 | `blt_events_validation_errors` | filter | `$errors, $clean, $posted, $fieldset` | Validation messages before returning |
-| `blt_events_attendee_fields` | filter | `$fields, $event_id` | Fields collected per additional attendee |
+| `blt_events_attendee_fields` | filter | `$fields, $event_id` | Fields collected per additional attendee (default: first name, last name, email, phone; `first_name` + `last_name` are joined into the attendee name) |
 | `blt_events_countries` | filter | `$countries` | Country list for the country field |
 
 ## Front end
@@ -84,6 +84,10 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_format_price` | filter | `$string, $amount, $include_total` | Formatted price |
 | `blt_events_registration_html` | filter | `$html, $event` | Complete registration block |
 | `blt_events_registration_form_args` | filter | `$args, $event_id` | Data for the form template |
+| `blt_events_registration_ticket_rows` | filter | `$rows, $event_id` | Tickets listed on the Registration step, each with a `state` (`available`, `members`, `ended`, `upcoming`); unset rows to hide them |
+| `blt_events_member_login_url` | filter | `$url, $return, $event_id` | Where "Log in for Member Rates" sends a logged-out visitor |
+| `blt_events_registration_summary` | filter | `$summary, $event` | Event facts in the checkout's "Event summary" card |
+| `blt_events_registration_help_email` | filter | `$email, $event_id` | Address in the checkout's "Need help?" box (`''` hides it) |
 | `blt_events_registration_closed_message` | filter | `$message, $reason, $event_id` | Text when registration is closed (`not_open`, `cutoff`, `sold_out`, `no_tickets`, `syncing`) |
 | `blt_events_before_registration_form` / `_after_registration_form` | action | `$event_id, $provider` | Around the form |
 | `blt_events_style_tokens` | filter | `$rules, $mode` | `--blt-e-*` overrides printed inline |

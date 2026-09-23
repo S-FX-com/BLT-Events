@@ -10,6 +10,7 @@
  * @var array   $variation_ids FluentCart variation IDs keyed by ticket index.
  * @var bool    $ready         Products synced and FluentCart active.
  * @var string  $message       Shown when not ready.
+ * @var string  $member_login  "Log in for Member Rates" prompt HTML, or ''.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,6 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<p><?php echo esc_html( $message ); ?></p>
 		</div>
 	<?php else : ?>
+		<?php echo $member_login ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendered from registration/member-login.php. ?>
 		<div class="blt-ticket-selection">
 			<h3><?php esc_html_e( 'Select Tickets', 'blt-events' ); ?></h3>
 			<?php foreach ( $ticket_types as $i => $ticket ) : ?>

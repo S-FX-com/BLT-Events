@@ -2,126 +2,9 @@
    BLT Events - Frontend Styles
    ======================================== */
 
-/* --- Registration Form --- */
-.blt-registration-form {
-	max-width: 640px;
-	margin: 2rem auto;
-	padding: 2rem;
-	background: var(--blt-e-surface);
-	border-radius: var(--blt-e-radius-lg);
-	box-shadow: var(--blt-e-shadow);
-	font-family: var(--blt-e-font);
-}
-
-.blt-registration-form h3 {
-	margin: 0 0 1rem;
-	color: var(--blt-e-fg);
-	font-size: 1.25rem;
-	font-weight: 600;
-}
-
-/* --- Stepped registration wizard --- */
-.blt-reg--js .blt-reg__step {
-	display: none;
-}
-
-.blt-reg__progress {
-	display: flex;
-	gap: 0.5rem;
-	list-style: none;
-	margin: 0 0 1.5rem;
-	padding: 0;
-	counter-reset: blt-step;
-}
-
-.blt-reg__progress-step {
-	flex: 1;
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding-top: 0.6rem;
-	border-top: 3px solid var(--blt-e-border);
-	font-size: 0.8rem;
-	font-weight: 600;
-	color: var(--blt-e-fg-subtle);
-	counter-increment: blt-step;
-}
-
-.blt-reg__progress-step::before {
-	content: counter(blt-step);
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: var(--blt-e-border);
-	color: var(--blt-e-fg-muted);
-	font-size: 0.72rem;
-}
-
-.blt-reg__progress-step.is-current {
-	border-top-color: var(--blt-e-primary);
-	color: var(--blt-e-fg);
-}
-
-.blt-reg__progress-step.is-current::before {
-	background: var(--blt-e-primary);
-	color: var(--blt-e-surface);
-}
-
-.blt-reg__progress-step.is-done {
-	border-top-color: var(--blt-e-primary);
-	color: var(--blt-e-fg-soft);
-}
-
-.blt-reg__progress-step.is-done::before {
-	content: "\2713";
-	background: var(--blt-e-primary);
-	color: var(--blt-e-surface);
-}
-
-.blt-reg__step:focus {
-	outline: none;
-}
-
-.blt-reg__nav {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-	margin-top: 1.5rem;
-}
-
-.blt-reg__nav .blt-reg__next {
-	margin-left: auto;
-}
-
-.blt-reg__back,
-.blt-reg__next {
-	padding: 0.7rem 1.5rem;
-	border-radius: var(--blt-e-radius-sm);
-	font-size: 0.95rem;
-	font-weight: 600;
-	cursor: pointer;
-	border: 1px solid var(--blt-e-border-strong);
-	background: var(--blt-e-surface);
-	color: var(--blt-e-fg);
-}
-
-.blt-reg__next {
-	border-color: var(--blt-e-primary);
-	background: var(--blt-e-primary);
-	color: var(--blt-e-surface);
-}
-
-.blt-reg__next:hover {
-	background: var(--blt-e-primary-hover);
-}
-
-.blt-reg__back:hover {
-	border-color: var(--blt-e-fg-subtle);
-}
+/* --- Shared: ticket lists, fields, coupon, consent, messages ---
+   Also used by the SureCart and FluentCart ticket pickers. The checkout
+   rules further down refine them for the on-site registration flow. */
 
 /* --- Ticket Selection --- */
 .blt-ticket-selection {
@@ -217,6 +100,80 @@
 	font-weight: 600;
 	color: var(--blt-e-fg);
 	font-size: 1.25rem;
+}
+
+/* --- SureCart / FluentCart ticket list --- */
+.blt-ticket-selection {
+	padding: 0;
+	background: transparent;
+	border-radius: 0;
+}
+
+.blt-ticket-header,
+.blt-ticket-type {
+	display: grid;
+	grid-template-columns: minmax(120px, 1.2fr) minmax(120px, 1.6fr) minmax(75px, 0.7fr) minmax(130px, 0.8fr);
+	column-gap: 1rem;
+	align-items: center;
+}
+
+.blt-ticket-header {
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--blt-e-border);
+	color: var(--blt-e-fg-muted);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+}
+
+.blt-ticket-type {
+	padding: 0.875rem 0;
+	gap: 0;
+}
+
+.blt-ticket-name {
+	min-width: 0;
+	font-weight: 600;
+}
+
+.blt-ticket-desc {
+	flex-basis: auto;
+	order: 0;
+}
+
+.blt-ticket-price {
+	margin: 0;
+}
+
+.blt-quantity-controls {
+	justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+	.blt-ticket-header {
+		display: none;
+	}
+
+	.blt-ticket-type {
+		grid-template-columns: 1fr auto;
+		row-gap: 0.4rem;
+	}
+
+	.blt-ticket-desc {
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
+
+	.blt-ticket-price {
+		grid-column: 1;
+		grid-row: 3;
+	}
+
+	.blt-quantity-controls {
+		grid-column: 2;
+		grid-row: 1 / span 3;
+	}
 }
 
 /* --- Fields Grid --- */
@@ -358,32 +315,6 @@
 /* Hidden by conditional logic */
 .blt-field-wrap[hidden] {
 	display: none;
-}
-
-/* Additional attendees */
-.blt-attendees-section {
-	margin-bottom: 1.5rem;
-}
-
-.blt-attendee {
-	margin: 0 0 1rem;
-	padding: 1rem 1.25rem 1.25rem;
-	border: 1px solid var(--blt-e-border);
-	border-radius: var(--blt-e-radius);
-	background: var(--blt-e-surface-alt);
-	min-width: 0;
-}
-
-.blt-attendee__title {
-	padding: 0 0.4rem;
-	font-size: 0.9rem;
-	font-weight: 600;
-	color: var(--blt-e-fg-soft);
-}
-
-.blt-attendee .blt-field-wrap input,
-.blt-attendee .blt-field-wrap select {
-	background: var(--blt-e-surface);
 }
 
 /* Scarcity hint */
@@ -607,109 +538,1093 @@
 	padding: 1rem;
 }
 
-/* --- Registration review flow --- */
+/* --- Registration checkout ---
+   Three steps (Registration, Attendee details, Review & payment) inside a
+   muted panel of white cards. Layout follows the width of the checkout
+   itself (a container query), not the viewport, because the same form sits
+   in a narrow event-page column or across a full-width page. */
+.blt-registration-form {
+	max-width: var(--blt-e-checkout-width, 1120px);
+	margin: 2rem auto;
+	padding: 2rem;
+	background: var(--blt-e-surface-sunken);
+	border-radius: var(--blt-e-radius-lg);
+	font-family: var(--blt-e-font);
+	/* Themes often set large body text; the checkout sizes itself from the
+	   root size instead so tables and cards keep their proportions. */
+	font-size: 1rem;
+	line-height: 1.5;
+	color: var(--blt-e-fg);
+	box-sizing: border-box;
+	container: blt-checkout / inline-size;
+}
+
+.blt-registration-form *,
+.blt-registration-form *::before,
+.blt-registration-form *::after {
+	box-sizing: border-box;
+}
+
+.blt-registration-form h3,
+.blt-registration-form h4,
+.blt-registration-form h5,
+.blt-registration-form p {
+	margin: 0;
+}
+
+.blt-icon {
+	width: 1em;
+	height: 1em;
+	flex-shrink: 0;
+	vertical-align: -0.125em;
+}
+
+/* Step visibility. The script also sets [hidden], which covers No-CSS mode;
+   these rules stop other steps flashing before the script runs. */
+.blt-reg[data-current-step="tickets"] [data-step-panel]:not([data-step-panel~="tickets"]),
+.blt-reg[data-current-step="details"] [data-step-panel]:not([data-step-panel~="details"]),
+.blt-reg[data-current-step="review"] [data-step-panel]:not([data-step-panel~="review"]),
+.blt-reg[data-current-step="complete"] [data-step-panel]:not([data-step-panel~="complete"]) {
+	display: none !important;
+}
+
+/* --- Progress --- */
 .blt-reg__progress {
+	display: flex;
 	gap: 1rem;
+	list-style: none;
+	margin: 0 0 1.75rem;
+	padding: 0;
+	counter-reset: blt-step;
 }
 
 .blt-reg__progress-step {
-	font-size: 0.85rem;
-}
-
-.blt-ticket-selection {
-	padding: 0;
-	background: transparent;
-	border-radius: 0;
-}
-
-.blt-ticket-header,
-.blt-ticket-type {
-	display: grid;
-	grid-template-columns: minmax(120px, 1.2fr) minmax(120px, 1.6fr) minmax(75px, 0.7fr) minmax(130px, 0.8fr);
-	column-gap: 1rem;
+	flex: 1;
+	display: flex;
 	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	padding-top: 0.6rem;
+	border-top: 3px solid var(--blt-e-border-strong);
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--blt-e-fg-subtle);
+	counter-increment: blt-step;
 }
 
-.blt-ticket-header {
-	padding: 0.7rem 0;
-	border-bottom: 1px solid var(--blt-e-border);
+.blt-reg__progress-step::before {
+	content: counter(blt-step);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: var(--blt-e-border-strong);
 	color: var(--blt-e-fg-muted);
 	font-size: 0.72rem;
+}
+
+.blt-reg__progress-step.is-current {
+	border-top-color: var(--blt-e-primary);
+	color: var(--blt-e-fg);
+}
+
+.blt-reg__progress-step.is-current::before {
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+}
+
+.blt-reg__progress-step.is-done {
+	border-top-color: var(--blt-e-primary);
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-reg__progress-step.is-done::before {
+	content: "\2713";
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+}
+
+/* --- Step headers --- */
+.blt-reg__header {
+	margin-bottom: 1.5rem;
+}
+
+.blt-registration-form .blt-reg__title {
+	font-family: var(--blt-e-font-heading);
+	font-size: 1.75rem;
+	font-weight: 600;
+	line-height: 1.2;
+	color: var(--blt-e-fg-strong);
+}
+
+.blt-reg__title:focus {
+	outline: none;
+}
+
+.blt-registration-form .blt-reg__subtitle {
+	margin-top: 0.4rem;
+	font-size: 0.9rem;
+	color: var(--blt-e-fg-muted);
+}
+
+/* --- Layout: main column + summary --- */
+.blt-reg__body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1.5rem;
+	align-items: start;
+}
+
+.blt-reg__main {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	min-width: 0;
+}
+
+.blt-reg__step {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.blt-reg__aside {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	min-width: 0;
+}
+
+@container blt-checkout (min-width: 760px) {
+	.blt-reg[data-current-step="details"] .blt-reg__body,
+	.blt-reg[data-current-step="review"] .blt-reg__body {
+		grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+	}
+
+	.blt-reg__aside {
+		position: sticky;
+		top: 1.5rem;
+	}
+}
+
+/* --- Cards --- */
+.blt-reg__card {
+	padding: 1.5rem;
+	background: var(--blt-e-surface);
+	border: 1px solid var(--blt-e-border);
+	border-radius: var(--blt-e-radius);
+}
+
+/* --- Buttons --- */
+.blt-reg__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	min-height: 46px;
+	padding: 0.75rem 1.25rem;
+	border: 1px solid transparent;
+	border-radius: var(--blt-e-radius-sm);
+	font: inherit;
+	font-size: 0.95rem;
+	font-weight: 600;
+	line-height: 1.2;
+	cursor: pointer;
+	transition: background-color 0.15s, border-color 0.15s;
+}
+
+.blt-reg__btn--primary {
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+}
+
+.blt-reg__btn--primary:hover:not(:disabled) {
+	background: var(--blt-e-primary-hover);
+}
+
+.blt-reg__btn:focus-visible,
+.blt-reg__back-link:focus-visible,
+.blt-reg__edit:focus-visible,
+.blt-attendee-card__remove:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px var(--blt-e-focus-ring);
+}
+
+.blt-reg__btn:disabled {
+	background: var(--blt-e-fg-subtle);
+	cursor: not-allowed;
+}
+
+.blt-reg__back-link,
+.blt-reg__edit,
+.blt-attendee-card__remove {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.25rem 0;
+	background: none;
+	border: 0;
+	border-radius: var(--blt-e-radius-sm);
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 500;
+	color: var(--blt-e-fg-muted);
+	cursor: pointer;
+}
+
+.blt-reg__back-link {
+	align-self: flex-start;
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-reg__back-link:hover,
+.blt-reg__edit:hover,
+.blt-attendee-card__remove:hover {
+	color: var(--blt-e-fg);
+}
+
+/* --- Member rates --- */
+.blt-member-login {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem 1rem;
+	padding: 1rem 1.25rem;
+	background: var(--blt-e-primary-tint);
+	border: 1px solid var(--blt-e-border);
+	border-radius: var(--blt-e-radius);
+	font-family: var(--blt-e-font);
+	font-size: 1rem;
+	line-height: 1.5;
+}
+
+.blt-member-login__icon {
+	display: inline-flex;
+	color: var(--blt-e-primary);
+	font-size: 1.25rem;
+}
+
+.blt-member-login__text {
+	flex: 1 1 240px;
+	min-width: 0;
+}
+
+.blt-member-login__title {
+	margin: 0;
+	font-weight: 600;
+	color: var(--blt-e-fg);
+}
+
+.blt-member-login__desc {
+	margin: 0.15rem 0 0;
+	font-size: 0.85rem;
+	color: var(--blt-e-fg-muted);
+}
+
+.blt-member-login__btn {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.55rem 1rem;
+	border: 1px solid var(--blt-e-primary);
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface);
+	color: var(--blt-e-primary);
+	font-size: 0.9rem;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.blt-member-login__btn:hover,
+.blt-member-login__btn:focus {
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+}
+
+.blt-surecart-form .blt-member-login,
+.blt-fluentcart-form .blt-member-login {
+	margin-bottom: 1.25rem;
+}
+
+/* --- Step 1: ticket table --- */
+.blt-ticket-table.blt-reg__card {
+	padding: 0;
+	overflow: hidden;
+}
+
+.blt-ticket-table .blt-ticket-header,
+.blt-ticket-table .blt-ticket-type {
+	display: grid;
+	grid-template-columns: minmax(110px, 1.1fr) minmax(120px, 1.5fr) minmax(70px, 0.6fr) minmax(120px, 0.8fr) minmax(70px, 0.6fr);
+	column-gap: 1rem;
+	align-items: center;
+	padding: 1rem 1.25rem;
+}
+
+.blt-ticket-table .blt-ticket-header {
+	padding-top: 0.8rem;
+	padding-bottom: 0.8rem;
+	background: var(--blt-e-surface-alt);
+	border-bottom: 1px solid var(--blt-e-border);
+	color: var(--blt-e-fg-muted);
+	font-size: 0.7rem;
 	font-weight: 700;
-	letter-spacing: 0.03em;
+	letter-spacing: 0.04em;
 	text-transform: uppercase;
 }
 
-.blt-ticket-type {
-	padding: 0.875rem 0;
-	gap: 0;
+.blt-ticket-table .blt-ticket-type {
+	border-bottom: 1px solid var(--blt-e-border);
+	min-height: 64px;
 }
 
-.blt-ticket-name {
-	min-width: 0;
+.blt-ticket-table .blt-ticket-type:last-child {
+	border-bottom: 0;
+}
+
+.blt-ticket-table .blt-ticket-type.is-selected {
+	background: var(--blt-e-primary-tint);
+}
+
+.blt-ticket-table .blt-ticket-name {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	color: var(--blt-e-fg);
+	font-size: 0.95rem;
 	font-weight: 600;
 }
 
-.blt-ticket-desc {
-	flex-basis: auto;
-	order: 0;
-}
-
-.blt-ticket-price {
-	margin: 0;
-}
-
-.blt-quantity-controls {
-	justify-content: flex-end;
-}
-
-.blt-reg__review-summary {
-	padding: 1rem 0;
-	border-top: 1px solid var(--blt-e-border);
-	border-bottom: 1px solid var(--blt-e-border);
-}
-
-.blt-reg__review-empty {
-	margin: 0;
+.blt-ticket-table .blt-ticket-desc {
 	color: var(--blt-e-fg-muted);
+	font-size: 0.875rem;
 }
 
-.blt-reg__review-tickets {
+.blt-ticket-table .blt-ticket-price {
+	color: var(--blt-e-fg-soft);
+	font-size: 0.9rem;
+	font-weight: 500;
+}
+
+.blt-ticket-table .blt-ticket-line-total {
+	color: var(--blt-e-fg);
+	font-size: 0.95rem;
+	font-weight: 600;
+	text-align: right;
+}
+
+.blt-ticket-table .blt-ticket-header > :last-child {
+	text-align: right;
+}
+
+.blt-ticket-table .blt-quantity-controls {
+	justify-content: flex-start;
+	gap: 0;
+}
+
+.blt-ticket-table .blt-qty-btn {
+	width: 32px;
+	height: 32px;
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface-alt);
+	font-size: 16px;
+}
+
+.blt-ticket-table .blt-ticket-quantity {
+	width: 44px;
+	margin: 0 0.25rem;
+	border-color: var(--blt-e-border);
+	background: var(--blt-e-surface);
+	color: var(--blt-e-fg);
+}
+
+.blt-ticket-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.3rem 0.75rem;
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-muted);
+	font-size: 0.8rem;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+a.blt-ticket-pill--members {
+	background: var(--blt-e-primary-tint);
+	color: var(--blt-e-primary);
+	text-decoration: none;
+}
+
+a.blt-ticket-pill--members:hover,
+a.blt-ticket-pill--members:focus {
+	text-decoration: underline;
+}
+
+.blt-ticket-type--ended .blt-ticket-name,
+.blt-ticket-type--ended .blt-ticket-price,
+.blt-ticket-type--upcoming .blt-ticket-name,
+.blt-ticket-type--upcoming .blt-ticket-price {
+	color: var(--blt-e-fg-subtle);
+}
+
+.blt-ticket-type--members .blt-ticket-name .blt-icon {
+	color: var(--blt-e-primary);
+}
+
+/* Tally + continue */
+.blt-reg__tickets-footer {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 1rem;
+	width: 100%;
+	max-width: 340px;
+	margin-left: auto;
+}
+
+.blt-reg__tally {
+	margin: 0;
+}
+
+.blt-reg__tally > div {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.75rem 0;
+	border-top: 1px solid var(--blt-e-border-strong);
+	font-size: 0.875rem;
+}
+
+.blt-reg__tally dt {
+	color: var(--blt-e-fg-soft);
+	font-weight: 500;
+}
+
+.blt-reg__tally dd {
+	margin: 0;
+	color: var(--blt-e-fg);
+	font-weight: 600;
+}
+
+.blt-reg__step-error {
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--blt-e-danger-border);
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-danger-bg);
+	color: var(--blt-e-danger);
+	font-size: 0.85rem;
+}
+
+/* Narrow checkout: each ticket becomes a compact block. */
+@container blt-checkout (max-width: 620px) {
+	.blt-ticket-table .blt-ticket-header {
+		display: none;
+	}
+
+	.blt-ticket-table .blt-ticket-type {
+		grid-template-columns: minmax(0, 1fr) auto;
+		row-gap: 0.3rem;
+	}
+
+	.blt-ticket-table .blt-ticket-name { grid-column: 1; grid-row: 1; }
+	.blt-ticket-table .blt-ticket-desc { grid-column: 1; grid-row: 2; }
+	.blt-ticket-table .blt-ticket-price { grid-column: 1; grid-row: 3; }
+	.blt-ticket-table .blt-ticket-qty { grid-column: 2; grid-row: 1 / span 2; justify-self: end; }
+	.blt-ticket-table .blt-ticket-line-total { grid-column: 2; grid-row: 3; }
+
+	.blt-ticket-table .blt-ticket-desc:empty {
+		display: none;
+	}
+
+	.blt-reg__tickets-footer {
+		max-width: none;
+	}
+}
+
+/* --- Step 2: attendee cards --- */
+.blt-attendees-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.blt-attendees-list:empty {
+	display: none;
+}
+
+.blt-attendee-card__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+	margin-bottom: 1.25rem;
+}
+
+.blt-registration-form .blt-attendee-card__title {
+	font-size: 1.15rem;
+	font-weight: 600;
+	color: var(--blt-e-fg-strong);
+}
+
+.blt-attendee-card__title:focus {
+	outline: none;
+}
+
+.blt-attendee-card__ticket {
+	display: inline-flex;
+	padding: 0.2rem 0.55rem;
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-soft);
+	font-size: 0.72rem;
+	font-weight: 600;
+}
+
+.blt-attendee-card__price {
+	margin-left: auto;
+	color: var(--blt-e-fg-soft);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.blt-attendee-card__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 1.25rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--blt-e-border);
+}
+
+.blt-attendee-card__count {
+	margin-left: auto;
+	color: var(--blt-e-fg-subtle);
+	font-size: 0.8rem;
+}
+
+.blt-registration-form .blt-field-wrap input[type="text"],
+.blt-registration-form .blt-field-wrap input[type="email"],
+.blt-registration-form .blt-field-wrap input[type="tel"],
+.blt-registration-form .blt-field-wrap input[type="url"],
+.blt-registration-form .blt-field-wrap input[type="number"],
+.blt-registration-form .blt-field-wrap input[type="date"],
+.blt-registration-form .blt-field-wrap select,
+.blt-registration-form .blt-field-wrap textarea {
+	background: var(--blt-e-surface);
+	border-radius: var(--blt-e-radius-sm);
+}
+
+.blt-registration-form .blt-field-wrap label,
+.blt-registration-form .blt-label {
+	display: block;
+	margin-bottom: 0.375rem;
+	color: var(--blt-e-fg-soft);
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.blt-consent-section.blt-reg__card {
+	margin-bottom: 0;
+}
+
+.blt-consent-section.blt-reg__card .blt-consent-field:last-child {
+	margin-bottom: 0;
+}
+
+/* --- Step 3: review --- */
+.blt-review-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.blt-registration-form .blt-review-card__title {
+	color: var(--blt-e-fg-muted);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.blt-review-table__row {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(60px, 1fr) minmax(50px, 0.7fr) minmax(70px, 1fr);
+	gap: 1rem;
+	align-items: center;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid var(--blt-e-border);
+	font-size: 0.875rem;
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-review-table__row > :last-child {
+	text-align: right;
+}
+
+.blt-review-table__row--head {
+	padding-top: 0;
+	color: var(--blt-e-fg-muted);
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.blt-review-table__name {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.blt-review-table__name strong {
+	color: var(--blt-e-fg);
+	font-weight: 600;
+}
+
+.blt-review-table__name small {
+	color: var(--blt-e-fg-muted);
+	font-size: 0.78rem;
+}
+
+.blt-review-totals {
+	margin: 0;
+}
+
+.blt-review-totals > div {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	padding-top: 0.75rem;
+	font-size: 0.875rem;
+}
+
+.blt-review-totals dt {
+	color: var(--blt-e-fg);
+	font-weight: 600;
+}
+
+.blt-review-totals dd {
+	margin: 0;
+	font-weight: 600;
+}
+
+.blt-review-attendees {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 
-.blt-reg__review-tickets li {
+.blt-review-attendee {
+	display: grid;
+	grid-template-columns: 32px minmax(0, 1fr) minmax(0, 1fr);
+	gap: 0.75rem;
+	align-items: center;
+	margin: 0;
+	font-size: 0.85rem;
+}
+
+.blt-review-attendee__num {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-muted);
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.blt-review-attendee__who,
+.blt-review-attendee__contact {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.blt-review-attendee__who strong {
+	color: var(--blt-e-fg);
+	font-weight: 600;
+}
+
+.blt-review-attendee__who span,
+.blt-review-attendee__email {
+	color: var(--blt-e-fg-muted);
+	font-size: 0.8rem;
+}
+
+.blt-review-attendee__email {
+	color: var(--blt-e-link);
+}
+
+@container blt-checkout (max-width: 520px) {
+	.blt-review-attendee {
+		grid-template-columns: 32px minmax(0, 1fr);
+	}
+
+	.blt-review-attendee__contact {
+		grid-column: 2;
+	}
+
+	.blt-review-table__row {
+		grid-template-columns: minmax(0, 1fr) auto auto;
+	}
+
+	.blt-review-table__row > :nth-child(2) {
+		display: none;
+	}
+}
+
+/* Payment method */
+.blt-payment-section.blt-reg__card {
+	margin-bottom: 0;
+}
+
+.blt-payment {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1.25rem;
+}
+
+@container blt-checkout (min-width: 760px) {
+	.blt-payment {
+		grid-template-columns: minmax(150px, 0.8fr) minmax(0, 2fr);
+	}
+
+	.blt-payment #blt-card-errors {
+		grid-column: 2;
+	}
+}
+
+.blt-payment__method {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+}
+
+.blt-payment__radio {
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	margin-top: 0.15rem;
+	border: 5px solid var(--blt-e-primary);
+	border-radius: 50%;
+	background: var(--blt-e-surface);
+}
+
+.blt-payment__method-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.blt-payment__method-label {
+	color: var(--blt-e-fg);
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.blt-payment__brands {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+}
+
+.blt-payment__brand {
+	padding: 0.1rem 0.35rem;
+	border: 1px solid var(--blt-e-border);
+	border-radius: 3px;
+	color: var(--blt-e-fg-muted);
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+}
+
+.blt-payment__fields {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+#blt-card-errors:empty {
+	display: none;
+}
+
+.blt-stripe-field {
+	padding: 0.7rem 0.75rem;
+	border: 1px solid var(--blt-e-border);
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface);
+	transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.blt-stripe-field.StripeElement--focus {
+	border-color: var(--blt-e-primary);
+	box-shadow: 0 0 0 3px var(--blt-e-focus-glow);
+}
+
+.blt-stripe-field.StripeElement--invalid {
+	border-color: var(--blt-e-danger);
+}
+
+/* --- Summary sidebar --- */
+.blt-summary {
+	display: flex;
+	flex-direction: column;
+	gap: 1.1rem;
+}
+
+.blt-registration-form .blt-summary__title {
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--blt-e-fg-strong);
+}
+
+.blt-summary__event {
+	display: flex;
+	gap: 0.85rem;
+	align-items: flex-start;
+}
+
+.blt-summary__thumb {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 64px;
+	height: 64px;
+	overflow: hidden;
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-subtle);
+	font-size: 1.4rem;
+}
+
+.blt-summary__thumb img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.blt-summary__facts {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	min-width: 0;
+}
+
+.blt-registration-form .blt-summary__name {
+	color: var(--blt-e-fg);
+	font-size: 0.9rem;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.blt-summary__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.2rem 0.75rem;
+	color: var(--blt-e-fg-muted);
+	font-size: 0.78rem;
+}
+
+.blt-summary__meta span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.blt-summary__section {
+	padding-top: 1rem;
+	border-top: 1px solid var(--blt-e-border);
+}
+
+.blt-registration-form .blt-summary__label {
+	display: block;
+	margin-bottom: 0.4rem;
+	color: var(--blt-e-fg);
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.blt-summary__lines {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-summary__lines li {
 	display: flex;
 	justify-content: space-between;
 	gap: 1rem;
-	padding: 0.55rem 0;
-	color: var(--blt-e-fg-soft);
+	margin: 0;
+	padding: 0.15rem 0;
+	color: var(--blt-e-fg-muted);
+	font-size: 0.82rem;
 }
 
-.blt-reg__review-total {
-	margin: 0.75rem 0 0;
-	padding-top: 0.75rem;
+.blt-summary__lines li > :last-child {
+	color: var(--blt-e-fg-soft);
+	white-space: nowrap;
+}
+
+.blt-summary .blt-coupon-section {
+	margin-bottom: 0;
+}
+
+.blt-summary .blt-coupon-input input,
+.blt-summary .blt-btn-secondary {
+	padding: 0.5rem 0.7rem;
+	border-radius: var(--blt-e-radius-sm);
+	font-size: 0.85rem;
+}
+
+.blt-summary .blt-coupon-input input {
+	min-width: 0;
+	background: var(--blt-e-surface);
+}
+
+.blt-summary__totals {
+	margin: 0;
+	padding-top: 1rem;
 	border-top: 1px solid var(--blt-e-border);
-	text-align: right;
-	font-size: 1.05rem;
+}
+
+.blt-summary__row {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.2rem 0;
+	font-size: 0.85rem;
+}
+
+.blt-summary__row dt {
+	color: var(--blt-e-fg-soft);
+	font-weight: 500;
+}
+
+.blt-summary__row dd {
+	margin: 0;
+	color: var(--blt-e-fg);
+	font-weight: 600;
+}
+
+.blt-summary__row--total {
+	margin-top: 0.6rem;
+	padding-top: 0.8rem;
+	border-top: 1px solid var(--blt-e-border);
+	font-size: 1rem;
+}
+
+.blt-summary__row--total dt,
+.blt-summary__row--total dd {
+	color: var(--blt-e-fg-strong);
 	font-weight: 700;
 }
 
-@media (max-width: 700px) {
-	.blt-registration-form {
-		margin: 1.5rem 0;
-		padding: 1.25rem;
-	}
+.blt-summary #blt-form-messages {
+	margin-bottom: 0;
+	font-size: 0.875rem;
+}
 
+.blt-registration-form .blt-summary__secure {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	margin-top: -0.35rem;
+	color: var(--blt-e-fg-subtle);
+	font-size: 0.75rem;
+}
+
+.blt-help {
+	display: flex;
+	gap: 0.75rem;
+	align-items: flex-start;
+	padding: 1rem 1.25rem;
+}
+
+.blt-help__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-muted);
+	font-size: 1rem;
+}
+
+.blt-registration-form .blt-help__title {
+	color: var(--blt-e-fg);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.blt-registration-form .blt-help__text {
+	color: var(--blt-e-fg-muted);
+	font-size: 0.8rem;
+	overflow-wrap: anywhere;
+}
+
+.blt-help__text a {
+	color: var(--blt-e-link);
+}
+
+/* --- Done --- */
+.blt-reg__complete {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 2.5rem 1.5rem;
+	text-align: center;
+}
+
+.blt-reg__complete:focus {
+	outline: none;
+}
+
+.blt-reg__complete-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: var(--blt-e-success-bg);
+	color: var(--blt-e-success);
+	font-size: 1.75rem;
+}
+
+.blt-reg__complete p {
+	max-width: 32rem;
+	color: var(--blt-e-fg-muted);
+}
+
+@container blt-checkout (max-width: 560px) {
 	.blt-reg__progress {
-		gap: 0.35rem;
+		gap: 0.4rem;
 	}
 
 	.blt-reg__progress-step {
 		gap: 0.3rem;
-		font-size: 0.68rem;
+		font-size: 0.7rem;
 	}
 
 	.blt-reg__progress-step::before {
@@ -718,27 +1633,31 @@
 		font-size: 0.65rem;
 	}
 
-	.blt-ticket-header {
-		display: none;
+	.blt-registration-form .blt-reg__title {
+		font-size: 1.4rem;
 	}
 
-	.blt-ticket-type {
-		grid-template-columns: 1fr auto;
-		row-gap: 0.4rem;
+	.blt-reg__card {
+		padding: 1.1rem;
 	}
+}
 
-	.blt-ticket-desc {
-		grid-column: 1 / -1;
-		grid-row: 2;
+@media (max-width: 700px) {
+	.blt-registration-form {
+		margin: 1.5rem 0;
+		padding: 1.25rem;
 	}
+}
 
-	.blt-ticket-price {
-		grid-column: 1;
-		grid-row: 3;
-	}
+.blt-reg__step.blt-ticket-selection {
+	margin-bottom: 0;
+}
 
-	.blt-quantity-controls {
-		grid-column: 2;
-		grid-row: 1 / span 3;
+/* Half/third-width fields go full width in a narrow checkout, whatever the
+   viewport (e.g. the form in a sidebar-flanked event column). */
+@container blt-checkout (max-width: 480px) {
+	.blt-field-half,
+	.blt-field-third {
+		flex: 0 0 100%;
 	}
 }

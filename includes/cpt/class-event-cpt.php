@@ -101,7 +101,9 @@ class BLT_Events_Event_CPT {
             'menu_icon'          => ( is_admin() && class_exists( 'BLT_Family_Brand' ) )
                 ? BLT_Family_Brand::menu_icon( BLT_EVENTS_PLUGIN_DIR, 'dashicons-calendar-alt' )
                 : 'dashicons-calendar-alt',
-            'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+            // No excerpt: the Event Description card is the one place event
+            // copy is written. Excerpts saved earlier are still read.
+            'supports'           => array( 'title', 'editor', 'thumbnail' ),
             // Expose to the block editor, core REST API, and Query Loop blocks.
             'show_in_rest'       => true,
         ) );

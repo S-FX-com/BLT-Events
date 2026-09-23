@@ -2,10 +2,14 @@
 /**
  * BLT Events - Event Meta Boxes
  *
- * Adds meta boxes to the event editor: date/time, event type & location,
- * tickets, registration configuration, additional options, and a
- * registration overview. Markup follows the card-based event editor
- * design (assets/css/event-editor.css + assets/js/event-editor.js).
+ * Adds meta boxes to the event editor: date/time, the description,
+ * event type & location, registration configuration, tickets, additional
+ * options, and a registration overview. Markup follows the card-based
+ * event editor design (assets/css/event-editor.css + assets/js/event-editor.js).
+ *
+ * The main column reads top to bottom as Event Details, Event Description
+ * (the post content editor, wrapped as a card), Event Type, Registration
+ * Configuration, Ticket Types, then everything else.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -14,9 +18,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class BLT_Events_Event_Metabox {
 
+	/**
+	 * Meta box context rendered above the description editor. Core prints
+	 * the content editor before every registered context, so Event Details
+	 * gets its own context printed from edit_form_after_title.
+	 */
+	const TOP_CONTEXT = 'blt_top';
+
+	/**
+	 * Bumped whenever the default box order changes. Each user's saved
+	 * drag-and-drop order is cleared once per bump so the new order shows.
+	 */
+	const LAYOUT_VERSION = '2';
+
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
 		add_action( 'save_post_event', array( __CLASS__, 'save_meta' ), 10, 2 );
+
+		add_action( 'edit_form_after_title', array( __CLASS__, 'open_description_card' ) );
+		add_action( 'edit_form_after_editor', array( __CLASS__, 'close_description_card' ) );
+		add_filter( 'wp_editor_expand', array( __CLASS__, 'disable_editor_expand' ), 10, 2 );
 
 		$boxes = array(
 			'blt_event_details',
@@ -42,20 +63,35 @@ class BLT_Events_Event_Metabox {
 		return $classes;
 	}
 
-	public static function add_meta_boxes() {
+	public static function add_meta_boxes( $post_type = '' ) {
+		if ( 'event' === $post_type ) {
+			self::maybe_reset_box_order();
+		}
+
 		add_meta_box(
 			'blt_event_details',
 			__( 'Event Details', 'blt-events' ),
 			array( __CLASS__, 'render_details_box' ),
+			'event',
+			self::TOP_CONTEXT,
+			'high'
+		);
+
+		// Main column order. Boxes of the same priority print in the order
+		// they are registered.
+		add_meta_box(
+			'blt_event_type',
+			__( 'Event Type', 'blt-events' ),
+			array( __CLASS__, 'render_type_box' ),
 			'event',
 			'normal',
 			'high'
 		);
 
 		add_meta_box(
-			'blt_event_type',
-			__( 'Event Type', 'blt-events' ),
-			array( __CLASS__, 'render_type_box' ),
+			'blt_event_registration_config',
+			__( 'Registration Configuration', 'blt-events' ),
+			array( __CLASS__, 'render_registration_config_box' ),
 			'event',
 			'normal',
 			'high'
@@ -89,15 +125,6 @@ class BLT_Events_Event_Metabox {
 		);
 
 		add_meta_box(
-			'blt_event_registration_config',
-			__( 'Registration Configuration', 'blt-events' ),
-			array( __CLASS__, 'render_registration_config_box' ),
-			'event',
-			'normal',
-			'default'
-		);
-
-		add_meta_box(
 			'blt_event_options',
 			__( 'Additional Options', 'blt-events' ),
 			array( __CLASS__, 'render_options_box' ),
@@ -114,6 +141,79 @@ class BLT_Events_Event_Metabox {
 			'side',
 			'default'
 		);
+	}
+
+	/**
+	 * Clear the current user's saved box order once per layout version.
+	 *
+	 * WordPress stores drag-and-drop order per user and applies it over the
+	 * registered order, so without this anyone who ever rearranged the
+	 * editor would keep their old layout and never see Event Details and
+	 * the description at the top.
+	 */
+	private static function maybe_reset_box_order() {
+		$user_id = get_current_user_id();
+		if ( ! $user_id || get_user_meta( $user_id, 'blt_events_editor_layout', true ) === self::LAYOUT_VERSION ) {
+			return;
+		}
+
+		// Core saves the order unprefixed; clear a per-site copy too.
+		delete_user_meta( $user_id, 'meta-box-order_event' );
+		delete_user_option( $user_id, 'meta-box-order_event' );
+		update_user_meta( $user_id, 'blt_events_editor_layout', self::LAYOUT_VERSION );
+	}
+
+	/**
+	 * Print the boxes that sit above the description, then open the card
+	 * the content editor renders inside.
+	 *
+	 * @param WP_Post $post The post being edited.
+	 */
+	public static function open_description_card( $post ) {
+		if ( 'event' !== $post->post_type ) {
+			return;
+		}
+
+		do_meta_boxes( get_current_screen(), self::TOP_CONTEXT, $post );
+
+		if ( ! post_type_supports( 'event', 'editor' ) ) {
+			return;
+		}
+		?>
+		<div id="blt-event-description" class="blt-description-card">
+			<div class="blt-description-card__header">
+				<h2><?php esc_html_e( 'Event Description', 'blt-events' ); ?></h2>
+				<p><?php esc_html_e( 'The main copy shown on the event page.', 'blt-events' ); ?></p>
+			</div>
+			<div class="blt-description-card__body">
+		<?php
+	}
+
+	/**
+	 * Close the card opened in open_description_card().
+	 *
+	 * @param WP_Post $post The post being edited.
+	 */
+	public static function close_description_card( $post ) {
+		if ( 'event' !== $post->post_type || ! post_type_supports( 'event', 'editor' ) ) {
+			return;
+		}
+		?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * The description editor lives in a card, so core's grow-with-content
+	 * editor (which pins its toolbar to the viewport) stays off for events.
+	 *
+	 * @param bool   $expand    Whether to enable the expanding editor.
+	 * @param string $post_type Post type being edited.
+	 * @return bool
+	 */
+	public static function disable_editor_expand( $expand, $post_type ) {
+		return 'event' === $post_type ? false : $expand;
 	}
 
 	/**

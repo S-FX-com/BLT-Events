@@ -95,6 +95,9 @@
 
 	/* --- Layout --- */
 	--blt-e-form-width: 640px;
+	/* Max width of the registration checkout: room for the Attendee details
+	   form beside its Event summary. Narrower containers stack the two. */
+	--blt-e-checkout-width: 1120px;
 	/* Max width of the calendar and listing containers. 960px is what the
 	   plugin has always used; Settings > Appearance can widen or narrow it. */
 	--blt-e-content-width: 960px;

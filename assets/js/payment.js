@@ -1,18 +1,39 @@
 /**
  * BLT Events - Stripe Payment Integration
  *
- * Handles the Stripe card element, payment intent creation, and the
- * payment confirmation flow. Strings come from bltStripeData.i18n.
+ * Mounts Stripe's card fields (number, expiry and CVC as separate fields,
+ * or the single combined card field used by pre-2.5 template overrides),
+ * creates the payment intent and confirms the payment. Strings come from
+ * bltStripeData.i18n.
+ *
+ * The registration steps script keeps this handler from running until the
+ * visitor submits the final (Review & payment) step.
  */
 (function ($) {
 	"use strict";
 
-	var stripe, cardElement, cardComplete = false;
+	var stripe;
+	var cardElement; // The element handed to confirmCardPayment().
+	var complete = {};
+	var errors = {};
 	var stripeData = window.bltStripeData || {};
 	var i18n = stripeData.i18n || {};
 
 	function t(key, fallback) {
 		return i18n[key] || fallback;
+	}
+
+	function registration() {
+		return (window.bltEvents && window.bltEvents.registration) || {};
+	}
+
+	function setLabel(text) {
+		var api = registration();
+		if (typeof api.setSubmitLabel === "function") {
+			api.setSubmitLabel(text);
+		} else {
+			$("#blt-submit-btn").text(text);
+		}
 	}
 
 	function showError(message) {
@@ -24,7 +45,39 @@
 	}
 
 	function resetButton() {
-		$("#blt-submit-btn").prop("disabled", false).text(t("registerPay", "Register & Pay"));
+		$("#blt-submit-btn").prop("disabled", false);
+		var api = registration();
+		if (typeof api.restoreSubmitLabel === "function") {
+			api.restoreSubmitLabel();
+		} else {
+			setLabel(t("registerPay", "Register & Pay"));
+		}
+	}
+
+	function renderErrors() {
+		var el = document.getElementById("blt-card-errors");
+		if (!el) {
+			return;
+		}
+		var first = Object.keys(errors).filter(function (k) {
+			return errors[k];
+		})[0];
+		el.textContent = first ? errors[first] : "";
+	}
+
+	function track(element, key) {
+		complete[key] = false;
+		element.on("change", function (event) {
+			complete[key] = !!event.complete;
+			errors[key] = event.error ? event.error.message : "";
+			renderErrors();
+		});
+	}
+
+	function cardReady() {
+		return Object.keys(complete).length > 0 && Object.keys(complete).every(function (k) {
+			return complete[k];
+		});
 	}
 
 	$(function () {
@@ -32,34 +85,50 @@
 			return;
 		}
 
-		var cardEl = document.getElementById("blt-card-element");
-		if (!cardEl) {
+		var numberEl = document.getElementById("blt-card-number");
+		var legacyEl = document.getElementById("blt-card-element");
+		if (!numberEl && !legacyEl) {
 			return;
 		}
 
 		stripe = window.Stripe(stripeData.publishableKey);
 		var elements = stripe.elements();
-
-		cardElement = elements.create("card", {
-			style: {
-				base: {
-					fontSize: "16px",
-					color: "#374151",
-					"::placeholder": { color: "#9ca3af" }
-				}
+		var style = {
+			base: {
+				fontSize: "15px",
+				color: "#1f2937",
+				"::placeholder": { color: "#9ca3af" }
 			}
-		});
+		};
 
-		cardElement.mount("#blt-card-element");
+		if (numberEl) {
+			cardElement = elements.create("cardNumber", { style: style, showIcon: true });
+			cardElement.mount(numberEl);
+			track(cardElement, "number");
 
-		cardElement.on("change", function (event) {
-			cardComplete = !!event.complete;
-			var errorsEl = document.getElementById("blt-card-errors");
-			if (errorsEl) {
-				errorsEl.textContent = event.error ? event.error.message : "";
-			}
-		});
+			var expiry = elements.create("cardExpiry", { style: style });
+			expiry.mount("#blt-card-expiry");
+			track(expiry, "expiry");
+
+			var cvc = elements.create("cardCvc", { style: style });
+			cvc.mount("#blt-card-cvc");
+			track(cvc, "cvc");
+		} else {
+			cardElement = elements.create("card", { style: style });
+			cardElement.mount(legacyEl);
+			track(cardElement, "card");
+		}
 	});
+
+	function orderTotal(form) {
+		var fromData = parseFloat($(form).attr("data-total"));
+		if (!isNaN(fromData)) {
+			return fromData;
+		}
+		// Pre-2.5 template overrides only carry the formatted total.
+		var totalText = $(".blt-registration-form .blt-total-amount").text();
+		return parseFloat(totalText.replace(/[^0-9.]/g, "")) || 0;
+	}
 
 	// Intercept form submission for Stripe payments.
 	$(document).on("submit", "#blt-registration-form", function (e) {
@@ -70,9 +139,7 @@
 		}
 
 		// Free selection: registration-form.js handles it.
-		var totalText = $(".blt-registration-form .blt-total-amount").text();
-		var amount = parseFloat(totalText.replace(/[^0-9.]/g, ""));
-		if (!amount || amount <= 0) {
+		if (orderTotal(this) <= 0) {
 			return;
 		}
 
@@ -84,13 +151,17 @@
 			return;
 		}
 
-		if (!cardComplete) {
+		if (!cardReady()) {
 			showError(t("cardIncomplete", "Please enter your card details."));
 			return;
 		}
 
 		var $btn = $("#blt-submit-btn");
-		$btn.prop("disabled", true).text(t("processing", "Processing payment…"));
+		$btn.prop("disabled", true);
+		setLabel(t("processing", "Processing payment…"));
+		$("#blt-form-messages").prop("hidden", true);
+
+		var holder = $.trim($(form).find("[data-blt-cardholder]").val() || "");
 
 		// Step 1: Create the Payment Intent. The full form (ticket quantities,
 		// coupon code, attendee details) is sent so the server computes the
@@ -111,11 +182,14 @@
 					return;
 				}
 
+				var method = { card: cardElement };
+				if (holder) {
+					method.billing_details = { name: holder };
+				}
+
 				// Step 2: Confirm the card payment.
 				stripe
-					.confirmCardPayment(response.data.clientSecret, {
-						payment_method: { card: cardElement }
-					})
+					.confirmCardPayment(response.data.clientSecret, { payment_method: method })
 					.then(function (result) {
 						if (result.error) {
 							showError(result.error.message);
@@ -154,7 +228,7 @@
 						.addClass("blt-msg-success")
 						.prop("hidden", false);
 					$(form).find("fieldset, input, select, textarea, button").prop("disabled", true);
-					$("#blt-submit-btn").text(t("complete", "Registration Complete"));
+					setLabel(t("complete", "Registration Complete"));
 					$(form).trigger("blt:registered", [response.data]);
 				} else {
 					showError(response.data.message);

@@ -53,6 +53,58 @@ body.post-type-event {
 	padding: 16px;
 }
 
+/* --- Boxes above the description (Event Details) --- */
+#blt_top-sortables {
+	margin-top: 12px;
+}
+
+/* Collapse the area when it is empty, except while a box is being dragged
+   so it stays a drop target. */
+body:not(.is-dragging-metaboxes) #blt_top-sortables.empty-container {
+	display: none;
+}
+
+/* --- Event Description: the content editor wrapped as a card --- */
+.blt-description-card {
+	margin-bottom: 0;
+	background: #fff;
+	border: 1px solid var(--blt-border);
+	border-radius: var(--blt-radius);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.blt-description-card__header {
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--blt-border);
+}
+
+#poststuff .blt-description-card__header h2 {
+	margin: 0;
+	padding: 0;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+	color: var(--blt-fg);
+}
+
+.blt-description-card__header p {
+	margin: 2px 0 0;
+	color: var(--blt-muted-fg);
+	font-size: 12px;
+}
+
+.blt-description-card__body {
+	padding: 16px;
+}
+
+.blt-description-card #postdivrich {
+	margin: 0;
+}
+
+.blt-description-card #post-status-info {
+	border-radius: 0 0 var(--blt-radius-sm) var(--blt-radius-sm);
+}
+
 .blt-editor {
 	font-size: 13px;
 	color: var(--blt-fg);
