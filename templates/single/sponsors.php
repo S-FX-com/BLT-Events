@@ -43,7 +43,7 @@ if ( empty( $sponsors ) ) {
 				<?php if ( ! empty( $blt_events_sponsor['url'] ) ) : ?>
 					<a class="blt-event__sponsor-link" href="<?php echo esc_url( $blt_events_sponsor['url'] ); ?>" target="_blank" rel="noopener sponsored">
 						<?php echo $blt_events_img; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- core image HTML or escaped above. ?>
-						<span class="blt-event__sr-only"><?php esc_html_e( '(opens in a new tab)', 'blt-events' ); ?></span>
+						<span class="blt-event__sr-only screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'blt-events' ); ?></span>
 					</a>
 				<?php else : ?>
 					<a class="blt-event__sponsor-link" href="<?php echo esc_url( $blt_events_sponsor['full'] ); ?>" data-blt-lightbox="sponsors-<?php echo esc_attr( $event_id ); ?>">

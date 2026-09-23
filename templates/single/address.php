@@ -10,13 +10,35 @@
  * @var bool   $is_physical
  * @var string $address
  * @var string $map_src     Map iframe URL, or '' when maps are off or the venue has no coordinates.
+ * @var bool   $card_info   Set by the current single-event.php, which lists the address in single/info.php.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! $is_physical || '' === $address || ! $map_src ) {
+if ( ! $is_physical || '' === $address ) {
+	return;
+}
+
+// A theme copy of the pre-2.5 single-event.php puts this part in its
+// sidebar and has no facts list: keep the address card it expects.
+if ( empty( $card_info ) ) :
+	?>
+	<div class="blt-event__card blt-event__address">
+		<h3 class="blt-event__card-title"><?php esc_html_e( 'Address', 'blt-events' ); ?></h3>
+		<p class="blt-event__address-text"><?php echo esc_html( $address ); ?></p>
+		<?php if ( $map_src ) : ?>
+			<div class="blt-event__map">
+				<iframe title="<?php esc_attr_e( 'Event location map', 'blt-events' ); ?>" src="<?php echo esc_url( $map_src ); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+			</div>
+		<?php endif; ?>
+	</div>
+	<?php
+	return;
+endif;
+
+if ( ! $map_src ) {
 	return;
 }
 ?>

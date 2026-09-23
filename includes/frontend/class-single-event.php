@@ -57,8 +57,8 @@ class BLT_Events_Single_Event {
 	}
 
 	public static function register_assets() {
-		// The sponsor lightbox is behaviour, not styling: it loads in every
-		// styling mode, and only on events that show sponsors.
+		// Behaviour, not styling (the card's fit-to-screen sticky and the
+		// sponsor lightbox), so it loads in every styling mode.
 		wp_register_script(
 			'blt-events-single',
 			BLT_EVENTS_PLUGIN_URL . 'assets/js/single-event.js',
@@ -67,9 +67,10 @@ class BLT_Events_Single_Event {
 			true
 		);
 		wp_localize_script( 'blt-events-single', 'bltEventsLightbox', array(
-			'close' => __( 'Close', 'blt-events' ),
-			'prev'  => __( 'Previous image', 'blt-events' ),
-			'next'  => __( 'Next image', 'blt-events' ),
+			'close'  => __( 'Close', 'blt-events' ),
+			'prev'   => __( 'Previous image', 'blt-events' ),
+			'next'   => __( 'Next image', 'blt-events' ),
+			'viewer' => __( 'Image viewer', 'blt-events' ),
 		) );
 
 		if ( ! self::styles_enabled() ) {
@@ -294,7 +295,13 @@ class BLT_Events_Single_Event {
 		 * @param array   $data  Template data.
 		 * @param WP_Post $event The event.
 		 */
-		return apply_filters( 'blt_events_single_view_data', $data, $event );
+		$data = apply_filters( 'blt_events_single_view_data', $data, $event );
+
+		// Derived after the filter, so hiding the image there (show_featured
+		// or featured_image) also drops the hero and the card overlap.
+		$data['has_image'] = ! empty( $data['show_featured'] ) && ! empty( $data['featured_image'] );
+
+		return $data;
 	}
 
 	/**
@@ -404,17 +411,9 @@ class BLT_Events_Single_Event {
 	 * ---------------------------------------------------------------- */
 
 	private static function render_single( $event, $content ) {
-		$data = self::view_data( $event, $content );
+		wp_enqueue_script( 'blt-events-single' );
 
-		// Logos without a sponsor link open in the lightbox.
-		foreach ( (array) ( $data['sponsors'] ?? array() ) as $sponsor ) {
-			if ( empty( $sponsor['url'] ) ) {
-				wp_enqueue_script( 'blt-events-single' );
-				break;
-			}
-		}
-
-		return BLT_Events_Templates::render( 'single-event.php', $data );
+		return BLT_Events_Templates::render( 'single-event.php', self::view_data( $event, $content ) );
 	}
 
 	/**

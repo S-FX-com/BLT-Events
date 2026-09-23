@@ -49,6 +49,13 @@
 	flex-shrink: 0;
 }
 
+.blt-event a:focus-visible,
+.blt-event summary:focus-visible {
+	/* Solid outline in the accent: visible on white and in forced colours. */
+	outline: 2px solid var(--blt-e-primary);
+	outline-offset: 2px;
+}
+
 .blt-event__sr-only {
 	position: absolute !important;
 	width: 1px;
@@ -265,11 +272,6 @@
 	content: "";
 }
 
-.blt-event__agenda-summary:focus-visible {
-	outline: 2px solid var(--blt-e-focus-ring);
-	outline-offset: 2px;
-}
-
 .blt-event__agenda-time {
 	margin: 0;
 	color: var(--blt-e-neutral);
@@ -387,9 +389,10 @@
 	gap: var(--blt-e-content-gap);
 }
 
-/* Only stick where the card fits comfortably on screen. */
-@media (min-width: 992px) and (min-height: 720px) {
-	.blt-event__summary {
+/* Sticks only when it fits on screen (single-event.js adds .is-sticky), so
+   a tall card never hides its own register button below the fold. */
+@media (min-width: 992px) {
+	.blt-event__summary.is-sticky {
 		position: sticky;
 		top: calc(var(--blt-e-space-m) + var(--wp-admin--admin-bar--height, 0px));
 	}
@@ -610,9 +613,12 @@ a.blt-event__presenter-name:focus-visible {
 	font-size: 0.875rem;
 }
 
-/* Register button */
+/* Register button (with the price above it under a pre-2.5 root template) */
 .blt-event__cta {
 	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--blt-e-space-xs);
 }
 
 .blt-event__cta-button {
@@ -624,7 +630,9 @@ a.blt-event__presenter-name:focus-visible {
 	min-height: 46px;
 	padding: 0.75rem 1.25rem;
 	border-radius: var(--blt-e-radius-sm);
-	background: var(--blt-e-primary);
+	/* The deeper accent shade keeps white text above 4.5:1 (the default
+	   accent alone is 4.47:1). */
+	background: var(--blt-e-primary-hover);
 	color: var(--blt-e-on-primary);
 	font-size: 0.95rem;
 	font-weight: 600;
@@ -633,15 +641,9 @@ a.blt-event__presenter-name:focus-visible {
 	transition: background-color 0.15s ease;
 }
 
-.blt-event__cta-button:hover,
-.blt-event__cta-button:focus-visible {
-	background: var(--blt-e-primary-hover);
+.blt-event__cta-button:hover {
 	color: var(--blt-e-on-primary);
-}
-
-.blt-event__cta-button:focus-visible {
-	outline: none;
-	box-shadow: 0 0 0 3px var(--blt-e-focus-ring);
+	filter: brightness(0.9);
 }
 
 .blt-event__cta-button.is-disabled,
@@ -651,6 +653,7 @@ a.blt-event__presenter-name:focus-visible {
 	background: var(--blt-e-surface-sunken);
 	color: var(--blt-e-fg-muted);
 	cursor: default;
+	filter: none;
 }
 
 /* --- Parts from theme overrides of the pre-2.5 templates --- */
@@ -701,6 +704,10 @@ a.blt-event__presenter-name:focus-visible {
 		order: 4;
 	}
 
+	.blt-event__main > .blt-event__main-start {
+		order: 0;
+	}
+
 	.blt-event__main > .blt-event__categories {
 		order: 1;
 	}
@@ -723,16 +730,6 @@ a.blt-event__presenter-name:focus-visible {
 }
 
 @media (max-width: 600px) {
-	.blt-event__back {
-		top: 0.6rem;
-		left: 0.6rem;
-		padding: 0.45rem 0.8rem;
-	}
-
-	.blt-event__card {
-		padding: var(--blt-e-space-s);
-	}
-
 	.blt-event__map iframe {
 		height: 220px;
 	}
@@ -855,4 +852,25 @@ a.blt-event__presenter-name:focus-visible {
 
 .blt-lightbox__next {
 	right: 1rem;
+}
+
+@media (max-width: 600px) {
+	.blt-lightbox__img {
+		max-height: 70vh;
+	}
+
+	.blt-lightbox__prev,
+	.blt-lightbox__next {
+		top: auto;
+		bottom: 1rem;
+		transform: none;
+	}
+
+	.blt-lightbox__prev {
+		left: calc(50% - 52px);
+	}
+
+	.blt-lightbox__next {
+		right: calc(50% - 52px);
+	}
 }

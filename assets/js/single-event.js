@@ -1,7 +1,11 @@
 /**
  * BLT Events - Single event page.
  *
- * A small lightbox for sponsor logos without a sponsor link. Links marked
+ * 1. The event card sticks beside the content only while it fits in the
+ *    window: a card taller than the screen would otherwise keep its own
+ *    register button out of view for as long as it is stuck.
+ *
+ * 2. A small lightbox for sponsor logos without a sponsor link. Links marked
  * data-blt-lightbox="group" open their full-size image in a native <dialog>:
  * Escape or a click outside the image closes it, the arrow keys step through
  * the group, and focus returns to the logo that opened it. Browsers without
@@ -102,6 +106,7 @@
 
 		img.src = link.getAttribute("href");
 		img.alt = alt;
+		dialog.setAttribute("aria-label", alt || i18n.viewer || "Image viewer");
 		caption.textContent = alt;
 		caption.hidden = !alt;
 
@@ -109,6 +114,46 @@
 		prevBtn.hidden = !many;
 		nextBtn.hidden = !many;
 	}
+
+	/* ------------------------------------------------------------------
+	 * Sticky card
+	 * ---------------------------------------------------------------- */
+
+	var cards = document.querySelectorAll(".blt-event__summary");
+	var pending = false;
+
+	function fitCards() {
+		pending = false;
+		var bar = document.getElementById("wpadminbar");
+		// Room for the card's top offset above it and a margin below it.
+		var room = document.documentElement.clientHeight - (bar ? bar.offsetHeight : 0) - 64;
+		Array.prototype.forEach.call(cards, function (card) {
+			card.classList.toggle("is-sticky", card.offsetHeight <= room);
+		});
+	}
+
+	function queueFit() {
+		if (!pending) {
+			pending = true;
+			window.requestAnimationFrame(fitCards);
+		}
+	}
+
+	if (cards.length) {
+		fitCards();
+		window.addEventListener("resize", queueFit);
+		window.addEventListener("load", queueFit);
+		if (typeof window.ResizeObserver === "function") {
+			var observer = new window.ResizeObserver(queueFit);
+			Array.prototype.forEach.call(cards, function (card) {
+				observer.observe(card);
+			});
+		}
+	}
+
+	/* ------------------------------------------------------------------
+	 * Sponsor lightbox
+	 * ---------------------------------------------------------------- */
 
 	document.addEventListener("click", function (e) {
 		var link = e.target && e.target.closest ? e.target.closest("a[data-blt-lightbox]") : null;

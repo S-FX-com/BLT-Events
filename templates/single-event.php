@@ -21,7 +21,7 @@
  * @var bool    $is_physical
  * @var bool    $show_title
  * @var bool    $show_featured
- * @var bool    $has_image          The featured image is shown.
+ * @var bool    $has_image          The featured image is shown (derived from show_featured and featured_image).
  * @var bool    $show_back
  * @var bool    $show_calendar
  * @var string  $featured_image     <img> HTML.
@@ -54,8 +54,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$has_image = ! empty( $has_image ) || ( $show_featured && $featured_image );
+$has_image = ! empty( $has_image );
 $has_hero  = $has_image || ( $show_back && $events_url );
+
+// Tells the parts they sit in this layout, where single/info.php lists the
+// time, venue, price and calendar links. A theme copy of the pre-2.5 root
+// template doesn't set it, so datebox.php, cta.php and address.php keep
+// printing those facts themselves there.
+$args['card_info'] = true;
+
+// Captured so it can keep its place at the top of the page when the card
+// moves up under the title on narrow screens.
+ob_start();
+/**
+ * Fires at the top of the main column.
+ *
+ * @param int $event_id
+ */
+do_action( 'blt_events_single_before_main', $event_id );
+$blt_events_before_main = trim( (string) ob_get_clean() );
 ?>
 <div class="blt-event blt-event--<?php echo esc_attr( $event_type ); ?> <?php echo $has_image ? 'blt-event--has-image' : 'blt-event--no-image'; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
 	<?php if ( $has_hero ) : ?>
@@ -71,14 +88,10 @@ $has_hero  = $has_image || ( $show_back && $events_url );
 
 	<div class="blt-event__layout">
 		<div class="blt-event__main">
+			<?php if ( '' !== $blt_events_before_main ) : ?>
+				<div class="blt-event__main-start"><?php echo $blt_events_before_main; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- output of the blt_events_single_before_main action. ?></div>
+			<?php endif; ?>
 			<?php
-			/**
-			 * Fires at the top of the main column.
-			 *
-			 * @param int $event_id
-			 */
-			do_action( 'blt_events_single_before_main', $event_id );
-
 			BLT_Events_Templates::include_template( 'single/categories.php', $args );
 			BLT_Events_Templates::include_template( 'single/title.php', $args );
 			BLT_Events_Templates::include_template( 'single/description.php', $args );
@@ -98,7 +111,7 @@ $has_hero  = $has_image || ( $show_back && $events_url );
 
 		<aside class="blt-event__sidebar" aria-labelledby="blt-event-card-title-<?php echo esc_attr( $event_id ); ?>">
 			<div class="blt-event__card blt-event__summary">
-				<h2 class="blt-event__sr-only" id="blt-event-card-title-<?php echo esc_attr( $event_id ); ?>"><?php esc_html_e( 'Event details', 'blt-events' ); ?></h2>
+				<h2 class="blt-event__sr-only screen-reader-text" id="blt-event-card-title-<?php echo esc_attr( $event_id ); ?>"><?php esc_html_e( 'Event details', 'blt-events' ); ?></h2>
 				<?php
 				/**
 				 * Fires at the top of the event card, before the date.

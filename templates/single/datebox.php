@@ -9,7 +9,11 @@
  * @var string $date_label
  * @var string $time_label
  * @var string $day
- * @var string $event_date Start date, Y-m-d.
+ * @var string $event_date    Start date, Y-m-d.
+ * @var bool   $show_calendar
+ * @var string $ics_url
+ * @var string $google_url
+ * @var bool   $card_info     Set by the current single-event.php, which lists the time and calendar links in single/info.php.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -35,3 +39,19 @@ if ( '' === $date_label && '' === $time_label ) {
 		<?php endif; ?>
 	</span>
 </div>
+<?php
+// A theme copy of the pre-2.5 single-event.php has no facts list, so the
+// time and calendar links stay here for it.
+if ( empty( $card_info ) ) :
+	?>
+	<?php if ( '' !== $time_label && '' !== $date_label ) : ?>
+		<p class="blt-event__datebox-time"><?php echo esc_html( $time_label ); ?></p>
+	<?php endif; ?>
+	<?php if ( $show_calendar && '' !== $date_label ) : ?>
+		<p class="blt-event__calendar-links">
+			<a class="blt-event__calendar-link" href="<?php echo esc_url( $ics_url ); ?>"><?php esc_html_e( 'Add to calendar', 'blt-events' ); ?></a>
+			<span aria-hidden="true">&middot;</span>
+			<a class="blt-event__calendar-link" href="<?php echo esc_url( $google_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Google Calendar', 'blt-events' ); ?></a>
+		</p>
+	<?php endif; ?>
+<?php endif; ?>

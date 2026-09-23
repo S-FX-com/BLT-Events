@@ -2,9 +2,9 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: BLT Events 2.4.3\n"
+"Project-Id-Version: BLT Events 2.4.4\n"
 "Report-Msgid-Bugs-To: https://github.com/S-FX-com/BLT-Events/issues\n"
-"POT-Creation-Date: 2026-09-23 18:24+0000\n"
+"POT-Creation-Date: 2026-09-23 19:05+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -117,6 +117,7 @@ msgstr ""
 #: templates/registration/form.php:127
 #: templates/registration/summary.php:92
 #: templates/registration/surecart.php:36
+#: templates/single/cta.php:29
 #: templates/single/info.php:60
 msgid "Free"
 msgstr ""
@@ -981,7 +982,7 @@ msgid "Thursday 14 May · 10:00 – 11:30"
 msgstr ""
 
 #: includes/admin/class-admin-settings.php:879
-#: includes/frontend/class-single-event.php:279
+#: includes/frontend/class-single-event.php:280
 #: includes/shortcodes/class-calendar-shortcode.php:664
 #: templates/single/registration.php:20
 msgid "Register"
@@ -1077,20 +1078,20 @@ msgstr ""
 msgid "Migration"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1002
+#: includes/admin/class-event-metabox.php:1003
 msgid "The set of form fields attendees fill in when registering."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1010
+#: includes/admin/class-event-metabox.php:1011
 msgid "Payment Processor"
 msgstr ""
 
 #. translators: %s: the site-wide default processor name.
-#: includes/admin/class-event-metabox.php:1016
+#: includes/admin/class-event-metabox.php:1017
 msgid "— Site Default (%s) —"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1027
+#: includes/admin/class-event-metabox.php:1028
 msgid "Which processor this event checks out through. Changing it re-syncs the ticket types to the new processor the next time you save; tickets already sold through the old one keep working."
 msgstr ""
 
@@ -1098,61 +1099,56 @@ msgstr ""
 msgid "Ticket Types"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1038
+#: includes/admin/class-event-metabox.php:1039
 msgid "Group Discount"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1039
+#: includes/admin/class-event-metabox.php:1040
 msgid "Discount registrations above a minimum group size"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1045
+#: includes/admin/class-event-metabox.php:1046
 msgid "Min. Attendees"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1049
+#: includes/admin/class-event-metabox.php:1050
 #: includes/admin/class-fieldset-builder.php:293
 #: includes/admin/class-registrations-list.php:420
 #: includes/cpt/class-event-cpt.php:190
 msgid "Type"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1051
+#: includes/admin/class-event-metabox.php:1052
 msgid "Percentage"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1052
+#: includes/admin/class-event-metabox.php:1053
 msgid "Fixed Amount"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1056
+#: includes/admin/class-event-metabox.php:1057
 #: includes/admin/class-registrations-list.php:40
 msgid "Amount"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1081
+#: includes/admin/class-event-metabox.php:1082
 msgid "Featured Event"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1082
+#: includes/admin/class-event-metabox.php:1083
 msgid "Highlight in featured listings"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1090
+#: includes/admin/class-event-metabox.php:1091
 msgid "Hide from Calendar"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1091
+#: includes/admin/class-event-metabox.php:1092
 msgid "Only accessible via direct link"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1118
-msgid "Total Registrations"
-msgstr ""
-
 #: includes/admin/class-event-metabox.php:1119
-#: includes/class-helpers.php:268
-msgid "Confirmed"
+msgid "Total Registrations"
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:112
@@ -1160,11 +1156,16 @@ msgid "Event Schedule"
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:1120
+#: includes/class-helpers.php:268
+msgid "Confirmed"
+msgstr ""
+
+#: includes/admin/class-event-metabox.php:1121
 #: includes/class-helpers.php:267
 msgid "Pending"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1126
+#: includes/admin/class-event-metabox.php:1127
 msgid "View All Registrations"
 msgstr ""
 
@@ -1190,7 +1191,7 @@ msgid "The main copy shown on the event page."
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:312
-#: templates/single/datebox.php:30
+#: templates/single/datebox.php:34
 msgid "Event Date"
 msgstr ""
 
@@ -1557,32 +1558,32 @@ msgstr ""
 msgid "Drag to reorder"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:881
+#: includes/admin/class-event-metabox.php:882
 msgid "Sponsor link"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:881
+#: includes/admin/class-event-metabox.php:882
 msgid "Sponsor link (optional), https://…"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:882
+#: includes/admin/class-event-metabox.php:883
 msgid "Remove sponsor"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:928
+#: includes/admin/class-event-metabox.php:929
 msgid "Registration Open"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:929
+#: includes/admin/class-event-metabox.php:930
 msgid "Allow attendees to register for this event"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:936
-#: includes/admin/class-event-metabox.php:1122
+#: includes/admin/class-event-metabox.php:937
+#: includes/admin/class-event-metabox.php:1123
 msgid "Capacity"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:938
+#: includes/admin/class-event-metabox.php:939
 #: includes/cpt/class-event-cpt.php:242
 msgid "Unlimited"
 msgstr ""
@@ -1591,55 +1592,55 @@ msgstr ""
 msgid "Registration Configuration"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:946
+#: includes/admin/class-event-metabox.php:947
 msgid "e.g. 100"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:947
+#: includes/admin/class-event-metabox.php:948
 msgid "Maximum registrations allowed."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:949
+#: includes/admin/class-event-metabox.php:950
 msgid "This event has unlimited capacity. Toggle off to set a maximum."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:953
+#: includes/admin/class-event-metabox.php:954
 msgid "Registration Cutoff"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:956
+#: includes/admin/class-event-metabox.php:957
 msgid "Cutoff Date"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:960
+#: includes/admin/class-event-metabox.php:961
 msgid "Cutoff Time"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:964
+#: includes/admin/class-event-metabox.php:965
 msgid "Registration closes at this date and time. Leave blank for no automatic cutoff."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:972
+#: includes/admin/class-event-metabox.php:973
 msgid "Collect Details for Each Attendee"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:973
+#: includes/admin/class-event-metabox.php:974
 msgid "When more than one ticket is bought, ask for the name and contact of every attendee, not just the buyer"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:983
+#: includes/admin/class-event-metabox.php:984
 msgid "Require Manual Approval"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:984
+#: includes/admin/class-event-metabox.php:985
 msgid "Registrations require admin review before confirmation"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:991
+#: includes/admin/class-event-metabox.php:992
 msgid "Registration Fieldset"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:993
+#: includes/admin/class-event-metabox.php:994
 msgid "— Default Fieldset —"
 msgstr ""
 
@@ -2192,7 +2193,7 @@ msgid "Status"
 msgstr ""
 
 #: includes/admin/class-registrations-list.php:425
-#: templates/single/address.php:24
+#: templates/single/address.php:46
 msgid "Location"
 msgstr ""
 
@@ -2428,7 +2429,7 @@ msgstr ""
 
 #: includes/api/class-rest-fieldsets.php:194
 #: includes/api/class-rest-registrations.php:167
-#: includes/frontend/class-single-event.php:107
+#: includes/frontend/class-single-event.php:108
 #: includes/shortcodes/class-registration-shortcode.php:46
 msgid "Event not found."
 msgstr ""
@@ -3371,7 +3372,7 @@ msgstr ""
 msgid "Speaker"
 msgstr ""
 
-#: includes/frontend/class-single-event.php:279
+#: includes/frontend/class-single-event.php:280
 #: includes/shortcodes/class-calendar-shortcode.php:664
 msgid "Buy tickets"
 msgstr ""
@@ -3386,6 +3387,10 @@ msgstr ""
 
 #: includes/frontend/class-single-event.php:72
 msgid "Next image"
+msgstr ""
+
+#: includes/frontend/class-single-event.php:73
+msgid "Image viewer"
 msgstr ""
 
 #: includes/integrations/class-clickmeeting-integration.php:120
@@ -4055,11 +4060,16 @@ msgstr ""
 msgid "Increase quantity"
 msgstr ""
 
-#: templates/single-event.php:101
+#: templates/single-event.php:114
 msgid "Event details"
 msgstr ""
 
-#: templates/single/address.php:27
+#: templates/single/address.php:29
+msgid "Address"
+msgstr ""
+
+#: templates/single/address.php:33
+#: templates/single/address.php:49
 msgid "Event location map"
 msgstr ""
 
@@ -4071,25 +4081,31 @@ msgstr ""
 msgid "Back to events"
 msgstr ""
 
-#: templates/single/cta.php:23
+#: templates/single/cta.php:26
+msgid "FROM"
+msgstr ""
+
+#: templates/single/cta.php:34
 msgid "Registration closed"
 msgstr ""
 
-#: templates/single/cta.php:25
+#: templates/single/cta.php:36
 msgid "Sold out"
+msgstr ""
+
+#: templates/single/datebox.php:52
+#: templates/single/info.php:70
+msgid "Add to calendar"
+msgstr ""
+
+#: templates/single/datebox.php:54
+#: templates/single/info.php:72
+msgid "Google Calendar"
 msgstr ""
 
 #. translators: %s: lowest ticket price, formatted.
 #: templates/single/info.php:56
 msgid "From %s"
-msgstr ""
-
-#: templates/single/info.php:70
-msgid "Add to calendar"
-msgstr ""
-
-#: templates/single/info.php:72
-msgid "Google Calendar"
 msgstr ""
 
 #: templates/single/sponsors.php:46

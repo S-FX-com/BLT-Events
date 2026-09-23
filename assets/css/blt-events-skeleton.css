@@ -83,7 +83,7 @@
 	--blt-e-neutral-light: var(--neutral-light, var(--blt-e-border));
 	--blt-e-neutral-ultra-light: var(--neutral-ultra-light, var(--blt-e-surface-sunken));
 	--blt-e-neutral-semi-light: var(--neutral-semi-light, var(--blt-e-fg-muted));
-	--blt-e-divider: var(--black-trans-20, rgba(0, 0, 0, 0.2));
+	--blt-e-divider: var(--black-trans-20, var(--border-color, rgba(0, 0, 0, 0.2)));
 	--blt-e-chip-bg: var(--neutral-trans-10, rgba(17, 24, 39, 0.1));
 	--blt-e-chip-bg-hover: var(--neutral-trans-20, rgba(17, 24, 39, 0.2));
 
@@ -97,6 +97,6 @@
 	:root {
 		--blt-e-chip-bg: var(--neutral-trans-10, color-mix(in oklch, var(--blt-e-neutral) 10%, transparent));
 		--blt-e-chip-bg-hover: var(--neutral-trans-20, color-mix(in oklch, var(--blt-e-neutral) 20%, transparent));
-		--blt-e-divider: var(--black-trans-20, color-mix(in oklch, var(--black, #000) 20%, transparent));
+		--blt-e-divider: var(--black-trans-20, var(--border-color, color-mix(in oklch, var(--black, #000) 20%, transparent)));
 	}
 }

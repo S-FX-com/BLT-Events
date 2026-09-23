@@ -12,6 +12,7 @@
  * @var bool     $has_paid
  * @var string   $price_from  Formatted lowest paid price (shown in single/info.php).
  * @var int|null $spots_left
+ * @var bool     $card_info   Set by the current single-event.php, which lists the price in single/info.php.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,6 +20,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="blt-event__cta">
+	<?php if ( empty( $card_info ) ) : // A theme copy of the pre-2.5 single-event.php has no facts list. ?>
+		<div class="blt-event__cta-price">
+			<?php if ( $has_paid && $price_from ) : ?>
+				<span class="blt-event__cta-from"><?php esc_html_e( 'FROM', 'blt-events' ); ?></span>
+				<span class="blt-event__cta-amount"><?php echo esc_html( $price_from ); ?></span>
+			<?php else : ?>
+				<span class="blt-event__cta-amount"><?php esc_html_e( 'Free', 'blt-events' ); ?></span>
+			<?php endif; ?>
+		</div>
+	<?php endif; ?>
 	<?php if ( ! $registration_open ) : ?>
 		<span class="blt-event__cta-button is-disabled" aria-disabled="true"><?php esc_html_e( 'Registration closed', 'blt-events' ); ?></span>
 	<?php elseif ( $is_sold_out ) : ?>

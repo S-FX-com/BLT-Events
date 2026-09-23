@@ -878,7 +878,8 @@ class BLT_Events_Event_Metabox {
 				<?php endif; ?>
 			</div>
 			<input type="hidden" class="blt-sponsor-image-id" name="sponsors[<?php echo esc_attr( $i ); ?>][image_id]" value="<?php echo esc_attr( $image_id ?: '' ); ?>" />
-			<input type="url" class="blt-input" name="sponsors[<?php echo esc_attr( $i ); ?>][url]" value="<?php echo esc_attr( $row['url'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Sponsor link (optional), https://…', 'blt-events' ); ?>" aria-label="<?php esc_attr_e( 'Sponsor link', 'blt-events' ); ?>" />
+			<?php // Text, not type="url": browser validation of a field in a collapsed panel would silently block saving the event. esc_url_raw() completes "example.com" on save. ?>
+			<input type="text" inputmode="url" class="blt-input" name="sponsors[<?php echo esc_attr( $i ); ?>][url]" value="<?php echo esc_attr( $row['url'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Sponsor link (optional), https://…', 'blt-events' ); ?>" aria-label="<?php esc_attr_e( 'Sponsor link', 'blt-events' ); ?>" />
 			<button type="button" class="blt-sponsor-remove dashicons dashicons-trash" aria-label="<?php esc_attr_e( 'Remove sponsor', 'blt-events' ); ?>"></button>
 		</div>
 		<?php
