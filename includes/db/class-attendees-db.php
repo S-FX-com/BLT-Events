@@ -40,6 +40,23 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 	}
 
 	/**
+	 * Delete every attendee row for a registration. Used when a
+	 * registration is permanently deleted.
+	 *
+	 * @param int $registration_id The registration row ID.
+	 * @return int|false Number of rows deleted, or false on error.
+	 */
+	public function delete_by_registration( $registration_id ) {
+		global $wpdb;
+
+		return $wpdb->delete(
+			$this->table_name,
+			array( 'registration_id' => absint( $registration_id ) ),
+			array( '%d' )
+		);
+	}
+
+	/**
 	 * Get all attendees for an event.
 	 *
 	 * @param int $event_id The event post ID.
@@ -110,7 +127,11 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 	}
 
 	/**
-	 * Number of checked-in attendees for an event.
+	 * Number of checked-in attendees for an event whose registration still
+	 * holds a seat — same status filter as count_for_event(), the count
+	 * this is normally shown as a percentage of, so a cancelled/refunded/
+	 * trashed registration's already-checked-in attendees can't push the
+	 * percentage past 100%.
 	 *
 	 * @param int $event_id The event post ID.
 	 * @return int
@@ -118,11 +139,16 @@ class BLT_Events_Attendees_DB extends BLT_Events_DB {
 	public function count_checked_in( $event_id ) {
 		global $wpdb;
 
+		$registrations_table = $wpdb->prefix . 'blt_registrations';
+		list( $status_sql, $status_params ) = $this->seat_status_sql();
+
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$this->table_name}
-				 WHERE event_id = %d AND check_in_status = 'checked_in'",
-				absint( $event_id )
+				"SELECT COUNT(*)
+				 FROM {$this->table_name} a
+				 INNER JOIN {$registrations_table} r ON r.id = a.registration_id
+				 WHERE a.event_id = %d AND a.check_in_status = 'checked_in' AND {$status_sql}", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				array_merge( array( absint( $event_id ) ), $status_params )
 			)
 		);
 	}

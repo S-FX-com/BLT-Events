@@ -3,7 +3,7 @@
  * Plugin Name:       BLT Events
  * Plugin URI:        https://github.com/S-FX-com/BLT-Events
  * Description:       Event registration for WordPress: calendar and list views, ticket types, configurable registration forms, multi-attendee bookings, waitlists, reminders, Stripe, SureCart and FluentCart checkout, and Zoom, Teams, GoTo and ClickMeeting rooms.
- * Version:           2.4.3
+ * Version:           2.4.4
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            S-FX.com
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'BLT_EVENTS_VERSION', '2.4.3' );
+define( 'BLT_EVENTS_VERSION', '2.4.4' );
 // Bumped whenever install()/upgrade work has to run on sites updated
 // without re-activation (schema, roles, cron, seeded options).
 define( 'BLT_EVENTS_DB_VERSION', '1.2' );
@@ -63,7 +63,10 @@ $blt_events_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::bui
 	'blt-events',
 	24
 );
-$blt_events_update_checker->getVcsApi()->enableReleaseAssets();
+// Narrows getVcsApi()'s generic return type: always a GitHubApi at runtime, since the checker is built against a github.com URL.
+/** @var \YahnisElsts\PluginUpdateChecker\v5p6\Vcs\GitHubApi $blt_events_vcs_api */
+$blt_events_vcs_api = $blt_events_update_checker->getVcsApi();
+$blt_events_vcs_api->enableReleaseAssets();
 
 // Family update policy: at most one automatic check per day, anchored to
 // 00:00 site time, with manual checks always allowed immediately.
@@ -134,6 +137,7 @@ spl_autoload_register( function ( $class ) {
 		'appearance'               => 'includes/frontend/class-appearance.php',
 		'single-event'             => 'includes/frontend/class-single-event.php',
 		'presenters'               => 'includes/frontend/class-presenters.php',
+		'sponsors'                 => 'includes/frontend/class-sponsors.php',
 		'schema'                   => 'includes/frontend/class-schema.php',
 		'archive'                  => 'includes/frontend/class-archive.php',
 		'blocks'                   => 'includes/frontend/class-blocks.php',
@@ -387,7 +391,7 @@ function blt_events_enqueue_admin_assets( $hook ) {
 		wp_enqueue_script(
 			'blt-events-event-editor',
 			BLT_EVENTS_PLUGIN_URL . 'assets/js/event-editor.js',
-			array( 'jquery' ),
+			array( 'jquery', 'jquery-ui-sortable' ),
 			BLT_EVENTS_VERSION,
 			true
 		);

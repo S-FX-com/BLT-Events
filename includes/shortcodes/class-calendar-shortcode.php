@@ -453,7 +453,7 @@ class BLT_Events_Calendar_Shortcode {
 							'event_id'       => $event_id,
 							'permalink'      => get_permalink(),
 							'title'          => get_the_title(),
-							'excerpt'        => has_excerpt() ? get_the_excerpt() : '',
+							'excerpt'        => has_excerpt() ? get_the_excerpt() : wp_trim_words( wp_strip_all_tags( get_the_content() ), 55 ),
 							'when'           => $when,
 							'datetime_label' => self::list_datetime_label( $when, $event_id ),
 							'day'            => BLT_Events_Helpers::format_date( $when['date'], 'j' ),
@@ -488,19 +488,39 @@ class BLT_Events_Calendar_Shortcode {
 		$context   = $search !== '' ? add_query_arg( 'blt_search', $search, $context ) : $context;
 		$prev_url  = $paged > 1 ? add_query_arg( 'blt_paged', $paged - 1, $context ) : '';
 		$next_url  = $paged < $max_pages ? add_query_arg( 'blt_paged', $paged + 1, $context ) : '';
+
+		$range_labels = array(
+			'today' => __( 'Today', 'blt-events' ),
+			'week'  => __( 'This Week', 'blt-events' ),
+			'month' => __( 'This Month', 'blt-events' ),
+		);
 		?>
 		<div class="blt-list-toolbar">
 			<div class="blt-list-nav">
-				<a class="blt-list-navbtn <?php echo $prev_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $prev_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Previous events', 'blt-events' ); ?>"<?php echo $prev_url ? '' : ' aria-disabled="true"'; ?>>&lsaquo;</a>
-				<a class="blt-list-navbtn <?php echo $next_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $next_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Next events', 'blt-events' ); ?>"<?php echo $next_url ? '' : ' aria-disabled="true"'; ?>>&rsaquo;</a>
-				<label class="blt-list-range">
-					<span class="screen-reader-text"><?php esc_html_e( 'Event date range', 'blt-events' ); ?></span>
-					<select name="blt_range">
-						<option value="today" <?php selected( $range, 'today' ); ?>><?php esc_html_e( 'Today', 'blt-events' ); ?></option>
-						<option value="week" <?php selected( $range, 'week' ); ?>><?php esc_html_e( 'This Week', 'blt-events' ); ?></option>
-						<option value="month" <?php selected( $range, 'month' ); ?>><?php esc_html_e( 'This Month', 'blt-events' ); ?></option>
-					</select>
-				</label>
+				<div class="blt-list-arrows">
+					<a class="blt-list-navbtn <?php echo $prev_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $prev_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Previous events', 'blt-events' ); ?>"<?php echo $prev_url ? '' : ' aria-disabled="true"'; ?>>&lsaquo;</a>
+					<a class="blt-list-navbtn <?php echo $next_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $next_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Next events', 'blt-events' ); ?>"<?php echo $next_url ? '' : ' aria-disabled="true"'; ?>>&rsaquo;</a>
+				</div>
+
+				<details class="blt-list-range" data-current="<?php echo esc_attr( $range ); ?>">
+					<summary aria-label="<?php esc_attr_e( 'Event date range', 'blt-events' ); ?>">
+						<span class="blt-list-range-label"><?php echo esc_html( $range_labels[ $range ] ); ?></span>
+						<span class="blt-list-range-chevron"><?php echo self::chevron_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+					</summary>
+					<ul>
+						<?php
+						self::render_dropdown_items(
+							$range_labels,
+							$range,
+							function ( $key ) use ( $base ) {
+								return add_query_arg( 'blt_range', $key, $base );
+							},
+							'range'
+						);
+						?>
+					</ul>
+				</details>
+
 				<?php if ( 'yes' === $atts['switcher'] ) : ?>
 					<?php self::render_view_menu( 'list' ); ?>
 				<?php endif; ?>
@@ -517,11 +537,12 @@ class BLT_Events_Calendar_Shortcode {
 				?>
 				<input type="hidden" name="blt_range" value="<?php echo esc_attr( $range ); ?>" />
 				<label class="blt-list-search-field">
-					<?php echo self::search_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					<span class="screen-reader-text"><?php esc_html_e( 'Search for events', 'blt-events' ); ?></span>
 					<input type="search" name="blt_search" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search for events', 'blt-events' ); ?>" />
 				</label>
-				<button type="submit" class="blt-list-find"><?php esc_html_e( 'Find events', 'blt-events' ); ?></button>
+				<button type="submit" class="blt-list-search-submit" aria-label="<?php esc_attr_e( 'Find events', 'blt-events' ); ?>">
+					<?php echo self::search_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</button>
 			</form>
 		</div>
 		<?php
@@ -536,22 +557,68 @@ class BLT_Events_Calendar_Shortcode {
 		$views = self::view_labels();
 		?>
 		<details class="blt-view-menu">
-			<summary aria-label="<?php esc_attr_e( 'Change view', 'blt-events' ); ?>"><span class="blt-view-menu-chevron" aria-hidden="true">&#9662;</span></summary>
+			<summary aria-label="<?php esc_attr_e( 'Change view', 'blt-events' ); ?>"><span class="blt-view-menu-chevron"><?php echo self::chevron_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span></summary>
 			<ul>
-				<?php foreach ( $views as $view => $label ) : ?>
-					<li><a href="<?php echo esc_url( add_query_arg( 'blt_view', $view, $base ) ); ?>" class="<?php echo $active === $view ? 'is-active' : ''; ?>"><?php echo esc_html( $label ); ?></a></li>
-				<?php endforeach; ?>
+				<?php
+				self::render_dropdown_items(
+					$views,
+					$active,
+					function ( $view ) use ( $base ) {
+						return add_query_arg( 'blt_view', $view, $base );
+					}
+				);
+				?>
 			</ul>
 		</details>
 		<?php
 	}
 
+	/**
+	 * The <li><a></a></li> rows shared by every <details> dropdown menu in
+	 * the toolbar (date range, view switcher): one link per $items entry,
+	 * the active one marked, an optional data-* attribute for JS to read.
+	 *
+	 * @param array    $items      key => label.
+	 * @param string   $active_key The currently selected key.
+	 * @param callable $url_for    Builds the href for a given key.
+	 * @param string   $data_attr  Optional data-* attribute name to print.
+	 */
+	private static function render_dropdown_items( $items, $active_key, $url_for, $data_attr = '' ) {
+		foreach ( $items as $key => $label ) {
+			$data = $data_attr ? sprintf( ' data-%s="%s"', esc_attr( $data_attr ), esc_attr( $key ) ) : '';
+			printf(
+				'<li><a href="%s"%s class="%s">%s</a></li>',
+				esc_url( $url_for( $key ) ),
+				$data, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from esc_attr() above.
+				$key === $active_key ? 'is-active' : '',
+				esc_html( $label )
+			);
+		}
+	}
+
+	/**
+	 * Shared wrapper for the toolbar's inline SVGs — same viewBox and stroke
+	 * styling throughout, only the shape, size and stroke weight vary.
+	 */
+	private static function icon( $shape, $size = 16, $stroke_width = 2 ) {
+		return sprintf(
+			'<svg class="blt-list-icon" viewBox="0 0 24 24" width="%1$d" height="%1$d" fill="none" stroke="currentColor" stroke-width="%2$s" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">%3$s</svg>',
+			$size,
+			$stroke_width,
+			$shape
+		);
+	}
+
 	private static function pin_icon() {
-		return '<svg class="blt-list-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+		return self::icon( '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>', 15 );
 	}
 
 	private static function search_icon() {
-		return '<svg class="blt-list-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+		return self::icon( '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' );
+	}
+
+	private static function chevron_icon() {
+		return self::icon( '<polyline points="6 9 12 15 18 9"/>', 16, 2.5 );
 	}
 
 	/**

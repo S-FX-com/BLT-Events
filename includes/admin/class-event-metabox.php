@@ -18,12 +18,19 @@ class BLT_Events_Event_Metabox {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
 		add_action( 'save_post_event', array( __CLASS__, 'save_meta' ), 10, 2 );
 
+		// WP remembers collapse state per user, which overrides the server
+		// default for anyone who already has a saved preference. This applies
+		// our intended default once per user, then leaves them free to
+		// change it again afterward.
+		add_filter( 'get_user_option_closedpostboxes_event', array( __CLASS__, 'nudge_closed_boxes' ) );
+
 		$boxes = array(
 			'blt_event_details',
 			'blt_event_type',
 			'blt_event_tickets',
 			'blt_event_agenda',
 			'blt_event_presenters',
+			'blt_event_sponsors',
 			'blt_event_registration_config',
 			'blt_event_options',
 			'blt_event_registrations_summary',
@@ -40,6 +47,54 @@ class BLT_Events_Event_Metabox {
 	public static function add_postbox_class( $classes ) {
 		$classes[] = 'blt-card';
 		return $classes;
+	}
+
+	/**
+	 * Whether a one-time admin UI default has already been applied for the
+	 * current user, so it only ever nudges their layout once.
+	 */
+	private static function nudge_applied( $key ) {
+		$applied = get_user_meta( get_current_user_id(), '_blt_admin_ui_nudges', true );
+		return is_array( $applied ) && in_array( $key, $applied, true );
+	}
+
+	private static function mark_nudge_applied( $key ) {
+		$applied   = get_user_meta( get_current_user_id(), '_blt_admin_ui_nudges', true );
+		$applied   = is_array( $applied ) ? $applied : array();
+		$applied[] = $key;
+		update_user_meta( get_current_user_id(), '_blt_admin_ui_nudges', array_values( array_unique( $applied ) ) );
+	}
+
+	/**
+	 * Start Sponsors and Ticket Types expanded, once, matching the rest of
+	 * the editor's card panels for an account that already had these boxes'
+	 * closed state saved before this default existed.
+	 */
+	public static function nudge_closed_boxes( $value ) {
+		$value   = is_array( $value ) ? $value : array();
+		$changed = false;
+
+		foreach ( array( 'sponsors_open' => 'blt_event_sponsors', 'tickets_open' => 'blt_event_tickets' ) as $nudge_key => $box_id ) {
+			if ( self::nudge_applied( $nudge_key ) ) {
+				continue;
+			}
+
+			$stripped = array_values( array_diff( $value, array( $box_id ) ) );
+			if ( $stripped !== $value ) {
+				$changed = true;
+			}
+			$value = $stripped;
+			self::mark_nudge_applied( $nudge_key );
+		}
+
+		if ( $changed ) {
+			// WP's own closed-postboxes AJAX handler persists via a plain
+			// update_user_meta() call (not update_user_option()) — match
+			// that exactly, or the next page load reads the stale value.
+			update_user_meta( get_current_user_id(), 'closedpostboxes_event', $value );
+		}
+
+		return $value;
 	}
 
 	public static function add_meta_boxes() {
@@ -83,6 +138,15 @@ class BLT_Events_Event_Metabox {
 			'blt_event_presenters',
 			__( 'Presenters', 'blt-events' ),
 			array( __CLASS__, 'render_presenters_box' ),
+			'event',
+			'normal',
+			'default'
+		);
+
+		add_meta_box(
+			'blt_event_sponsors',
+			__( 'Sponsors', 'blt-events' ),
+			array( __CLASS__, 'render_sponsors_box' ),
 			'event',
 			'normal',
 			'default'
@@ -416,10 +480,6 @@ class BLT_Events_Event_Metabox {
 	public static function render_tickets_box( $post ) {
 		$ticket_types = BLT_Events_Helpers::get_ticket_types( $post->ID );
 
-		if ( empty( $ticket_types ) && get_post_status( $post ) === 'auto-draft' ) {
-			$ticket_types = array( array( 'name' => __( 'General Admission', 'blt-events' ), 'price' => '0', 'description' => '' ) );
-		}
-
 		$roles = array();
 		foreach ( wp_roles()->get_names() as $slug => $label ) {
 			$roles[ $slug ] = translate_user_role( $label );
@@ -574,6 +634,7 @@ class BLT_Events_Event_Metabox {
 
 			<div class="blt-agenda-panel" id="blt-agenda-panel" <?php echo $enabled ? '' : 'style="display:none;"'; ?>>
 				<div class="blt-agenda-header" aria-hidden="true">
+					<span></span>
 					<span><?php esc_html_e( 'Start', 'blt-events' ); ?></span>
 					<span><?php esc_html_e( 'End', 'blt-events' ); ?></span>
 					<span><?php esc_html_e( 'Session', 'blt-events' ); ?></span>
@@ -582,6 +643,7 @@ class BLT_Events_Event_Metabox {
 				<div id="blt-agenda-rows">
 					<?php foreach ( $items as $i => $item ) : ?>
 						<div class="blt-agenda-row">
+							<span class="blt-drag-handle dashicons dashicons-menu" aria-hidden="true"></span>
 							<input type="time" class="blt-input" name="agenda[<?php echo (int) $i; ?>][start]" value="<?php echo esc_attr( $item['start'] ?? '' ); ?>" />
 							<input type="time" class="blt-input" name="agenda[<?php echo (int) $i; ?>][end]" value="<?php echo esc_attr( $item['end'] ?? '' ); ?>" />
 							<input type="text" class="blt-input" name="agenda[<?php echo (int) $i; ?>][label]" value="<?php echo esc_attr( $item['label'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'e.g. Registration & networking', 'blt-events' ); ?>" />
@@ -691,6 +753,7 @@ class BLT_Events_Event_Metabox {
 		$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
 		?>
 		<div class="blt-presenter-row">
+			<span class="blt-drag-handle dashicons dashicons-menu" aria-hidden="true"></span>
 			<div class="blt-presenter-photo">
 				<div class="blt-presenter-photo-preview <?php echo $image_url ? 'has-image' : ''; ?>">
 					<?php if ( $image_url ) : ?>
@@ -707,6 +770,81 @@ class BLT_Events_Event_Metabox {
 				<textarea class="blt-input" name="presenters[<?php echo esc_attr( $i ); ?>][bio]" rows="2" placeholder="<?php esc_attr_e( 'Short bio (optional)', 'blt-events' ); ?>"><?php echo esc_textarea( $row['bio'] ?? '' ); ?></textarea>
 			</div>
 			<button type="button" class="blt-presenter-remove dashicons dashicons-trash" aria-label="<?php esc_attr_e( 'Remove presenter', 'blt-events' ); ?>"></button>
+		</div>
+		<?php
+	}
+
+	/* ----------------------------------------------------------------
+	 * Sponsors
+	 * ---------------------------------------------------------------- */
+
+	/**
+	 * A simple repeater: logo + optional link, stored directly on the event.
+	 * No connected-CPT mode — sponsors are always event-local.
+	 */
+	public static function render_sponsors_box( $post ) {
+		$prefix  = BLT_EVENTS_PREFIX;
+		$enabled = get_post_meta( $post->ID, $prefix . 'sponsors_enabled', true ) === '1';
+
+		$raw  = get_post_meta( $post->ID, $prefix . 'sponsors', true );
+		$rows = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+		$rows = is_array( $rows ) ? array_values( $rows ) : array();
+
+		if ( empty( $rows ) ) {
+			$rows = array( array( 'image_id' => 0, 'url' => '' ) );
+		}
+		?>
+		<div class="blt-editor">
+			<div class="blt-toggle-row">
+				<span class="blt-toggle-text">
+					<span>
+						<span class="blt-toggle-title"><?php esc_html_e( 'Show sponsors on the event page', 'blt-events' ); ?></span>
+						<span class="blt-toggle-desc"><?php esc_html_e( 'Displays a row of sponsor logos on the single event page.', 'blt-events' ); ?></span>
+					</span>
+				</span>
+				<span class="blt-toggle">
+					<input type="checkbox" name="sponsors_enabled" id="blt-sponsors-enabled" value="1" <?php checked( $enabled ); ?> />
+					<span class="blt-toggle-track" aria-hidden="true"><span class="blt-toggle-thumb"></span></span>
+				</span>
+			</div>
+
+			<div class="blt-sponsors-panel" id="blt-sponsors-panel" <?php echo $enabled ? '' : 'style="display:none;"'; ?>>
+				<div id="blt-sponsor-rows">
+					<?php foreach ( $rows as $i => $row ) : ?>
+						<?php self::render_sponsor_row( $i, $row ); ?>
+					<?php endforeach; ?>
+				</div>
+				<button type="button" class="blt-btn-dashed" id="blt-add-sponsor">+ <?php esc_html_e( 'Add Sponsor', 'blt-events' ); ?></button>
+				<p class="blt-help"><?php esc_html_e( 'Sponsor logos show in a row on the event page. The link is optional.', 'blt-events' ); ?></p>
+
+				<script type="text/html" id="tmpl-blt-sponsor">
+					<?php self::render_sponsor_row( '__i__', array( 'image_id' => 0, 'url' => '' ) ); ?>
+				</script>
+			</div>
+		</div>
+		<?php
+	}
+
+	private static function render_sponsor_row( $i, $row ) {
+		$image_id  = absint( $row['image_id'] ?? 0 );
+		$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
+		?>
+		<div class="blt-sponsor-row">
+			<span class="blt-drag-handle dashicons dashicons-menu" aria-hidden="true"></span>
+			<div class="blt-sponsor-photo">
+				<div class="blt-sponsor-photo-preview <?php echo $image_url ? 'has-image' : ''; ?>">
+					<?php if ( $image_url ) : ?>
+						<img src="<?php echo esc_url( $image_url ); ?>" alt="" />
+					<?php endif; ?>
+				</div>
+				<input type="hidden" class="blt-sponsor-image-id" name="sponsors[<?php echo esc_attr( $i ); ?>][image_id]" value="<?php echo esc_attr( $image_id ); ?>" />
+				<button type="button" class="button blt-sponsor-photo-select"><?php esc_html_e( 'Logo', 'blt-events' ); ?></button>
+				<button type="button" class="button-link blt-sponsor-photo-remove" <?php echo $image_url ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove', 'blt-events' ); ?></button>
+			</div>
+			<div class="blt-sponsor-fields">
+				<input type="url" class="blt-input" name="sponsors[<?php echo esc_attr( $i ); ?>][url]" value="<?php echo esc_attr( $row['url'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Website URL (optional)', 'blt-events' ); ?>" />
+			</div>
+			<button type="button" class="blt-sponsor-remove dashicons dashicons-trash" aria-label="<?php esc_attr_e( 'Remove sponsor', 'blt-events' ); ?>"></button>
 		</div>
 		<?php
 	}
@@ -1157,6 +1295,27 @@ class BLT_Events_Event_Metabox {
 				);
 			}
 			update_post_meta( $post_id, $prefix . 'presenters', wp_json_encode( $presenters ) );
+		}
+
+		// Sponsors
+		update_post_meta( $post_id, $prefix . 'sponsors_enabled', isset( $_POST['sponsors_enabled'] ) ? '1' : '0' );
+
+		if ( isset( $_POST['sponsors'] ) && is_array( $_POST['sponsors'] ) ) {
+			$sponsors = array();
+			foreach ( $_POST['sponsors'] as $row ) {
+				if ( ! is_array( $row ) ) {
+					continue;
+				}
+				$image_id = absint( $row['image_id'] ?? 0 );
+				if ( ! $image_id ) {
+					continue;
+				}
+				$sponsors[] = array(
+					'image_id' => $image_id,
+					'url'      => esc_url_raw( wp_unslash( $row['url'] ?? '' ) ),
+				);
+			}
+			update_post_meta( $post_id, $prefix . 'sponsors', wp_json_encode( $sponsors ) );
 		}
 
 		// Registration config

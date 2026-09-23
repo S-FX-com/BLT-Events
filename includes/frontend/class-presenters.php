@@ -12,8 +12,8 @@
  *    own presenter rows (name/role/bio/photo) via the repeater.
  *
  * Either way presenters only appear when the event's "Show presenters"
- * toggle is on. This class normalizes both modes to a common shape and
- * renders the single-event sidebar block.
+ * toggle is on. This class normalizes both modes to a common shape;
+ * BLT_Events_Single_Event::view_data() fetches it for the sidebar's info card.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +24,6 @@ class BLT_Events_Presenters {
 
 	public static function init() {
 		add_action( 'wp_ajax_blt_search_presenters', array( __CLASS__, 'ajax_search' ) );
-		add_action( 'blt_events_single_sidebar', array( __CLASS__, 'render_sidebar' ), 10, 1 );
 	}
 
 	/**
@@ -224,32 +223,5 @@ class BLT_Events_Presenters {
 			);
 		}
 		return $out;
-	}
-
-	/* ------------------------------------------------------------------
-	 * Front-end sidebar block.
-	 * ------------------------------------------------------------------ */
-
-	public static function render_sidebar( $event_id ) {
-		$presenters = self::for_event( $event_id );
-		if ( empty( $presenters ) ) {
-			return;
-		}
-
-		/**
-		 * Filter the presenters shown on an event page.
-		 *
-		 * @param array $presenters Rows with name, role, bio, photo, url.
-		 * @param int   $event_id   The event post ID.
-		 */
-		$presenters = apply_filters( 'blt_events_presenters', $presenters, $event_id );
-
-		BLT_Events_Templates::include_template( 'single/presenters.php', array(
-			'event_id'   => $event_id,
-			'presenters' => $presenters,
-			'label'      => count( $presenters ) > 1
-				? __( 'Presenters', 'blt-events' )
-				: __( 'Presenter', 'blt-events' ),
-		) );
 	}
 }

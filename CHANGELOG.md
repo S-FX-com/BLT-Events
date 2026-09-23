@@ -2,6 +2,33 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.4.4
+
+### Added
+
+- **Sponsors.** A new section on the single event page — a logo row on the front end, with its own admin repeater (logo + optional link) and drag-to-reorder, mirroring Presenters.
+- **Registrations Trash.** Move to Trash / Restore / Delete Permanently for registrations in the admin list, matching WordPress's native post-trash pattern (views, bulk actions, row actions).
+- Agenda, Presenters and Sponsors admin rows are drag-to-reorder.
+
+### Changed
+
+- **Single event sidebar.** The four separate cards (date, price/CTA, address, presenters) are now one sticky info card; every field hides independently when empty, so the card itself only disappears if all fields are empty.
+- **Agenda** is now a native accordion: opening one session closes the others.
+- **Registration form** is widened to match the page instead of floating as a separate narrow widget, and restyled to match the site design.
+- **Event Calendar list view toolbar** rebuilt to match the approved design: bordered prev/next buttons, a styled Today / This Week / This Month date-range filter, and an icon-only search button.
+- **Event Calendar list rows** rebuilt to match the approved design (day/weekday, datetime, title, location, featured image); mobile layout adjusted so the date-range dropdown fills the toolbar and the day/weekday column hides in favor of the inline datetime.
+
+### Fixed
+
+- Sidebar consolidation had dropped the "Free" price label, the event's time, and presenter bios for events without a paid ticket, a set time, or a bio.
+- Free events were routed through an unconfigured SureCart checkout instead of the standard RSVP path.
+- Registrations CSV export included trashed registrations.
+- Attendee check-in percentage could read over 100% if a checked-in registration was later cancelled, refunded, or trashed.
+- Event excerpt now falls back to a trimmed excerpt of the post content when no manual excerpt is set, instead of showing nothing.
+- Corner Radius setting under Appearance → Overrides now actually applies to the calendar list view (was previously hardcoded to square corners).
+- Skeleton mode now pulls real Automatic.css (ACSS) variables for colours, borders, shadows and corner radius instead of falling back to incorrect guessed variable names; content width now matches the site's real ACSS max content width, so switching between Styled and Skeleton mode produces no layout differences.
+- Plugin update-checker's bundled `vendor/` folder was silently stripped from release builds.
+
 ## 2.4.0
 
 ### Fixed

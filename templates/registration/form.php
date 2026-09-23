@@ -128,7 +128,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div id="blt-form-messages" role="status" aria-live="polite" hidden></div>
 			<div class="blt-form-actions">
 				<button type="submit" class="blt-submit-btn" id="blt-submit-btn">
-					<?php esc_html_e( 'Register — Free', 'blt-events' ); ?>
+					<?php esc_html_e( 'Register', 'blt-events' ); ?>
 				</button>
 			</div>
 			<?php endif; ?>
@@ -153,8 +153,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div id="blt-form-messages" role="status" aria-live="polite" hidden></div>
 
 			<div class="blt-form-actions">
-				<button type="submit" class="blt-submit-btn" id="blt-submit-btn" <?php echo $stepped ? 'disabled' : ''; ?>>
-					<?php echo $stepped ? esc_html__( 'Select tickets to continue', 'blt-events' ) : esc_html__( 'Register — Free', 'blt-events' ); ?>
+				<button type="submit" class="blt-submit-btn" id="blt-submit-btn" disabled>
+					<?php esc_html_e( 'Select tickets to continue', 'blt-events' ); ?>
 				</button>
 			</div>
 		</div>

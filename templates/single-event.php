@@ -9,6 +9,7 @@
  * @var WP_Post $event
  * @var int     $event_id
  * @var string  $description        Filtered post content.
+ * @var string  $excerpt
  * @var string  $title
  * @var string  $event_type         online | in-person | hybrid
  * @var bool    $is_online
@@ -38,6 +39,9 @@
  * @var string  $map_src
  * @var string  $online_url
  * @var bool    $can_see_online_url
+ * @var array   $presenters         Rows with name, role, bio, photo, url.
+ * @var string  $presenters_label   "Speaker" or "Speakers".
+ * @var array   $sponsors           Rows with image_id, src, url.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -68,6 +72,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			BLT_Events_Templates::include_template( 'single/title.php', $args );
 			BLT_Events_Templates::include_template( 'single/description.php', $args );
 			BLT_Events_Templates::include_template( 'single/agenda.php', $args );
+			BLT_Events_Templates::include_template( 'single/sponsors.php', $args );
 			BLT_Events_Templates::include_template( 'single/registration.php', $args );
 
 			/**
@@ -88,13 +93,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 			 */
 			do_action( 'blt_events_single_before_sidebar', $event_id );
 
-			BLT_Events_Templates::include_template( 'single/datebox.php', $args );
-			BLT_Events_Templates::include_template( 'single/cta.php', $args );
-			BLT_Events_Templates::include_template( 'single/address.php', $args );
+			BLT_Events_Templates::include_template( 'single/info-card.php', $args );
 			BLT_Events_Templates::include_template( 'single/virtual.php', $args );
 
 			/**
-			 * Extra sidebar content — presenters, sponsors, etc.
+			 * Extra sidebar content.
 			 *
 			 * @param int $event_id
 			 */

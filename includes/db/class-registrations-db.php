@@ -136,9 +136,9 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 	/**
 	 * Check if an email is already registered for a specific event.
 	 *
-	 * Used for duplicate registration prevention. Cancelled and refunded
-	 * registrations do not count, so that person may legitimately register
-	 * again.
+	 * Used for duplicate registration prevention. Cancelled, refunded and
+	 * trashed registrations do not count, so that person may legitimately
+	 * register again.
 	 *
 	 * @param string $email    The customer email.
 	 * @param int    $event_id The event post ID.
@@ -155,11 +155,12 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 				"SELECT COUNT(*) FROM {$this->table_name}
 				 WHERE customer_email = %s
 				   AND event_id = %d
-				   AND status NOT IN ( %s, %s )",
+				   AND status NOT IN ( %s, %s, %s )",
 				$email,
 				$event_id,
 				'cancelled',
-				'refunded'
+				'refunded',
+				'trash'
 			)
 		);
 
@@ -202,23 +203,19 @@ class BLT_Events_Registrations_DB extends BLT_Events_DB {
 	}
 
 	/**
-	 * Registration counts per status for an event.
+	 * Registration counts per status, in one query.
 	 *
-	 * @param int $event_id The event post ID.
+	 * @param int $event_id The event post ID, or 0 for every event.
 	 * @return array Map of status => registration count.
 	 */
-	public function count_by_status( $event_id ) {
+	public function count_by_status( $event_id = 0 ) {
 		global $wpdb;
 
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT status, COUNT(*) AS total
-				 FROM {$this->table_name}
-				 WHERE event_id = %d
-				 GROUP BY status",
-				absint( $event_id )
-			)
-		);
+		$event_id = absint( $event_id );
+		$sql      = "SELECT status, COUNT(*) AS total FROM {$this->table_name}";
+		$rows     = $event_id
+			? $wpdb->get_results( $wpdb->prepare( "{$sql} WHERE event_id = %d GROUP BY status", $event_id ) ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			: $wpdb->get_results( "{$sql} GROUP BY status" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		$counts = array();
 		foreach ( $rows as $row ) {

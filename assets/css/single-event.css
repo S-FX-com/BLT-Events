@@ -11,67 +11,80 @@
 .blt-event {
 	--blt-event-accent: var(--blt-e-fg-strong);
 	--blt-event-link: var(--blt-e-link);
-	--blt-event-border: var(--blt-e-border-subtle);
+	--blt-event-border: var(--blt-e-border);
 	--blt-event-muted: var(--blt-e-fg-muted);
 	--blt-event-radius: var(--blt-e-radius);
+	box-sizing: border-box;
 	color: var(--blt-e-fg);
 	font-family: var(--blt-e-font);
 	max-width: var(--blt-e-content-width);
 	margin: 0 auto;
+	padding: var(--blt-e-content-pad) 0 var(--blt-e-section-pad);
 }
 
 /* --- Featured image --- */
 .blt-event__hero {
 	position: relative;
-	margin-bottom: 2.5rem;
-	background: var(--blt-e-surface-sunken);
+	margin-bottom: 2rem;
 }
 
 .blt-event__hero--plain {
 	margin-bottom: 1.5rem;
-	background: transparent;
 }
 
 .blt-event__featured-img {
 	display: block;
 	width: 100%;
-	aspect-ratio: 2.2 / 1;
+	aspect-ratio: 16 / 9;
 	height: auto;
 	object-fit: cover;
-	border-radius: 0;
-}
-
-/* --- Layout --- */
-.blt-event__layout {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) 320px;
-	gap: clamp(2rem, 5vw, 4.5rem);
-	align-items: start;
-}
-
-.blt-event__sidebar {
-	position: relative;
-	z-index: 1;
-	margin-top: -4.5rem;
+	border-radius: var(--blt-e-radius-lg);
+	background: var(--blt-e-surface-sunken);
 }
 
 /* --- Back link --- */
 .blt-event__back {
 	position: absolute;
-	top: 0.85rem;
-	left: 0.85rem;
+	top: 1rem;
+	left: 1rem;
 	z-index: 1;
 	display: inline-flex;
-	padding: 0.45rem 0.7rem;
-	font-size: 0.85rem;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.7rem 1.1rem;
+	font-size: 1.4rem;
 	font-weight: 600;
 	color: var(--blt-e-fg-strong);
 	background: var(--blt-e-surface);
+	border-radius: var(--blt-e-radius);
 	text-decoration: none;
+	box-shadow: var(--blt-e-shadow-sm);
 }
 
 .blt-event__back:hover {
 	color: var(--blt-event-accent);
+}
+
+/* --- Layout --- */
+.blt-event__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 34rem;
+	gap: clamp(2rem, 5vw, 4.5rem);
+	align-items: start;
+	padding: 0 var(--blt-e-content-pad);
+}
+
+.blt-event__main {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-gap-lg);
+}
+
+.blt-event__sidebar {
+	position: sticky;
+	top: 2rem;
+	z-index: 1;
+	margin-top: calc(-1 * var(--blt-e-section-pad));
 }
 
 /* --- Categories --- */
@@ -79,15 +92,14 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	margin-bottom: 1rem;
 }
 
 .blt-event__category {
 	display: inline-block;
-	padding: 0.2rem 0.6rem;
-	background: var(--blt-e-surface-alt);
+	padding: 0.6rem 1rem;
+	background: var(--blt-e-primary-tint);
 	border-radius: var(--blt-e-radius-sm);
-	font-size: 0.75rem;
+	font-size: 1.4rem;
 	font-weight: 600;
 	color: var(--blt-e-fg-soft);
 	text-decoration: none;
@@ -100,14 +112,17 @@
 
 /* --- Title & description --- */
 .blt-event__title {
-	margin: 0 0 1rem;
-	font-size: clamp(2rem, 4vw, 3rem);
+	margin: 0;
+	font-size: clamp(2.8rem, 4vw, 4rem);
 	line-height: 1.15;
 	font-weight: 700;
+	color: var(--blt-e-fg-strong);
 }
 
 .blt-event__description {
-	font-size: 0.95rem;
+	padding-bottom: 2.5rem;
+	border-bottom: 1px solid var(--blt-e-border);
+	font-size: 1.6rem;
 	line-height: 1.65;
 }
 
@@ -115,24 +130,53 @@
 	margin-top: 0;
 }
 
+.blt-event__description > *:last-child {
+	margin-bottom: 0;
+}
+
 .blt-event__section-title {
-	font-size: 1.35rem;
+	display: block;
+	margin: 0 0 var(--blt-e-gap);
+	font-size: 2.4rem;
 	font-weight: 700;
 }
 
-/* --- Agenda (collapsible) --- */
+/* --- Agenda: one <details> per item --- */
 .blt-event__agenda {
-	margin: 2rem 0;
-	border-top: 1px solid var(--blt-event-border);
-	padding-top: 1.25rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--blt-e-border);
+}
+
+.blt-event__agenda-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.blt-event__agenda-item {
+	border-bottom: 1px solid var(--blt-e-border);
+}
+
+.blt-event__agenda-item:last-child {
+	border-bottom: none;
 }
 
 .blt-event__agenda-summary {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: 1rem;
+	padding: 1.5rem 0;
 	cursor: pointer;
 	list-style: none;
+	font-size: 1.4rem;
+	font-weight: 600;
+	color: var(--blt-e-fg);
+}
+
+.blt-event__agenda-time {
+	padding: 0.5rem 1rem;
+	background: var(--blt-e-primary-tint);
+	border-radius: var(--blt-e-radius-sm);
 }
 
 .blt-event__agenda-summary::-webkit-details-marker {
@@ -140,116 +184,238 @@
 }
 
 .blt-event__agenda-chevron {
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 0;
+	color: var(--blt-e-primary);
 	transition: transform 0.15s ease;
-	color: var(--blt-event-muted);
 }
 
-.blt-event__agenda[open] .blt-event__agenda-chevron {
+.blt-event__agenda-item[open] .blt-event__agenda-chevron {
 	transform: rotate(180deg);
 }
 
-.blt-event__agenda-list {
-	list-style: none;
-	margin: 1rem 0 0;
-	padding: 0;
-}
-
-.blt-event__agenda-item {
-	display: flex;
-	gap: 0.75rem;
-	padding: 0.5rem 0;
-	border-bottom: 1px solid var(--blt-event-border);
-	font-size: 0.95rem;
-}
-
-.blt-event__agenda-item:last-child {
-	border-bottom: none;
-}
-
-.blt-event__agenda-time {
-	flex-shrink: 0;
-	min-width: 9.5rem;
-	color: var(--blt-event-muted);
-	font-variant-numeric: tabular-nums;
-}
-
 .blt-event__agenda-label {
-	font-weight: 500;
+	margin: 0;
+	padding: 0 0 1rem 1rem;
+	font-size: 1.6rem;
+	line-height: 1.6;
+	color: var(--blt-e-fg);
+}
+
+/* --- Sponsors --- */
+.blt-event__sponsor-list {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 3rem;
+	justify-items: center;
+}
+
+.blt-event__sponsor {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	max-width: 11rem;
+	aspect-ratio: 1 / 1;
+}
+
+.blt-event__sponsor img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
 }
 
 /* --- Registration panel --- */
 .blt-event__registration {
-	margin-top: 2.5rem;
-	padding-top: 1.5rem;
-	border-top: 1px solid var(--blt-event-border);
 	scroll-margin-top: 2rem;
 }
 
 .blt-event__registration .blt-event__section-title {
-	display: block;
-	margin-bottom: 1.25rem;
+	margin-bottom: 1.5rem;
+}
+
+/* The registration form ships as a standalone, narrow widget so it can be
+   embedded anywhere (blt-events.css: max-width 640px, its own card chrome,
+   a smaller type scale). Here it's already inside the page's main column,
+   so drop the floating-card look and bring the scale up to match the rest
+   of the page. Scoped to this section only — .blt-registration-form and
+   .blt-field-wrap are shared with the fieldset builder and any standalone
+   shortcode embed elsewhere, so their base rules in blt-events.css stay
+   untouched. */
+.blt-event__registration .blt-registration-form {
+	max-width: var(--blt-e-content-width);
+	margin: 0;
+	padding: 0;
+	background: none;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.blt-event__registration .blt-fields-grid {
+	gap: 1.5rem;
+}
+
+/* One field per row regardless of the fieldset's configured half/third
+   width, per the requested layout. */
+.blt-event__registration .blt-field-half,
+.blt-event__registration .blt-field-third {
+	flex: 0 0 100%;
+}
+
+.blt-event__registration .blt-field-wrap label,
+.blt-event__registration .blt-choice-group legend {
+	font-size: 1.5rem;
+}
+
+.blt-event__registration .blt-field-wrap input[type="text"],
+.blt-event__registration .blt-field-wrap input[type="email"],
+.blt-event__registration .blt-field-wrap input[type="tel"],
+.blt-event__registration .blt-field-wrap input[type="url"],
+.blt-event__registration .blt-field-wrap input[type="number"],
+.blt-event__registration .blt-field-wrap input[type="date"],
+.blt-event__registration .blt-field-wrap select,
+.blt-event__registration .blt-field-wrap textarea {
+	padding: 1rem 1.2rem;
+	font-size: 1.6rem;
+	color: var(--blt-e-fg-strong);
+	background: var(--blt-e-surface);
+	border-radius: var(--blt-e-radius-sm);
+}
+
+.blt-event__registration .blt-other-input {
+	margin-top: 1rem;
+}
+
+/* Same standalone-widget sizing issue .blt-registration-form had: a
+   narrow floating card instead of matching the section's width. Keeps
+   its background/padding/centered-text notice look, which #blt-form-
+   messages also keeps — only the width/centering is scoped out here. */
+.blt-event__registration .blt-registration-closed {
+	max-width: var(--blt-e-content-width);
+	margin: 0;
+}
+
+/* Selects size to their content instead of stretching full width like the
+   text inputs. */
+.blt-event__registration .blt-field-wrap select {
+	width: fit-content;
+	min-width: 16rem;
+}
+
+.blt-event__registration #blt-form-messages {
+	margin-bottom: 1.5rem;
+	padding: 1.2rem 1.5rem;
+	font-size: 1.5rem;
+	border-radius: var(--blt-e-radius-sm);
+}
+
+.blt-event__registration .blt-consent-field label {
+	font-size: 1.4rem;
+}
+
+.blt-event__registration .blt-form-actions {
+	margin-top: 2rem;
+}
+
+/* Match .blt-event__cta-button (the sidebar's Register button) exactly —
+   both buttons register the same event, so they should look and behave
+   the same. blt-events.css's base .blt-submit-btn has its own radius, a
+   hardcoded "white" instead of the on-primary token, and a hover lift
+   the cta-button doesn't have. */
+.blt-event__registration .blt-submit-btn {
+	box-sizing: border-box;
+	width: auto;
+	max-width: 100%;
+	padding: 1.2rem 2.4rem;
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+	border-radius: var(--blt-e-radius-sm);
+	font-size: 1.6rem;
+}
+
+.blt-event__registration .blt-submit-btn:hover:not(:disabled) {
+	background: var(--blt-e-primary-hover);
+	color: var(--blt-e-on-primary);
+	transform: none;
 }
 
 /* --- Sidebar cards --- */
 .blt-event__card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-gap-lg);
 	border: 1px solid var(--blt-event-border);
-	border-radius: 0;
-	padding: 1.25rem;
-	margin-bottom: 1.25rem;
+	border-radius: var(--blt-e-radius);
+	padding: 2rem;
 	background: var(--blt-e-surface);
 }
 
+.blt-event__card + .blt-event__card {
+	margin-top: 1.5rem;
+}
+
 .blt-event__card-title {
-	margin: 0 0 0.6rem;
-	font-size: 1.05rem;
+	margin: 0;
+	font-size: 1.6rem;
 	font-weight: 700;
 }
 
-/* Date box */
+/* Only the main info card sticks; a virtual/online card below it (for
+   hybrid events) scrolls normally. */
 .blt-event__datebox-head {
 	display: flex;
 	align-items: center;
-	gap: 0.85rem;
+	gap: 1rem;
 }
 
 .blt-event__datebox-day {
-	display: inline-flex;
+	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 48px;
-	height: 48px;
+	width: 6.2rem;
+	aspect-ratio: 1;
 	flex-shrink: 0;
-	border: 1px solid var(--blt-event-border);
-	border-radius: var(--blt-e-radius);
-	font-size: 1.4rem;
+	padding: 0.8rem;
+	background: var(--blt-e-primary-tint);
+	border-radius: var(--blt-e-radius-sm);
+}
+
+.blt-event__datebox-day span {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	background: var(--blt-e-surface);
+	border-radius: var(--blt-e-radius-sm);
+	font-size: 2.2rem;
 	font-weight: 700;
 	line-height: 1;
+	color: var(--blt-e-fg);
 }
 
 .blt-event__datebox-meta {
 	display: flex;
 	flex-direction: column;
+	gap: 0.2rem;
 }
 
 .blt-event__datebox-label {
-	font-size: 0.75rem;
+	font-size: 1.3rem;
+	font-weight: 500;
 	color: var(--blt-event-muted);
 }
 
 .blt-event__datebox-value {
-	font-size: 1.05rem;
+	font-size: 1.8rem;
 	font-weight: 700;
-}
-
-.blt-event__datebox-time {
-	margin: 0.85rem 0 0;
-	font-size: 0.9rem;
-	color: var(--blt-event-muted);
+	color: var(--blt-e-fg);
 }
 
 .blt-event__calendar-links {
-	margin: 0.75rem 0 0;
-	font-size: 0.82rem;
+	margin: 0.8rem 0 0;
+	font-size: 1.4rem;
 	color: var(--blt-event-muted);
 }
 
@@ -263,51 +429,181 @@
 	text-decoration: underline;
 }
 
-/* CTA card */
-.blt-event__cta {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
+.blt-event__excerpt {
+	margin: 0;
+	font-size: 1.6rem;
+	line-height: 1.6;
+	color: var(--blt-e-fg-soft);
 }
 
+/* Address / info list */
+.blt-event__info-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.8rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-event__info-item {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+	font-size: 1.6rem;
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-event__info-item .blt-e-icon {
+	flex-shrink: 0;
+	width: 1.6rem;
+	height: 1.6rem;
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-event__map {
+	border-radius: var(--blt-e-radius-sm);
+	overflow: hidden;
+	border: 1px solid var(--blt-event-border);
+}
+
+.blt-event__map iframe {
+	display: block;
+	width: 100%;
+	height: 18rem;
+	border: 0;
+}
+
+/* Virtual join link, kept for online/hybrid events */
+.blt-event__virtual-text,
+.blt-event__virtual-link {
+	font-size: 1.6rem;
+	color: var(--blt-e-fg-soft);
+}
+
+.blt-event__virtual-link {
+	color: var(--blt-event-link);
+	word-break: break-all;
+}
+
+/* Speakers */
+.blt-event__speakers {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.blt-event__speakers-title {
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.blt-event__speaker-list {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-event__speaker {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+}
+
+.blt-event__speaker-photo {
+	width: 4rem;
+	height: 4rem;
+	flex-shrink: 0;
+	border-radius: 50%;
+	border: 3px solid var(--blt-e-surface);
+	box-shadow: 0 0 0 1px var(--blt-e-border);
+	object-fit: cover;
+}
+
+.blt-event__speaker-photo--placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--blt-e-surface-alt);
+	color: var(--blt-e-fg-muted);
+}
+
+.blt-event__speaker-meta {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.blt-event__speaker-name {
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: inherit;
+	text-decoration: none;
+}
+
+a.blt-event__speaker-name:hover {
+	color: var(--blt-event-link);
+}
+
+.blt-event__speaker-role {
+	font-size: 1.4rem;
+	color: var(--blt-e-fg-muted);
+}
+
+.blt-event__speaker-bio {
+	margin-top: 0.4rem;
+	font-size: 1.4rem;
+	line-height: 1.5;
+	color: var(--blt-e-fg-soft);
+}
+
+/* CTA */
 .blt-event__cta-price {
+	margin: 0;
 	display: flex;
 	align-items: baseline;
-	gap: 0.35rem;
+	gap: 0.4rem;
 }
 
 .blt-event__cta-from {
-	font-size: 0.7rem;
+	font-size: 1.2rem;
 	font-weight: 600;
 	letter-spacing: 0.05em;
 	color: var(--blt-event-muted);
 }
 
 .blt-event__cta-amount {
-	font-size: 1.05rem;
-	font-weight: 700;
+	font-size: 2.5rem;
+	font-weight: 600;
 }
 
 .blt-event__cta-button {
-	display: inline-flex;
+	display: flex;
 	align-items: center;
-	gap: 0.4rem;
-	padding: 0.6rem 1.1rem;
-	background: var(--blt-e-fg-strong);
-	color: var(--blt-e-surface);
-	border-radius: 0;
-	font-size: 0.85rem;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 1.2rem;
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+	border-radius: var(--blt-e-radius-sm);
+	font-size: 1.5rem;
 	font-weight: 600;
 	text-decoration: none;
 	white-space: nowrap;
-	transition: opacity 0.15s;
+	box-sizing: border-box;
+	transition: background 0.15s;
 }
 
 .blt-event__cta-button:hover,
 .blt-event__cta-button:focus {
-	color: var(--blt-e-surface);
-	opacity: 0.88;
+	background: var(--blt-e-primary-hover);
+	color: var(--blt-e-on-primary);
 }
 
 .blt-event__cta-button.is-disabled,
@@ -318,116 +614,47 @@
 	opacity: 1;
 }
 
-.blt-event__presenter-bio {
-	margin-top: 0.15rem;
-	font-size: 0.8rem;
-	line-height: 1.45;
-	color: var(--blt-e-fg-soft);
-}
-
-/* Address / virtual */
-.blt-event__address-text,
-.blt-event__virtual-text {
-	margin: 0 0 0.75rem;
-	font-size: 0.9rem;
-	line-height: 1.5;
-	color: var(--blt-e-fg-soft);
-}
-
-.blt-event__virtual-link {
-	font-size: 0.9rem;
-	color: var(--blt-event-link);
-	word-break: break-all;
-}
-
-/* Presenters */
-.blt-event__presenter-list {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.blt-event__presenter {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	padding: 0.5rem 0;
-}
-
-.blt-event__presenter + .blt-event__presenter {
-	border-top: 1px solid var(--blt-event-border);
-}
-
-.blt-event__presenter-photo {
-	width: 44px;
-	height: 44px;
-	flex-shrink: 0;
-	border-radius: 50%;
-	object-fit: cover;
-}
-
-.blt-event__presenter-meta {
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
-}
-
-.blt-event__presenter-name {
-	font-weight: 600;
-	color: inherit;
-	text-decoration: none;
-}
-
-a.blt-event__presenter-name:hover {
-	color: var(--blt-event-link);
-}
-
-.blt-event__presenter-role {
-	font-size: 0.82rem;
-	color: var(--blt-event-muted);
-}
-
-/* Map */
-.blt-event__map {
-	margin-top: 0.75rem;
-	border-radius: var(--blt-e-radius);
-	overflow: hidden;
-	border: 1px solid var(--blt-event-border);
-}
-
-.blt-event__map iframe {
-	display: block;
-	width: 100%;
-	height: 200px;
-	border: 0;
-}
-
 /* --- Responsive --- */
 @media (max-width: 860px) {
+	.blt-event {
+		padding-bottom: var(--blt-e-content-pad);
+	}
+
 	.blt-event__layout {
 		grid-template-columns: 1fr;
 	}
 
 	.blt-event__sidebar {
+		position: static;
 		margin-top: 0;
+		/* Stacked order only; the DOM order (and desktop layout) is
+		   untouched. The sidebar's CTA is an anchor to #blt-event-registration
+		   in the main column, so it needs to appear above that section here
+		   or the link would scroll back up to content already scrolled past. */
+		order: -1;
 	}
 
-	.blt-event__title {
-		font-size: 1.8rem;
+	.blt-event__sponsor-list {
+		grid-template-columns: repeat(3, 1fr);
 	}
 }
 
 @media (max-width: 600px) {
 	.blt-event__hero {
 		margin-bottom: 1.5rem;
+		padding: 0 var(--blt-e-content-pad);
 	}
 
 	.blt-event__featured-img {
-		aspect-ratio: 1.4 / 1;
+		aspect-ratio: 4 / 3;
 	}
 
 	.blt-event__back {
 		top: 0.5rem;
-		left: 0.5rem;
+		left: 3rem;
+	}
+
+	.blt-event__sponsor-list {
+		grid-template-columns: repeat(2, 1fr);
 	}
 }

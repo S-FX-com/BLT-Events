@@ -16,4 +16,4 @@ if ( ! $show_back || ! $events_url ) {
 	return;
 }
 ?>
-<a class="blt-event__back" href="<?php echo esc_url( $events_url ); ?>"><span aria-hidden="true">&larr;</span> <?php esc_html_e( 'All events', 'blt-events' ); ?></a>
+<a class="blt-event__back" href="<?php echo esc_url( $events_url ); ?>"><span aria-hidden="true">&larr;</span> <?php esc_html_e( 'Back to events', 'blt-events' ); ?></a>

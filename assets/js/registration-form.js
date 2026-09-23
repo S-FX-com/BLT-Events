@@ -65,9 +65,11 @@
 	function recalculateTotal() {
 		var total = 0;
 		var hasTickets = false;
+		var totalQty = 0;
 
 		selectedTickets().forEach(function (ticket) {
 			total += ticket.qty * ticket.price;
+			totalQty += ticket.qty;
 			hasTickets = true;
 		});
 
@@ -88,9 +90,10 @@
 		var stepped = $form.data("stepped") === 1 || $form.data("stepped") === "1";
 
 		if (!stepped) {
-			$btn.prop("disabled", false).text(t("registerFree", "Register — Free"));
+			$btn.prop("disabled", false).text(t("register", "Register"));
 		} else if (hasTickets) {
-			$btn.prop("disabled", false).text(totalPrice > 0 ? t("registerPay", "Register & Pay") : t("registerFree", "Register — Free"));
+			var label = totalPrice > 0 ? (totalQty > 1 ? t("buyTickets", "Buy Tickets") : t("buyTicket", "Buy Ticket")) : t("register", "Register");
+			$btn.prop("disabled", false).text(label);
 		} else {
 			$btn.prop("disabled", true).text(t("selectToContinue", "Select tickets to continue"));
 		}
@@ -380,16 +383,16 @@
 				if (response.success) {
 					showMessage($msg, response.data.message, "success");
 					$form.find("fieldset, input, select, textarea, button").prop("disabled", true);
-					$btn.text(t("complete", "Registration Complete"));
+					$btn.closest(".blt-form-actions").hide();
 					$form.trigger("blt:registered", [response.data]);
 				} else {
 					showMessage($msg, response.data.message, "error");
-					$btn.prop("disabled", false).text(t("registerFree", "Register — Free"));
+					recalculateTotal();
 				}
 			},
 			error: function () {
 				showMessage($msg, t("genericError", "An error occurred. Please try again."), "error");
-				$btn.prop("disabled", false).text(t("registerFree", "Register — Free"));
+				recalculateTotal();
 			}
 		});
 	});

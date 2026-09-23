@@ -11,6 +11,33 @@
 	'use strict';
 
 	$(function () {
+		// --- Warn before leaving a tab with unsaved changes ---
+		var $settingsForm = $('.blt-events-settings form[action="options.php"]');
+
+		if ($settingsForm.length) {
+			var formDirty = false;
+
+			$settingsForm.on('change input', ':input', function () {
+				formDirty = true;
+			});
+
+			$(window).on('beforeunload', function (e) {
+				if (!formDirty) {
+					return;
+				}
+				// The message string itself is ignored by modern browsers,
+				// which always show their own generic wording — only whether
+				// a truthy value comes back decides if the prompt appears.
+				e.preventDefault();
+				e.returnValue = '';
+				return '';
+			});
+
+			$settingsForm.on('submit', function () {
+				formDirty = false;
+			});
+		}
+
 		// --- Payment provider selection ---
 		var $providerRadios = $('input[name="blt_events_payment_provider"]');
 		var $cards = $providerRadios.closest('.blt-select-card');
@@ -121,6 +148,12 @@
 
 			function syncPreview() {
 				var mode = $modeRadios.filter(':checked').val();
+
+				$modeRadios.closest('.blt-select-card').each(function () {
+					var $card = $(this);
+					$card.toggleClass('is-selected', $card.find('input[type="radio"]').val() === mode);
+				});
+
 				$('[data-blt-style-panel]').toggle(mode !== 'off');
 
 				var primary = ($primary.val() || '').trim();

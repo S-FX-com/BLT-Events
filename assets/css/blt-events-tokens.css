@@ -92,10 +92,19 @@
 	--blt-e-gap: 1rem;
 	--blt-e-gap-lg: 2rem;
 	--blt-e-pad: 2rem;
+	/* Vertical rhythm between toolbar/month/rows in the events list view. */
+	--blt-e-list-gap: 3.6rem;
+	/* Vertical rhythm inside a card's datetime/title/excerpt stack. */
+	--blt-e-info-gap: 2rem;
+	/* Single event page: section padding (top/left/right), and the larger
+	   bottom padding that reserves room for the sidebar card's overlap. */
+	--blt-e-content-pad: 2.4rem;
+	--blt-e-section-pad: 4.5rem;
 
 	/* --- Layout --- */
 	--blt-e-form-width: 640px;
-	/* Max width of the calendar and listing containers. 960px is what the
-	   plugin has always used; Settings > Appearance can widen or narrow it. */
-	--blt-e-content-width: 960px;
+	/* Max width of the calendar and listing containers, matched to this
+	   site's ACSS max content width. Settings > Appearance can widen or
+	   narrow it. */
+	--blt-e-content-width: 1350px;
 }

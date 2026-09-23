@@ -4,8 +4,10 @@
  *
  * Renders the single event layout via the_content: featured image across
  * the top, then a two-column body — main column (category, title,
- * description, collapsible agenda, registration) and a sidebar (date box,
- * register/buy CTA, address or virtual link, map, presenters).
+ * description, collapsible agenda, sponsor logos, registration) and a
+ * sidebar (a single sticky info card: date, excerpt, address/map, calendar
+ * links, presenters and the register/buy CTA, plus a virtual-join card for
+ * online/hybrid events).
  *
  * The HTML lives in templates/single-event.php and templates/single/*.php,
  * so a theme can override any part (see BLT_Events_Templates). Markup
@@ -14,9 +16,11 @@
  *
  * Settings > Appearance controls whether the plugin prints the title and
  * featured image, and the blt_events_single_show_* filters do the same
- * from code.
+ * from code. Presenters are fetched here (view_data()) and rendered inside
+ * the sidebar's info card; sponsors are fetched the same way but rendered
+ * as their own main-column section, not inside that card.
  *
- * Themes/plugins can add sidebar content (e.g. presenters) via the
+ * Themes/plugins can add extra sidebar content via the
  * blt_events_single_sidebar action, and disable the wrapper entirely with
  * the blt_events_render_single filter.
  */
@@ -222,12 +226,15 @@ class BLT_Events_Single_Event {
 		 */
 		$can_see_link = (bool) apply_filters( 'blt_events_can_see_online_url', $can_see_link, $event_id );
 
-		$terms = get_the_terms( $event_id, 'event_category' );
+		$terms      = get_the_terms( $event_id, 'event_category' );
+		$presenters = apply_filters( 'blt_events_presenters', BLT_Events_Presenters::for_event( $event_id ), $event_id );
+		$sponsors   = apply_filters( 'blt_events_sponsors', BLT_Events_Sponsors::for_event( $event_id ), $event_id );
 
 		$data = array(
 			'event'              => $event,
 			'event_id'           => $event_id,
 			'description'        => $content,
+			'excerpt'            => has_excerpt( $event_id ) ? get_the_excerpt( $event_id ) : '',
 			'title'              => get_the_title( $event_id ),
 			'event_type'         => $event_type,
 			'is_online'          => in_array( $event_type, array( 'online', 'hybrid' ), true ),
@@ -257,6 +264,9 @@ class BLT_Events_Single_Event {
 			'map_src'            => self::map_src( $event_id ),
 			'online_url'         => $online_url,
 			'can_see_online_url' => $can_see_link,
+			'presenters'         => $presenters,
+			'presenters_label'   => count( $presenters ) > 1 ? __( 'Speakers', 'blt-events' ) : __( 'Speaker', 'blt-events' ),
+			'sponsors'           => $sponsors,
 		);
 
 		/**

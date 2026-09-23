@@ -82,6 +82,12 @@ class BLT_Events_Registration_Shortcode {
 		// on the same site can check out through different processors.
 		$provider = BLT_Events_Helpers::get_event_payment_provider( $event_id );
 
+		// A free event has nothing to check out, so it never needs an
+		// external processor's redirect flow even if one is configured
+		// site-wide — otherwise a free event silently inherits whatever
+		// checkout state (or lack of one) that processor happens to be in.
+		$has_paid_tickets = BLT_Events_Helpers::ticket_price_range( $event_id )['has_paid'];
+
 		ob_start();
 
 		/**
@@ -93,9 +99,9 @@ class BLT_Events_Registration_Shortcode {
 		do_action( 'blt_events_before_registration_form', $event_id, $provider );
 
 		// Route to appropriate renderer
-		if ( $provider === 'surecart' ) {
+		if ( $has_paid_tickets && $provider === 'surecart' ) {
 			echo self::render_surecart_form( $event_id, $event ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		} elseif ( $provider === 'fluentcart' ) {
+		} elseif ( $has_paid_tickets && $provider === 'fluentcart' ) {
 			echo self::render_fluentcart_form( $event_id, $event ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} else {
 			echo self::render_standard_form( $event_id, $event, $provider ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -170,11 +176,11 @@ class BLT_Events_Registration_Shortcode {
 				'back'            => __( 'Back', 'blt-events' ),
 				'selectTickets'   => __( 'Please select at least one ticket to continue.', 'blt-events' ),
 				'stepOf'          => __( 'Step %1$d of %2$d', 'blt-events' ),
-				'registerPay'     => __( 'Register & Pay', 'blt-events' ),
-				'registerFree'    => __( 'Register — Free', 'blt-events' ),
+				'register'        => __( 'Register', 'blt-events' ),
+				'buyTicket'       => __( 'Buy Ticket', 'blt-events' ),
+				'buyTickets'      => __( 'Buy Tickets', 'blt-events' ),
 				'selectToContinue' => __( 'Select tickets to continue', 'blt-events' ),
 				'registering'     => __( 'Registering…', 'blt-events' ),
-				'complete'        => __( 'Registration Complete', 'blt-events' ),
 				'couponApplied'   => __( 'Coupon applied: %s', 'blt-events' ),
 				'genericError'    => __( 'An error occurred. Please try again.', 'blt-events' ),
 				/* translators: %d: attendee number. */

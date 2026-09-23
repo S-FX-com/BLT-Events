@@ -361,74 +361,6 @@ jQuery(document).ready(function ($) {
 	});
 
 	/* ----------------------------------------------------------------
-	 * Single ticket: mirror the event's start/end dates onto the ticket's
-	 * sale window. With more than one ticket type each keeps its own dates
-	 * (left blank unless set), matching the requested behaviour.
-	 * ---------------------------------------------------------------- */
-	var getEventDateRange = function () {
-		if ($multiDay.is(":checked")) {
-			var dates = $("#blt-day-rows .blt-day-row input[type=date]")
-				.map(function () {
-					return $(this).val();
-				})
-				.get()
-				.filter(function (v) {
-					return v;
-				})
-				.sort();
-			if (dates.length) {
-				return { start: dates[0], end: dates[dates.length - 1] };
-			}
-			return { start: "", end: "" };
-		}
-		var d = $("#event_date").val() || "";
-		return { start: d, end: d };
-	};
-
-	var syncSingleTicketDates = function () {
-		var $tickets = $ticketList.children(".blt-ticket");
-		if ($tickets.length !== 1) {
-			return;
-		}
-
-		var range = getEventDateRange();
-		var $ticket = $tickets.first();
-
-		// Only fill blanks or values we previously auto-filled, so a value
-		// the user typed is never overwritten.
-		var apply = function (selector, value) {
-			if (!value) {
-				return;
-			}
-			var $input = $ticket.find(selector);
-			if ($input.length && ($input.val() === "" || $input.data("bltAutofill"))) {
-				$input.val(value).data("bltAutofill", true);
-			}
-		};
-
-		apply('input[name$="[sale_start_date]"]', range.start);
-		apply('input[name$="[sale_end_date]"]', range.end);
-	};
-
-	// A manual edit to a sale date opts that field out of auto-alignment.
-	$(document).on(
-		"input",
-		'.blt-ticket input[name$="[sale_start_date]"], .blt-ticket input[name$="[sale_end_date]"]',
-		function () {
-			$(this).data("bltAutofill", false);
-		}
-	);
-
-	// Re-align whenever the event dates or ticket count change.
-	$(document).on("change input", "#event_date, #blt-day-rows input[type=date]", syncSingleTicketDates);
-	$multiDay.on("change", syncSingleTicketDates);
-	$(document).on("click", ".blt-add-ticket, .blt-ticket-remove", function () {
-		// Defer so the row is added/removed before we count tickets.
-		window.setTimeout(syncSingleTicketDates, 0);
-	});
-	syncSingleTicketDates();
-
-	/* ----------------------------------------------------------------
 	 * Agenda / schedule
 	 * ---------------------------------------------------------------- */
 	$("#blt-agenda-enabled").on("change", function () {
@@ -459,6 +391,19 @@ jQuery(document).ready(function ($) {
 		}
 	});
 
+	// Drag-to-reorder: the row's field names keep their original indexes,
+	// but the save routine only reads values in submission order, so
+	// re-ordering the DOM is all that's needed to persist a new order.
+	if ($.fn.sortable) {
+		$agendaRows.sortable({
+			handle: ".blt-drag-handle",
+			axis: "y",
+			items: "> .blt-agenda-row",
+			placeholder: "blt-agenda-row blt-drag-placeholder",
+			forcePlaceholderSize: true,
+		});
+	}
+
 	/* ----------------------------------------------------------------
 	 * Presenters
 	 * ---------------------------------------------------------------- */
@@ -487,6 +432,16 @@ jQuery(document).ready(function ($) {
 			$(this).closest(".blt-presenter-row").find(".blt-presenter-photo-remove").hide();
 		}
 	});
+
+	if ($.fn.sortable) {
+		$presenterRows.sortable({
+			handle: ".blt-drag-handle",
+			axis: "y",
+			items: "> .blt-presenter-row",
+			placeholder: "blt-presenter-row blt-drag-placeholder",
+			forcePlaceholderSize: true,
+		});
+	}
 
 	// Built-in repeater: photo picker via the media library.
 	$presenterRows.on("click", ".blt-presenter-photo-select", function () {
@@ -519,6 +474,77 @@ jQuery(document).ready(function ($) {
 		var $row = $(this).closest(".blt-presenter-row");
 		$row.find(".blt-presenter-image-id").val("");
 		$row.find(".blt-presenter-photo-preview").removeClass("has-image").empty();
+		$(this).hide();
+	});
+
+	/* ----------------------------------------------------------------
+	 * Sponsors
+	 * ---------------------------------------------------------------- */
+	$("#blt-sponsors-enabled").on("change", function () {
+		$("#blt-sponsors-panel").toggle(this.checked);
+	});
+
+	var $sponsorRows = $("#blt-sponsor-rows");
+	var sponsorIndex = $sponsorRows.children(".blt-sponsor-row").length;
+
+	$("#blt-add-sponsor").on("click", function () {
+		var html = $("#tmpl-blt-sponsor").html();
+		if (!html) {
+			return;
+		}
+		$sponsorRows.append(html.replace(/__i__/g, sponsorIndex++));
+	});
+
+	$sponsorRows.on("click", ".blt-sponsor-remove", function () {
+		if ($sponsorRows.children(".blt-sponsor-row").length > 1) {
+			$(this).closest(".blt-sponsor-row").remove();
+		} else {
+			$(this).closest(".blt-sponsor-row").find("input").val("");
+			$(this).closest(".blt-sponsor-row").find(".blt-sponsor-photo-preview").removeClass("has-image").empty();
+			$(this).closest(".blt-sponsor-row").find(".blt-sponsor-photo-remove").hide();
+		}
+	});
+
+	if ($.fn.sortable) {
+		$sponsorRows.sortable({
+			handle: ".blt-drag-handle",
+			axis: "y",
+			items: "> .blt-sponsor-row",
+			placeholder: "blt-sponsor-row blt-drag-placeholder",
+			forcePlaceholderSize: true,
+		});
+	}
+
+	$sponsorRows.on("click", ".blt-sponsor-photo-select", function () {
+		var $row = $(this).closest(".blt-sponsor-row");
+
+		if (typeof wp === "undefined" || !wp.media) {
+			return;
+		}
+
+		var frame = wp.media({
+			title: "Select sponsor logo",
+			multiple: false,
+			library: { type: "image" },
+		});
+
+		frame.on("select", function () {
+			var att = frame.state().get("selection").first().toJSON();
+			var url = ( att.sizes && att.sizes.thumbnail ) ? att.sizes.thumbnail.url : att.url;
+			$row.find(".blt-sponsor-image-id").val(att.id);
+			$row.find(".blt-sponsor-photo-preview")
+				.addClass("has-image")
+				.html($("<img>").attr("src", url));
+			$row.find(".blt-sponsor-photo-remove").show();
+		});
+
+		frame.open();
+	});
+
+	$sponsorRows.on("click", ".blt-sponsor-photo-remove", function () {
+		var $row = $(this).closest(".blt-sponsor-row");
+		$row.find(".blt-sponsor-image-id").val("");
+		$row.find(".blt-sponsor-photo-preview").removeClass("has-image").empty();
 		$(this).hide();
 	});
 

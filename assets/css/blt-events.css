@@ -593,6 +593,13 @@
 	color: var(--blt-e-fg-muted);
 }
 
+.blt-registration-closed p {
+	/* The theme/builder injects its own inline margin:0 reset on every <p>,
+	   which beats any external rule regardless of specificity — !important
+	   is the correct tool here since it's not our own CSS being overridden. */
+	margin: auto !important;
+}
+
 .blt-registration-closed p:last-child {
 	margin-bottom: 0;
 }

@@ -30,6 +30,21 @@ body.post-type-event {
 	--blt-radius-sm: 6px;
 }
 
+/* --- Excerpt position: visually pin it above Event Details without
+   touching WP's own drag-order storage. --- */
+#normal-sortables {
+	display: flex;
+	flex-direction: column;
+}
+
+#normal-sortables > .postbox {
+	width: 100%;
+}
+
+#postexcerpt {
+	order: -1;
+}
+
 /* --- Card chrome (postbox) --- */
 .postbox.blt-card {
 	border: 1px solid var(--blt-border);
@@ -113,7 +128,7 @@ body.post-type-event {
 .blt-agenda-header,
 .blt-agenda-row {
 	display: grid;
-	grid-template-columns: 120px 120px 1fr 28px;
+	grid-template-columns: 20px 120px 120px 1fr 28px;
 	gap: 8px;
 	align-items: center;
 }
@@ -161,11 +176,16 @@ body.post-type-event {
 	}
 
 	.blt-agenda-row {
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 20px 1fr 1fr;
 	}
 
 	.blt-agenda-row input[type="text"] {
-		grid-column: 1 / -1;
+		grid-column: 2 / -1;
+	}
+
+	.blt-agenda-row .blt-agenda-remove {
+		grid-column: 2 / -1;
+		justify-self: end;
 	}
 }
 
@@ -176,7 +196,7 @@ body.post-type-event {
 
 .blt-presenter-row {
 	display: grid;
-	grid-template-columns: auto 1fr 28px;
+	grid-template-columns: 20px auto 1fr 28px;
 	gap: 12px;
 	align-items: start;
 	padding: 12px 0;
@@ -245,6 +265,115 @@ body.post-type-event {
 .blt-presenter-remove:hover {
 	background: rgba(212, 24, 61, 0.08);
 	color: var(--blt-destructive);
+}
+
+/* --- Sponsors --- */
+.blt-sponsor-row {
+	display: grid;
+	grid-template-columns: 20px auto 1fr 28px;
+	gap: 12px;
+	align-items: start;
+	padding: 12px 0;
+	border-top: 1px solid var(--blt-border);
+}
+
+.blt-sponsor-row:first-child {
+	border-top: none;
+}
+
+.blt-sponsor-photo {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 72px;
+}
+
+.blt-sponsor-photo-preview {
+	width: 72px;
+	height: 72px;
+	border: 1px dashed var(--blt-border);
+	border-radius: var(--blt-radius-sm);
+	background: var(--blt-input-bg);
+	overflow: hidden;
+}
+
+.blt-sponsor-photo-preview.has-image {
+	border-style: solid;
+}
+
+.blt-sponsor-photo-preview img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	display: block;
+}
+
+.blt-sponsor-photo .button-link {
+	font-size: 11px;
+	color: var(--blt-destructive);
+}
+
+.blt-sponsor-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.blt-sponsor-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--blt-muted-fg);
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.blt-sponsor-remove:hover {
+	background: rgba(212, 24, 61, 0.08);
+	color: var(--blt-destructive);
+}
+
+/* --- Drag-to-reorder (Agenda, Presenters, Sponsors) --- */
+.blt-drag-handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	align-self: center;
+	width: 20px;
+	color: var(--blt-muted-fg);
+	cursor: grab;
+	touch-action: none;
+}
+
+.blt-drag-handle:active {
+	cursor: grabbing;
+}
+
+.blt-agenda-row.ui-sortable-helper,
+.blt-presenter-row.ui-sortable-helper,
+.blt-sponsor-row.ui-sortable-helper {
+	background: #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.blt-drag-placeholder {
+	border: 1px dashed var(--blt-border);
+	border-radius: var(--blt-radius-sm);
+	background: var(--blt-muted);
+	margin-bottom: 8px;
+}
+
+.blt-presenter-row.blt-drag-placeholder,
+.blt-sponsor-row.blt-drag-placeholder {
+	margin-bottom: 0;
 }
 
 #blt-add-presenter {

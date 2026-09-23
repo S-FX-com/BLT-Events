@@ -29,6 +29,9 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_registration_cancelled` | action | `$registration_id` | Status became `cancelled` |
 | `blt_registration_refunded` | action | `$registration_id` | Status became `refunded` |
 | `blt_registration_partially_refunded` | action | `$registration_id, $refunded_amount, $order` | FluentCart partial refund |
+| `blt_registration_trashed` | action | `$registration_id` | Moved to Trash in the admin |
+| `blt_registration_restored` | action | `$registration_id, $status` | Restored from Trash, to `$status` |
+| `blt_registration_deleted` | action | `$registration_id, $reg` | Permanently deleted (irreversible) |
 | `blt_events_payment_orphaned` | action | `$provider, $payment_id, $event_id, WP_Error $error` | A completed payment produced no registration |
 | `blt_events_registration_data` | filter | `$data, $event_id, $payment` | Submitted data before validation |
 | `blt_events_new_registration_status` | filter | `$status, $event_id, $payment` | Status a new registration is stored with |
@@ -73,6 +76,7 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_map_src` | filter | `$src, $event_id, $provider` | Map iframe URL |
 | `blt_events_single_before_main` / `_after_main` / `_before_sidebar` / `blt_events_single_sidebar` | action | `$event_id` | Insertion points on the event page |
 | `blt_events_presenters` | filter | `$presenters, $event_id` | Presenters shown on the event page |
+| `blt_events_sponsors` | filter | `$sponsors, $event_id` | Sponsor logos shown on the event page |
 | `blt_events_calendar_query_args` | filter | `$args, $view, $atts` | `WP_Query` args of a calendar view |
 | `blt_events_calendar_views` | filter | `$views` | View switcher labels |
 | `blt_events_calendar_html` | filter | `$html, $view, $atts` | Rendered calendar/listing |
@@ -134,6 +138,7 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_setup_checks` | filter | `$checks` | Setup checklist |
 | `blt_events_shortcode_reference` | filter | `$shortcodes` | Reference table on the Shortcodes tab |
 | `blt_events_registration_bulk_actions` | filter | `$actions` | Bulk actions on the Registrations screen |
+| `blt_events_registration_bulk_actions_trash` | filter | `$actions` | Bulk actions while viewing the Trash |
 | `blt_events_registrations_per_page` | filter | `20` | Rows per page |
 | `blt_events_csv_columns` / `blt_events_csv_row` | filter | `$columns, $event_id` / `$row, $reg, $event_id` | Registrations CSV |
 | `blt_events_attendees_csv_columns` / `blt_events_attendees_csv_row` | filter | `$columns, $event_id` / `$row, $att, $event_id` | Attendees CSV |

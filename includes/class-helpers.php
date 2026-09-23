@@ -20,6 +20,40 @@ class BLT_Events_Helpers {
 	const MANAGE_CAP = 'manage_blt_events';
 
 	/* ------------------------------------------------------------------
+	 * Icons
+	 * ---------------------------------------------------------------- */
+
+	/**
+	 * Shared location-pin SVG, used anywhere a venue/address is shown.
+	 */
+	public static function pin_icon() {
+		return '<svg class="blt-e-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+	}
+
+	/**
+	 * Shared chevron SVG, matching the one used in the Event Calendar's
+	 * toolbar/agenda dropdowns.
+	 */
+	public static function chevron_icon() {
+		return '<svg class="blt-e-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+	}
+
+	/**
+	 * Shared clock SVG, used anywhere an event's time is shown.
+	 */
+	public static function clock_icon() {
+		return '<svg class="blt-e-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+	}
+
+	/**
+	 * Generic person silhouette, used as a placeholder avatar wherever a
+	 * speaker/presenter has no photo.
+	 */
+	public static function person_icon() {
+		return '<svg class="blt-e-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+	}
+
+	/* ------------------------------------------------------------------
 	 * Currency
 	 * ---------------------------------------------------------------- */
 

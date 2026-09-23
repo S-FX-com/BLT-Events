@@ -15,3 +15,7 @@ package-lock.json
 # OS / editor noise
 .DS_Store
 Thumbs.db
+.vscode/
+
+# Personal
+Ghino - Code Checklist.md

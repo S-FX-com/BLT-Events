@@ -33,13 +33,14 @@
 		$(".blt-events-listing").each(function () {
 			var $calendar = $(this);
 			var $search = $calendar.find('input[name="blt_search"]');
-			var $range = $calendar.find('select[name="blt_range"]');
+			var $range = $calendar.find(".blt-list-range");
+			var currentRange = $range.data("current") || "today";
 			var timer;
 
 			function state(paged) {
 				return {
 					search: $search.val() || "",
-					range: $range.val() || "today",
+					range: currentRange,
 					paged: paged || 1
 				};
 			}
@@ -51,7 +52,17 @@
 				}, 220);
 			});
 
-			$calendar.on("change", 'select[name="blt_range"]', function () {
+			$calendar.on("click", ".blt-list-range a", function (event) {
+				event.preventDefault();
+
+				var $link = $(this);
+
+				currentRange = $link.data("range");
+				$range.attr("data-current", currentRange).removeAttr("open");
+				$range.find(".blt-list-range-label").text($link.text());
+				$range.find("a").removeClass("is-active");
+				$link.addClass("is-active");
+
 				request($calendar, state(1));
 			});
 
