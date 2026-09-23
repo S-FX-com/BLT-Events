@@ -764,34 +764,94 @@ class BLT_Events_Helpers {
 	 * @return bool
 	 */
 	public static function ticket_is_available( $ticket ) {
+		return self::ticket_on_sale( $ticket ) && self::ticket_role_allowed( $ticket );
+	}
+
+	/**
+	 * Where a ticket type is in its sale window, ignoring roles.
+	 *
+	 * @param array $ticket Ticket type array.
+	 * @return string 'on_sale', 'upcoming' (before the sale start) or 'ended'.
+	 */
+	public static function ticket_sale_state( $ticket ) {
 		$now = current_time( 'Y-m-d H:i' );
 
 		if ( ! empty( $ticket['sale_start_date'] ) ) {
 			$start = $ticket['sale_start_date'] . ' ' . ( ! empty( $ticket['sale_start_time'] ) ? $ticket['sale_start_time'] : '00:00' );
 			if ( $now < $start ) {
-				return false;
+				return 'upcoming';
 			}
 		}
 
 		if ( ! empty( $ticket['sale_end_date'] ) ) {
 			$end = $ticket['sale_end_date'] . ' ' . ( ! empty( $ticket['sale_end_time'] ) ? $ticket['sale_end_time'] : '23:59' );
 			if ( $now > $end ) {
-				return false;
+				return 'ended';
 			}
 		}
 
-		$roles = isset( $ticket['roles'] ) && is_array( $ticket['roles'] ) ? $ticket['roles'] : array();
-		if ( ! empty( $roles ) ) {
-			if ( ! is_user_logged_in() ) {
-				return false;
-			}
-			$user = wp_get_current_user();
-			if ( ! array_intersect( $roles, (array) $user->roles ) ) {
-				return false;
-			}
+		return 'on_sale';
+	}
+
+	/**
+	 * Whether a ticket type is inside its sale window right now.
+	 *
+	 * @param array $ticket Ticket type array.
+	 * @return bool
+	 */
+	public static function ticket_on_sale( $ticket ) {
+		return 'on_sale' === self::ticket_sale_state( $ticket );
+	}
+
+	/**
+	 * Whether a ticket type is restricted to certain user roles (a member
+	 * rate).
+	 *
+	 * @param array $ticket Ticket type array.
+	 * @return bool
+	 */
+	public static function ticket_is_members_only( $ticket ) {
+		return ! empty( $ticket['roles'] ) && is_array( $ticket['roles'] );
+	}
+
+	/**
+	 * Whether the current visitor's role may buy a ticket type. Tickets
+	 * without a role restriction are open to everyone.
+	 *
+	 * @param array $ticket Ticket type array.
+	 * @return bool
+	 */
+	public static function ticket_role_allowed( $ticket ) {
+		if ( ! self::ticket_is_members_only( $ticket ) ) {
+			return true;
 		}
 
-		return true;
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+
+		return (bool) array_intersect( $ticket['roles'], (array) wp_get_current_user()->roles );
+	}
+
+	/**
+	 * Member rates a logged-out visitor could unlock by logging in: ticket
+	 * types on sale now and restricted to a role. Empty for logged-in users,
+	 * since logging in again changes nothing for them.
+	 *
+	 * @param int $event_id The event post ID.
+	 * @return array Ticket type arrays keyed by original index.
+	 */
+	public static function member_ticket_types( $event_id ) {
+		if ( is_user_logged_in() ) {
+			return array();
+		}
+
+		return array_filter(
+			self::get_ticket_types( $event_id ),
+			function ( $ticket ) {
+				return self::ticket_is_members_only( $ticket ) && self::ticket_on_sale( $ticket );
+			}
+		);
 	}
 
 	/**

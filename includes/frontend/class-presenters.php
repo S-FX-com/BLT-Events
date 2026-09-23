@@ -13,7 +13,7 @@
  *
  * Either way presenters only appear when the event's "Show presenters"
  * toggle is on. This class normalizes both modes to a common shape and
- * renders the single-event sidebar block.
+ * renders the Speakers block inside the single event card.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -248,8 +248,8 @@ class BLT_Events_Presenters {
 			'event_id'   => $event_id,
 			'presenters' => $presenters,
 			'label'      => count( $presenters ) > 1
-				? __( 'Presenters', 'blt-events' )
-				: __( 'Presenter', 'blt-events' ),
+				? __( 'Speakers', 'blt-events' )
+				: __( 'Speaker', 'blt-events' ),
 		) );
 	}
 }

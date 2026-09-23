@@ -1,8 +1,19 @@
 /* ========================================
    BLT Events - Single Event (front end)
+
    BEM under the `blt-event` block. Every value resolves through the shared
-   token layer in blt-events-tokens.css, so restyling happens there (or in
-   Settings > Appearance) rather than by overriding selectors here.
+   token layer in blt-events-tokens.css (spacing, type, neutrals, radii), so
+   restyling happens there, in Settings > Appearance, or through Skeleton
+   mode's mapping to your framework, rather than by overriding selectors.
+
+   Layout:
+   - Hero: the featured image at 16:9 with the "Back to events" button over
+     its top-left corner.
+   - Body: a 2fr / 1fr grid. The main column stacks the category chips,
+     title, description, agenda, sponsors, location and registration, with a
+     divider above each section. The event card sits in the narrow column,
+     lifted over the bottom of the hero image, and sticks while scrolling.
+   - Below 992px everything stacks, and the card moves up under the title.
 
    The block-local aliases below stay for backwards compatibility: sites
    already overriding --blt-event-accent keep working.
@@ -11,126 +22,237 @@
 .blt-event {
 	--blt-event-accent: var(--blt-e-fg-strong);
 	--blt-event-link: var(--blt-e-link);
-	--blt-event-border: var(--blt-e-border-subtle);
+	--blt-event-border: var(--blt-e-divider);
 	--blt-event-muted: var(--blt-e-fg-muted);
 	--blt-event-radius: var(--blt-e-radius);
+	/* Keeps the hero / body / card stacking local to the event. */
+	isolation: isolate;
 	color: var(--blt-e-fg);
 	font-family: var(--blt-e-font);
+	/* Size from the root, not the theme's (often large) body text, so the
+	   card and accordion keep the design's proportions. */
+	font-size: 1rem;
+	line-height: 1.5;
 	max-width: var(--blt-e-content-width);
 	margin: 0 auto;
 }
 
-/* --- Featured image --- */
+.blt-event *,
+.blt-event *::before,
+.blt-event *::after {
+	box-sizing: border-box;
+}
+
+.blt-event .blt-icon {
+	width: 1em;
+	height: 1em;
+	flex-shrink: 0;
+}
+
+.blt-event__sr-only {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* --- Hero --- */
 .blt-event__hero {
 	position: relative;
-	margin-bottom: 2.5rem;
-	background: var(--blt-e-surface-sunken);
+	z-index: 1;
+	margin-bottom: var(--blt-e-content-gap);
 }
 
 .blt-event__hero--plain {
-	margin-bottom: 1.5rem;
-	background: transparent;
+	margin-bottom: var(--blt-e-space-s);
 }
 
+.blt-event__hero-media {
+	margin: 0;
+	overflow: hidden;
+	aspect-ratio: 16 / 9;
+	border-radius: var(--blt-e-radius-lg);
+	background: var(--blt-e-surface-sunken);
+}
+
+.blt-event__hero-media img,
 .blt-event__featured-img {
 	display: block;
 	width: 100%;
-	aspect-ratio: 2.2 / 1;
-	height: auto;
+	max-width: none;
+	height: 100%;
 	object-fit: cover;
-	border-radius: 0;
+	object-position: 50%;
+}
+
+/* --- Back to events --- */
+.blt-event__back {
+	position: absolute;
+	top: var(--blt-e-space-s);
+	left: var(--blt-e-space-s);
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.55rem 1rem;
+	border-radius: var(--blt-e-radius);
+	background: var(--blt-e-surface);
+	color: var(--blt-e-neutral);
+	box-shadow: var(--blt-e-shadow-sm);
+	font-size: var(--blt-e-text-s);
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+}
+
+.blt-event__back:hover,
+.blt-event__back:focus-visible {
+	background: var(--blt-e-surface-alt);
+	color: var(--blt-event-accent);
+}
+
+.blt-event__hero--plain .blt-event__back {
+	position: static;
+	border: 1px solid var(--blt-e-border);
+	box-shadow: none;
 }
 
 /* --- Layout --- */
 .blt-event__layout {
+	position: relative;
+	z-index: 2;
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 320px;
-	gap: clamp(2rem, 5vw, 4.5rem);
-	align-items: start;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	gap: var(--blt-e-grid-gap);
+	/* Stretch, not start: the card column must be as tall as the main column
+	   for the card to have room to stick. */
+	align-items: stretch;
+}
+
+.blt-event__main {
+	display: flex;
+	flex-direction: column;
+	row-gap: var(--blt-e-content-gap);
+	min-width: 0;
+}
+
+.blt-event__main > * {
+	margin-top: 0;
+	margin-bottom: 0;
 }
 
 .blt-event__sidebar {
 	position: relative;
-	z-index: 1;
-	margin-top: -4.5rem;
+	z-index: 3;
+	min-width: 0;
 }
 
-/* --- Back link --- */
-.blt-event__back {
-	position: absolute;
-	top: 0.85rem;
-	left: 0.85rem;
-	z-index: 1;
-	display: inline-flex;
-	padding: 0.45rem 0.7rem;
-	font-size: 0.85rem;
-	font-weight: 600;
-	color: var(--blt-e-fg-strong);
-	background: var(--blt-e-surface);
-	text-decoration: none;
+/* The card overlaps the hero image only when there is one. */
+.blt-event--has-image .blt-event__sidebar {
+	margin-top: calc(-1 * var(--blt-e-section-space-m));
 }
 
-.blt-event__back:hover {
-	color: var(--blt-event-accent);
-}
-
-/* --- Categories --- */
+/* --- Category chips --- */
 .blt-event__categories {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.5rem;
-	margin-bottom: 1rem;
+	gap: calc(var(--blt-e-space-xs) / 2);
+	width: fit-content;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-event__category-item {
+	margin: 0;
 }
 
 .blt-event__category {
 	display: inline-block;
-	padding: 0.2rem 0.6rem;
-	background: var(--blt-e-surface-alt);
-	border-radius: var(--blt-e-radius-sm);
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: var(--blt-e-fg-soft);
+	padding: calc(var(--blt-e-space-xs) / 2) calc(var(--blt-e-space-s) / 2);
+	border-radius: var(--blt-e-chip-radius);
+	background: var(--blt-e-chip-bg);
+	color: var(--blt-e-neutral);
+	font-size: var(--blt-e-text-s);
+	font-weight: 500;
+	line-height: 1.5;
 	text-decoration: none;
 }
 
-.blt-event__category:hover {
-	background: var(--blt-e-border);
-	color: var(--blt-e-fg-strong);
+.blt-event__category:hover,
+.blt-event__category:focus-visible {
+	background: var(--blt-e-chip-bg-hover);
+	color: var(--blt-e-neutral);
 }
 
-/* --- Title & description --- */
+/* --- Title and description --- */
 .blt-event__title {
-	margin: 0 0 1rem;
-	font-size: clamp(2rem, 4vw, 3rem);
-	line-height: 1.15;
+	margin: 0;
+	color: var(--blt-e-neutral);
+	font-family: var(--blt-e-font-heading);
+	font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
 	font-weight: 700;
+	line-height: 1.15;
 }
 
 .blt-event__description {
-	font-size: 0.95rem;
+	max-width: var(--blt-e-prose-width);
+	font-size: 1rem;
 	line-height: 1.65;
 }
 
-.blt-event__description > *:first-child {
+.blt-event__description > :first-child {
 	margin-top: 0;
 }
 
-.blt-event__section-title {
-	font-size: 1.35rem;
-	font-weight: 700;
+.blt-event__description > :last-child {
+	margin-bottom: 0;
 }
 
-/* --- Agenda (collapsible) --- */
-.blt-event__agenda {
-	margin: 2rem 0;
+/* --- Sections (agenda, sponsors, location, registration) --- */
+.blt-event__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-space-s);
+	padding-top: var(--blt-e-content-gap);
 	border-top: 1px solid var(--blt-event-border);
-	padding-top: 1.25rem;
 }
 
-.blt-event__agenda-summary {
+.blt-event__section-title {
+	margin: 0;
+	color: var(--blt-e-neutral);
+	font-family: var(--blt-e-font-heading);
+	font-size: clamp(1.35rem, 1.25rem + 0.5vw, 1.6rem);
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+/* --- Agenda accordion --- */
+.blt-event__agenda-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.blt-event__agenda-item {
+	margin: 0;
+}
+
+.blt-event__agenda-summary,
+.blt-event__agenda-item--static {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: var(--blt-e-space-xs);
+	padding: var(--blt-e-space-xs) 0 var(--blt-e-space-s);
+	border-bottom: 1px solid var(--blt-e-neutral-light);
+}
+
+.blt-event__agenda-summary {
 	cursor: pointer;
 	list-style: none;
 }
@@ -139,89 +261,178 @@
 	display: none;
 }
 
-.blt-event__agenda-chevron {
-	transition: transform 0.15s ease;
-	color: var(--blt-event-muted);
+.blt-event__agenda-summary::marker {
+	content: "";
 }
 
-.blt-event__agenda[open] .blt-event__agenda-chevron {
-	transform: rotate(180deg);
-}
-
-.blt-event__agenda-list {
-	list-style: none;
-	margin: 1rem 0 0;
-	padding: 0;
-}
-
-.blt-event__agenda-item {
-	display: flex;
-	gap: 0.75rem;
-	padding: 0.5rem 0;
-	border-bottom: 1px solid var(--blt-event-border);
-	font-size: 0.95rem;
-}
-
-.blt-event__agenda-item:last-child {
-	border-bottom: none;
+.blt-event__agenda-summary:focus-visible {
+	outline: 2px solid var(--blt-e-focus-ring);
+	outline-offset: 2px;
 }
 
 .blt-event__agenda-time {
-	flex-shrink: 0;
-	min-width: 9.5rem;
-	color: var(--blt-event-muted);
+	margin: 0;
+	color: var(--blt-e-neutral);
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.4;
 	font-variant-numeric: tabular-nums;
 }
 
-.blt-event__agenda-label {
-	font-weight: 500;
+.blt-event__agenda-chevron {
+	display: inline-flex;
+	color: var(--blt-e-primary);
+	font-size: 1.25rem;
+	transition: transform 0.2s ease;
 }
 
-/* --- Registration panel --- */
+.blt-event__agenda-item[open] > .blt-event__agenda-summary .blt-event__agenda-chevron {
+	transform: rotate(180deg);
+}
+
+.blt-event__agenda-content {
+	padding: var(--blt-e-space-xs) 0;
+}
+
+.blt-event__agenda-label {
+	margin: 0;
+	color: var(--blt-e-fg-soft);
+	line-height: 1.55;
+}
+
+/* --- Sponsors --- */
+.blt-event__sponsor-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: var(--blt-e-space-m);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-event__sponsor {
+	margin: 0;
+}
+
+.blt-event__sponsor-link {
+	display: block;
+	aspect-ratio: 1;
+	overflow: hidden;
+	border: 1px solid var(--blt-e-border);
+	border-radius: var(--blt-e-radius);
+	background: var(--blt-e-surface);
+	transition: border-color 0.15s ease;
+}
+
+.blt-event__sponsor-link:hover,
+.blt-event__sponsor-link:focus-visible {
+	border-color: var(--blt-e-primary);
+}
+
+.blt-event__sponsor-img {
+	display: block;
+	width: 100%;
+	max-width: none;
+	height: 100%;
+	/* Logos are contained, not cropped; set the token to `cover` (and the
+	   padding to 0) for photo tiles. */
+	padding: var(--blt-e-sponsor-padding);
+	object-fit: var(--blt-e-sponsor-fit);
+}
+
+/* --- Location --- */
+.blt-event__address-text {
+	margin: 0;
+	color: var(--blt-e-fg-soft);
+	line-height: 1.5;
+}
+
+.blt-event__map {
+	overflow: hidden;
+	border: 1px solid var(--blt-e-border);
+	border-radius: var(--blt-e-radius);
+}
+
+.blt-event__map iframe {
+	display: block;
+	width: 100%;
+	height: 280px;
+	border: 0;
+}
+
+/* --- Registration --- */
 .blt-event__registration {
-	margin-top: 2.5rem;
-	padding-top: 1.5rem;
-	border-top: 1px solid var(--blt-event-border);
 	scroll-margin-top: 2rem;
 }
 
-.blt-event__registration .blt-event__section-title {
-	display: block;
-	margin-bottom: 1.25rem;
+.blt-event__registration .blt-registration-form,
+.blt-event__registration .blt-registration-closed,
+.blt-event__registration .blt-surecart-form,
+.blt-event__registration .blt-fluentcart-form {
+	margin: 0;
 }
 
-/* --- Sidebar cards --- */
+/* --- Event card --- */
 .blt-event__card {
+	padding: var(--blt-e-space-m);
 	border: 1px solid var(--blt-event-border);
-	border-radius: 0;
-	padding: 1.25rem;
-	margin-bottom: 1.25rem;
+	border-radius: var(--blt-e-radius);
 	background: var(--blt-e-surface);
 }
 
-.blt-event__card-title {
-	margin: 0 0 0.6rem;
-	font-size: 1.05rem;
-	font-weight: 700;
+.blt-event__summary {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--blt-e-content-gap);
 }
 
-/* Date box */
-.blt-event__datebox-head {
+/* Only stick where the card fits comfortably on screen. */
+@media (min-width: 992px) and (min-height: 720px) {
+	.blt-event__summary {
+		position: sticky;
+		top: calc(var(--blt-e-space-m) + var(--wp-admin--admin-bar--height, 0px));
+	}
+}
+
+/* Content other plugins add to the card with the sidebar actions: fold
+   their own card chrome into this one. */
+.blt-event__summary .blt-event__card {
+	padding: 0;
+	border: 0;
+	background: none;
+}
+
+/* Date */
+.blt-event__datebox {
 	display: flex;
+	flex-wrap: nowrap;
 	align-items: center;
-	gap: 0.85rem;
+	gap: var(--blt-e-space-xs);
 }
 
 .blt-event__datebox-day {
-	display: inline-flex;
+	display: flex;
+	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
-	width: 48px;
-	height: 48px;
-	flex-shrink: 0;
-	border: 1px solid var(--blt-event-border);
-	border-radius: var(--blt-e-radius);
-	font-size: 1.4rem;
+	width: 62px;
+	aspect-ratio: 1;
+	padding: calc(var(--blt-e-space-xs) / 2);
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-neutral-ultra-light);
+}
+
+.blt-event__datebox-day-inner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	aspect-ratio: 1;
+	border-radius: var(--blt-e-radius-xs);
+	background: var(--blt-e-surface);
+	color: var(--blt-e-neutral);
+	font-size: var(--blt-e-text-l);
 	font-weight: 700;
 	line-height: 1;
 }
@@ -229,46 +440,231 @@
 .blt-event__datebox-meta {
 	display: flex;
 	flex-direction: column;
+	min-width: 0;
 }
 
 .blt-event__datebox-label {
-	font-size: 0.75rem;
-	color: var(--blt-event-muted);
+	color: var(--blt-e-fg-muted);
+	font-size: var(--blt-e-text-s);
+	font-weight: 500;
+	line-height: 1.4;
 }
 
 .blt-event__datebox-value {
+	color: var(--blt-e-neutral);
+	font-size: var(--blt-e-text-l);
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+/* Summary */
+.blt-event__excerpt {
+	margin: 0;
+	color: var(--blt-e-fg-soft);
+	line-height: 1.6;
+}
+
+/* Facts */
+.blt-event__info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-space-xs);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-event__info-item {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: flex-start;
+	gap: var(--blt-e-space-xs);
+	margin: 0;
+	color: var(--blt-e-fg-soft);
+	font-size: 0.95rem;
+	line-height: 1.45;
+}
+
+.blt-event__info-icon {
+	display: inline-flex;
+	flex-shrink: 0;
+	margin-top: 0.1em;
+	color: var(--blt-e-neutral);
+	font-size: var(--blt-e-text-m);
+}
+
+.blt-event__info-text {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.blt-event__price {
+	color: var(--blt-e-neutral);
+	font-weight: 700;
+}
+
+.blt-event__calendar-link,
+.blt-event__virtual-link {
+	color: var(--blt-event-link);
+	font-weight: 500;
+	text-decoration: none;
+}
+
+.blt-event__calendar-link:hover,
+.blt-event__calendar-link:focus-visible,
+.blt-event__virtual-link:hover,
+.blt-event__virtual-link:focus-visible {
+	text-decoration: underline;
+}
+
+.blt-event__virtual {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.blt-event__virtual-title {
+	color: var(--blt-e-neutral);
+	font-weight: 600;
+}
+
+.blt-event__virtual-text {
+	color: var(--blt-event-muted);
+	font-size: 0.85rem;
+}
+
+/* Speakers */
+.blt-event__presenters {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-space-xs);
+}
+
+.blt-event__presenters-title {
+	margin: 0;
+	color: var(--blt-e-neutral);
+	font-size: var(--blt-e-text-s);
+	font-weight: 700;
+	line-height: 1.4;
+}
+
+.blt-event__presenter-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-space-xs);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.blt-event__presenter {
+	display: flex;
+	align-items: center;
+	gap: var(--blt-e-space-xs);
+	margin: 0;
+}
+
+.blt-event__presenter-photo {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 60px;
+	height: 60px;
+	border: 3px solid var(--blt-e-surface);
+	border-radius: 50%;
+	background: var(--blt-e-neutral-ultra-light);
+	/* The white ring from the design needs an edge to show on a white card. */
+	box-shadow: 0 0 0 1px var(--blt-e-border);
+	object-fit: cover;
+}
+
+.blt-event__presenter-photo--initial {
+	color: var(--blt-e-neutral);
+	font-size: var(--blt-e-text-m);
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.blt-event__presenter-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.blt-event__presenter-name {
+	color: var(--blt-e-neutral);
+	font-size: var(--blt-e-text-s);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+a.blt-event__presenter-name:hover,
+a.blt-event__presenter-name:focus-visible {
+	color: var(--blt-event-link);
+}
+
+.blt-event__presenter-role {
+	color: var(--blt-e-neutral-semi-light);
+	font-size: 0.875rem;
+}
+
+/* Register button */
+.blt-event__cta {
+	display: flex;
+}
+
+.blt-event__cta-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: 100%;
+	min-height: 46px;
+	padding: 0.75rem 1.25rem;
+	border-radius: var(--blt-e-radius-sm);
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+	font-size: 0.95rem;
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+	transition: background-color 0.15s ease;
+}
+
+.blt-event__cta-button:hover,
+.blt-event__cta-button:focus-visible {
+	background: var(--blt-e-primary-hover);
+	color: var(--blt-e-on-primary);
+}
+
+.blt-event__cta-button:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px var(--blt-e-focus-ring);
+}
+
+.blt-event__cta-button.is-disabled,
+.blt-event__cta-button.is-soldout,
+.blt-event__cta-button.is-disabled:hover,
+.blt-event__cta-button.is-soldout:hover {
+	background: var(--blt-e-surface-sunken);
+	color: var(--blt-e-fg-muted);
+	cursor: default;
+}
+
+/* --- Parts from theme overrides of the pre-2.5 templates --- */
+.blt-event__card-title {
+	margin: 0 0 0.6rem;
 	font-size: 1.05rem;
 	font-weight: 700;
 }
 
-.blt-event__datebox-time {
-	margin: 0.85rem 0 0;
-	font-size: 0.9rem;
+.blt-event__datebox-time,
+.blt-event__presenter-bio {
+	margin: 0;
 	color: var(--blt-event-muted);
-}
-
-.blt-event__calendar-links {
-	margin: 0.75rem 0 0;
-	font-size: 0.82rem;
-	color: var(--blt-event-muted);
-}
-
-.blt-event__calendar-link {
-	color: var(--blt-event-link);
-	text-decoration: none;
-	font-weight: 600;
-}
-
-.blt-event__calendar-link:hover {
-	text-decoration: underline;
-}
-
-/* CTA card */
-.blt-event__cta {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
+	font-size: 0.85rem;
 }
 
 .blt-event__cta-price {
@@ -278,156 +674,185 @@
 }
 
 .blt-event__cta-from {
-	font-size: 0.7rem;
-	font-weight: 600;
-	letter-spacing: 0.05em;
 	color: var(--blt-event-muted);
+	font-size: 0.7rem;
+	letter-spacing: 0.05em;
 }
 
 .blt-event__cta-amount {
-	font-size: 1.05rem;
 	font-weight: 700;
 }
 
-.blt-event__cta-button {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4rem;
-	padding: 0.6rem 1.1rem;
-	background: var(--blt-e-fg-strong);
-	color: var(--blt-e-surface);
-	border-radius: 0;
-	font-size: 0.85rem;
-	font-weight: 600;
-	text-decoration: none;
-	white-space: nowrap;
-	transition: opacity 0.15s;
-}
-
-.blt-event__cta-button:hover,
-.blt-event__cta-button:focus {
-	color: var(--blt-e-surface);
-	opacity: 0.88;
-}
-
-.blt-event__cta-button.is-disabled,
-.blt-event__cta-button.is-soldout {
-	background: var(--blt-e-surface-sunken);
-	color: var(--blt-e-fg-muted);
-	cursor: default;
-	opacity: 1;
-}
-
-.blt-event__presenter-bio {
-	margin-top: 0.15rem;
-	font-size: 0.8rem;
-	line-height: 1.45;
-	color: var(--blt-e-fg-soft);
-}
-
-/* Address / virtual */
-.blt-event__address-text,
-.blt-event__virtual-text {
-	margin: 0 0 0.75rem;
-	font-size: 0.9rem;
-	line-height: 1.5;
-	color: var(--blt-e-fg-soft);
-}
-
-.blt-event__virtual-link {
-	font-size: 0.9rem;
-	color: var(--blt-event-link);
-	word-break: break-all;
-}
-
-/* Presenters */
-.blt-event__presenter-list {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.blt-event__presenter {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	padding: 0.5rem 0;
-}
-
-.blt-event__presenter + .blt-event__presenter {
-	border-top: 1px solid var(--blt-event-border);
-}
-
-.blt-event__presenter-photo {
-	width: 44px;
-	height: 44px;
-	flex-shrink: 0;
-	border-radius: 50%;
-	object-fit: cover;
-}
-
-.blt-event__presenter-meta {
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
-}
-
-.blt-event__presenter-name {
-	font-weight: 600;
-	color: inherit;
-	text-decoration: none;
-}
-
-a.blt-event__presenter-name:hover {
-	color: var(--blt-event-link);
-}
-
-.blt-event__presenter-role {
-	font-size: 0.82rem;
-	color: var(--blt-event-muted);
-}
-
-/* Map */
-.blt-event__map {
-	margin-top: 0.75rem;
-	border-radius: var(--blt-e-radius);
-	overflow: hidden;
-	border: 1px solid var(--blt-event-border);
-}
-
-.blt-event__map iframe {
-	display: block;
-	width: 100%;
-	height: 200px;
-	border: 0;
-}
-
-/* --- Responsive --- */
-@media (max-width: 860px) {
+/* --- Tablet and below --- */
+@media (max-width: 991px) {
+	/* Stack, with the card right under the title so the date, place and
+	   register button come before the long content. */
 	.blt-event__layout {
-		grid-template-columns: 1fr;
+		display: flex;
+		flex-direction: column;
+		gap: var(--blt-e-content-gap);
+	}
+
+	.blt-event__main {
+		display: contents;
+	}
+
+	.blt-event__main > * {
+		order: 4;
+	}
+
+	.blt-event__main > .blt-event__categories {
+		order: 1;
+	}
+
+	.blt-event__main > .blt-event__title {
+		order: 2;
 	}
 
 	.blt-event__sidebar {
+		order: 3;
+	}
+
+	.blt-event--has-image .blt-event__sidebar {
 		margin-top: 0;
 	}
 
-	.blt-event__title {
-		font-size: 1.8rem;
+	.blt-event__sponsor-grid {
+		gap: var(--blt-e-space-s);
 	}
 }
 
 @media (max-width: 600px) {
-	.blt-event__hero {
-		margin-bottom: 1.5rem;
-	}
-
-	.blt-event__featured-img {
-		aspect-ratio: 1.4 / 1;
-	}
-
 	.blt-event__back {
-		top: 0.5rem;
-		left: 0.5rem;
+		top: 0.6rem;
+		left: 0.6rem;
+		padding: 0.45rem 0.8rem;
 	}
+
+	.blt-event__card {
+		padding: var(--blt-e-space-s);
+	}
+
+	.blt-event__map iframe {
+		height: 220px;
+	}
+}
+
+@media (max-width: 478px) {
+	.blt-event__sponsor-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.blt-event__presenters {
+		gap: var(--blt-e-space-s);
+	}
+}
+
+/* --- Sponsor lightbox (appended to <body>) --- */
+.blt-lightbox {
+	max-width: min(92vw, 1100px);
+	max-height: 92vh;
+	padding: 0;
+	overflow: visible;
+	border: 0;
+	background: transparent;
+}
+
+.blt-lightbox::backdrop {
+	background: rgba(0, 0, 0, 0.8);
+}
+
+.blt-lightbox[open] {
+	animation: blt-lightbox-fade 0.2s ease;
+}
+
+@keyframes blt-lightbox-fade {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.blt-lightbox[open] {
+		animation: none;
+	}
+
+	.blt-event__agenda-chevron {
+		transition: none;
+	}
+}
+
+.blt-lightbox__figure {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.6rem;
+	margin: 0;
+}
+
+.blt-lightbox__img {
+	display: block;
+	width: auto;
+	max-width: min(92vw, 1100px);
+	height: auto;
+	max-height: 82vh;
+	border-radius: var(--blt-e-radius);
+	background: #fff;
+	object-fit: contain;
+}
+
+.blt-lightbox__caption {
+	color: #fff;
+	font-family: var(--blt-e-font);
+	font-size: 0.9rem;
+	text-align: center;
+}
+
+.blt-lightbox__btn {
+	position: fixed;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.92);
+	color: #111;
+	font-size: 1.6rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.blt-lightbox__btn:focus-visible {
+	outline: 3px solid #fff;
+	outline-offset: 2px;
+}
+
+.blt-lightbox__btn[hidden] {
+	display: none;
+}
+
+.blt-lightbox__close {
+	top: 1rem;
+	right: 1rem;
+}
+
+.blt-lightbox__prev,
+.blt-lightbox__next {
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.blt-lightbox__prev {
+	left: 1rem;
+}
+
+.blt-lightbox__next {
+	right: 1rem;
 }

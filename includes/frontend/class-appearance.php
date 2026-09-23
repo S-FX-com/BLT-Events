@@ -164,11 +164,13 @@ class BLT_Events_Appearance {
 
 		$radius = (int) get_option( self::OPTION_RADIUS, '' );
 		if ( $radius > 0 ) {
+			$rules['--blt-e-radius-xs'] = max( 0, $radius - 6 ) . 'px';
 			$rules['--blt-e-radius-sm'] = max( 0, $radius - 4 ) . 'px';
 			$rules['--blt-e-radius']    = $radius . 'px';
 			$rules['--blt-e-radius-lg'] = ( $radius + 2 ) . 'px';
 		} elseif ( '0' === (string) get_option( self::OPTION_RADIUS, '' ) ) {
 			// An explicit zero is a real choice (square corners), not "unset".
+			$rules['--blt-e-radius-xs'] = '0';
 			$rules['--blt-e-radius-sm'] = '0';
 			$rules['--blt-e-radius']    = '0';
 			$rules['--blt-e-radius-lg'] = '0';

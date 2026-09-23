@@ -42,6 +42,10 @@
 	$(document).on("click", ".blt-qty-btn.plus-btn", function () {
 		var input = $(this).siblings("input[type='number']");
 		var val = parseInt(input.val(), 10) || 0;
+		var max = parseInt(input.attr("max"), 10);
+		if (!isNaN(max) && val >= max) {
+			return;
+		}
 		input.val(val + 1).trigger("change");
 	});
 

@@ -2,6 +2,34 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Changed
+
+- **Event editor layout.** The main column now reads Event Details, Event Description, Event Type, Registration Configuration, Ticket Types, then everything else. The content editor sits in its own **Event Description** card. Each user's saved drag-and-drop box order is cleared once so the new order shows; boxes can be rearranged again afterwards.
+- **No Excerpt box.** Events no longer support excerpts. Excerpts saved on existing events are still stored and still shown in listings and structured data, but can no longer be edited.
+- **Registration is a three-step checkout** (Stripe and free events): Registration (ticket table with per-row and running totals), Attendee details (a card per attendee with the ticket type, price and a "Remove attendee" action, beside an event summary), and Review & payment (ticket and attendee summaries with edit links, then the card form). When the order total is zero the payment step is skipped and the order completes from Attendee details. Events without ticket types open straight on the details step.
+- The Stripe card is collected as separate cardholder name, card number, expiry and CVC fields. Theme overrides that still print `#blt-card-element` keep the single combined field.
+- Tickets whose sale window has closed or not yet opened are listed disabled ("Sales ended", "On sale …") instead of being hidden. Remove them with `blt_events_registration_ticket_rows`.
+- Additional attendees are asked for first and last name (joined into the attendee name) instead of a single full-name field.
+- The checkout summary includes the event's group discount, so the total shown matches what is charged.
+- `templates/registration/form.php` and `attendee.php` were rewritten. Theme overrides of them need updating to the new markup.
+
+- **Event page redesigned** to the new layout: the featured image at 16:9 with rounded corners and a "Back to events" button over it; category chips, title, description (715px measure), an **Agenda** accordion (one item per session, time as the title, first item open), **Sponsors** and a **Location** map in the main column, with a divider above each section; and one sticky event card beside them, lifted over the hero image, holding the date box, event facts (time, venue, online attendance and join link, price, add-to-calendar links), the speakers and the register button. Below 992px the card moves up under the title.
+- The card only overlaps the hero when a featured image is shown (the old sidebar overlapped even without one).
+- The register button in the card points at the form itself when the form is placed inside the description.
+- Presenters are titled "Speakers" on the event page and show photo, name and role; bios are no longer printed there.
+- The four `blt_events_single_*` actions still fire; `blt_events_single_before_sidebar` and `blt_events_single_sidebar` now run inside the event card.
+- New design tokens for the event page (`--blt-e-space-xs/s/m`, `--blt-e-content-gap`, `--blt-e-grid-gap`, `--blt-e-section-space-m`, `--blt-e-text-s/m/l`, `--blt-e-radius-xs`, `--blt-e-neutral*`, `--blt-e-divider`, `--blt-e-chip-*`, `--blt-e-prose-width`, `--blt-e-sponsor-*`). Skeleton mode maps them to the matching Automatic.css variables, and Settings > Appearance > Corner radius now reaches the event card, hero and buttons.
+- Theme overrides of `single-event.php` or of the `single/` parts need reviewing: every part name still resolves, but `address.php` is now the main-column Location section, `virtual.php` renders inside the card's facts list, and `datebox.php` / `cta.php` no longer print their own cards. New parts: `single/info.php`, `single/excerpt.php`, `single/sponsors.php`.
+
+### Added
+
+- **Sponsors.** A new Sponsors box in the event editor: pick logos from the media library, drag to reorder, optionally link each to the sponsor's site. They show as square tiles under the agenda; a logo without a link opens larger in a lightbox. Filter with `blt_events_sponsors`.
+- **Log in for Member Rates.** Logged-out visitors see a prompt, and locked "Members only" rows, when a role-restricted ticket type is on sale; logging in returns them to the form. SureCart and FluentCart checkouts show the prompt too. Filter the link with `blt_events_member_login_url`.
+- New templates `registration/summary.php` and `registration/member-login.php`; new filters `blt_events_registration_ticket_rows`, `blt_events_member_login_url`, `blt_events_registration_summary` and `blt_events_registration_help_email`.
+- The "Need help?" box in the checkout shows the Reply-To (or From) address from Settings > Emails, and is hidden when neither is set.
+
 ## 2.4.0
 
 ### Fixed

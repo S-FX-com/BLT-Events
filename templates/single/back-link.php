@@ -1,6 +1,7 @@
 <?php
 /**
- * "All events" back link.
+ * "Back to events" button, laid over the top-left corner of the hero image
+ * (or in the normal flow when the event has no image).
  *
  * Override: your-theme/blt-events/single/back-link.php
  *
@@ -16,4 +17,7 @@ if ( ! $show_back || ! $events_url ) {
 	return;
 }
 ?>
-<a class="blt-event__back" href="<?php echo esc_url( $events_url ); ?>"><span aria-hidden="true">&larr;</span> <?php esc_html_e( 'All events', 'blt-events' ); ?></a>
+<a class="blt-event__back" href="<?php echo esc_url( $events_url ); ?>">
+	<?php echo BLT_Events_Templates::icon( 'arrow-left' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed SVG. ?>
+	<?php esc_html_e( 'Back to events', 'blt-events' ); ?>
+</a>

@@ -754,8 +754,15 @@ class BLT_Events_Registrations {
 					}
 				}
 
+				// The checkout asks for first and last name; older forms and
+				// custom attendee fields may still post a single name.
+				$attendee_name = sanitize_text_field( $att['name'] ?? '' );
+				if ( '' === $attendee_name ) {
+					$attendee_name = trim( sanitize_text_field( $att['first_name'] ?? '' ) . ' ' . sanitize_text_field( $att['last_name'] ?? '' ) );
+				}
+
 				$attendees[] = array(
-					'attendee_name'  => sanitize_text_field( $att['name'] ?? '' ),
+					'attendee_name'  => $attendee_name,
 					'attendee_email' => sanitize_email( $att['email'] ?? '' ),
 					'attendee_phone' => BLT_Events_Helpers::sanitize_phone( $att['phone'] ?? '' ),
 					'ticket_type'    => $ticket_type,

@@ -102,8 +102,9 @@ function blt_events_uninstall_site() {
 	}
 	remove_role( 'blt_event_manager' );
 
-	// Per-user dismissals.
+	// Per-user flags: setup-card dismissal, editor layout version.
 	delete_metadata( 'user', 0, 'blt_events_setup_dismissed', '', true );
+	delete_metadata( 'user', 0, 'blt_events_editor_layout', '', true );
 }
 
 if ( is_multisite() ) {

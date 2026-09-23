@@ -2,10 +2,12 @@
 /**
  * BLT Events - Front-End Single Event View
  *
- * Renders the single event layout via the_content: featured image across
- * the top, then a two-column body — main column (category, title,
- * description, collapsible agenda, registration) and a sidebar (date box,
- * register/buy CTA, address or virtual link, map, presenters).
+ * Renders the single event layout via the_content: a 16:9 featured image
+ * with a "Back to events" button, then a two-column body. The main column
+ * holds the category chips, title, description, agenda accordion, sponsors,
+ * location map and registration; the sticky event card beside it holds the
+ * date, the event facts (time, place, online, price, calendar links), the
+ * speakers and the register button.
  *
  * The HTML lives in templates/single-event.php and templates/single/*.php,
  * so a theme can override any part (see BLT_Events_Templates). Markup
@@ -55,6 +57,21 @@ class BLT_Events_Single_Event {
 	}
 
 	public static function register_assets() {
+		// The sponsor lightbox is behaviour, not styling: it loads in every
+		// styling mode, and only on events that show sponsors.
+		wp_register_script(
+			'blt-events-single',
+			BLT_EVENTS_PLUGIN_URL . 'assets/js/single-event.js',
+			array(),
+			BLT_EVENTS_VERSION,
+			true
+		);
+		wp_localize_script( 'blt-events-single', 'bltEventsLightbox', array(
+			'close' => __( 'Close', 'blt-events' ),
+			'prev'  => __( 'Previous image', 'blt-events' ),
+			'next'  => __( 'Next image', 'blt-events' ),
+		) );
+
 		if ( ! self::styles_enabled() ) {
 			return;
 		}
@@ -224,6 +241,10 @@ class BLT_Events_Single_Event {
 
 		$terms = get_the_terms( $event_id, 'event_category' );
 
+		$has_shortcode = has_shortcode( $event->post_content, 'blt_event_registration' ) || has_block( 'blt-events/registration-form', $event );
+		$show_featured = self::show_featured( $event_id ) && has_post_thumbnail( $event_id );
+		$featured      = has_post_thumbnail( $event_id ) ? get_the_post_thumbnail( $event_id, 'large', array( 'class' => 'blt-event__featured-img' ) ) : '';
+
 		$data = array(
 			'event'              => $event,
 			'event_id'           => $event_id,
@@ -233,24 +254,32 @@ class BLT_Events_Single_Event {
 			'is_online'          => in_array( $event_type, array( 'online', 'hybrid' ), true ),
 			'is_physical'        => in_array( $event_type, array( 'in-person', 'hybrid' ), true ),
 			'show_title'         => self::show_title( $event_id ),
-			'show_featured'      => self::show_featured( $event_id ) && has_post_thumbnail( $event_id ),
+			'show_featured'      => $show_featured,
+			'has_image'          => $show_featured && '' !== $featured,
 			'show_back'          => self::show_back_link( $event_id ),
 			'show_calendar'      => self::show_calendar_links( $event_id ),
-			'featured_image'     => has_post_thumbnail( $event_id ) ? get_the_post_thumbnail( $event_id, 'large', array( 'class' => 'blt-event__featured-img' ) ) : '',
+			'featured_image'     => $featured,
 			'events_url'         => BLT_Events_Helpers::events_page_url(),
 			'categories'         => ( empty( $terms ) || is_wp_error( $terms ) ) ? array() : $terms,
 			'date_label'         => BLT_Events_Helpers::event_date_label( $event_id ),
 			'time_label'         => BLT_Events_Helpers::event_time_label( $event_id ),
 			'day'                => $event_date ? BLT_Events_Helpers::format_date( $event_date, 'j' ) : '',
+			'event_date'         => $event_date ? (string) $event_date : '',
+			// Only an excerpt saved before events dropped the Excerpt box;
+			// never core's auto-excerpt, which would repeat the description.
+			'excerpt'            => trim( wp_strip_all_tags( (string) $event->post_excerpt ) ),
 			'ics_url'            => BLT_Events_Helpers::get_ics_url( $event_id ),
 			'google_url'         => BLT_Events_Helpers::get_google_calendar_url( $event ),
 			'agenda'             => self::agenda_items( $event_id ),
-			'has_shortcode'      => has_shortcode( $event->post_content, 'blt_event_registration' ) || has_block( 'blt-events/registration-form', $event ),
+			'sponsors'           => self::sponsor_items( $event_id ),
+			'has_shortcode'      => $has_shortcode,
 			'registration_open'  => get_post_meta( $event_id, '_blt_registration_open', true ) === '1',
 			'has_paid'           => $range['has_paid'],
 			'price_from'         => $range['has_paid'] ? BLT_Events_Helpers::format_price( self::lowest_paid_price( $event_id ) ) : '',
 			'cta_label'          => apply_filters( 'blt_events_cta_label', $range['has_paid'] ? __( 'Buy tickets', 'blt-events' ) : __( 'Register', 'blt-events' ), $event_id, $range ),
-			'cta_url'            => '#blt-event-registration',
+			// When the form sits inside the description there is no
+			// registration panel, so point at the form itself.
+			'cta_url'            => $has_shortcode ? '#blt-registration-' . $event_id : '#blt-event-registration',
 			'spots_left'         => BLT_Events_Helpers::spots_left( $event_id ),
 			'is_sold_out'        => BLT_Events_Helpers::is_sold_out( $event_id ),
 			'address'            => BLT_Events_Helpers::get_event_address( $event_id ),
@@ -326,12 +355,66 @@ class BLT_Events_Single_Event {
 		return $out;
 	}
 
+	/**
+	 * Sponsor logos for the event page, or an empty array when the section
+	 * is switched off.
+	 *
+	 * @param int $event_id The event post ID.
+	 * @return array Rows with id, url (sponsor link, may be ''), full (image URL), alt.
+	 */
+	private static function sponsor_items( $event_id ) {
+		$items = array();
+
+		if ( get_post_meta( $event_id, '_blt_sponsors_enabled', true ) === '1' ) {
+			$raw  = get_post_meta( $event_id, '_blt_sponsors', true );
+			$rows = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+
+			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+				$image_id = absint( $row['image_id'] ?? 0 );
+				$full     = $image_id ? wp_get_attachment_image_url( $image_id, 'full' ) : '';
+				if ( ! $full ) {
+					continue;
+				}
+
+				$alt = trim( (string) get_post_meta( $image_id, '_wp_attachment_image_alt', true ) );
+
+				$items[] = array(
+					'id'   => $image_id,
+					'url'  => esc_url_raw( (string) ( $row['url'] ?? '' ) ),
+					'full' => $full,
+					'alt'  => '' !== $alt ? $alt : get_the_title( $image_id ),
+				);
+			}
+		}
+
+		/**
+		 * Filter the sponsor logos shown on an event page.
+		 *
+		 * Runs even when the section is off, so code can supply sponsors
+		 * from elsewhere.
+		 *
+		 * @param array $items    Rows with id (attachment ID), url (link, may be ''), full (image URL), alt.
+		 * @param int   $event_id The event post ID.
+		 */
+		return (array) apply_filters( 'blt_events_sponsors', $items, $event_id );
+	}
+
 	/* ------------------------------------------------------------------
 	 * Rendering
 	 * ---------------------------------------------------------------- */
 
 	private static function render_single( $event, $content ) {
-		return BLT_Events_Templates::render( 'single-event.php', self::view_data( $event, $content ) );
+		$data = self::view_data( $event, $content );
+
+		// Logos without a sponsor link open in the lightbox.
+		foreach ( (array) ( $data['sponsors'] ?? array() ) as $sponsor ) {
+			if ( empty( $sponsor['url'] ) ) {
+				wp_enqueue_script( 'blt-events-single' );
+				break;
+			}
+		}
+
+		return BLT_Events_Templates::render( 'single-event.php', $data );
 	}
 
 	/**

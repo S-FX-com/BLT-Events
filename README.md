@@ -25,8 +25,8 @@ Updates are served from GitHub releases through the bundled update checker; the 
 |---|---|
 | Events page | Created for you from the setup card, holding the Events Calendar block (or shortcode on classic-editor sites) |
 | `/event/` archive | Rendered by the plugin with search and a view switcher; category archives too |
-| Event page | Renders inside your theme's single template: date box, add-to-calendar links, CTA, address with map, join link for confirmed registrants, presenters, agenda, registration form |
-| Registration form | Name, email, phone, privacy consent; tickets when the event has them; per-attendee details for group bookings |
+| Event page | Renders inside your theme's single template: a 16:9 featured image with a Back to events button; category chips, title, description, agenda accordion, sponsor logos, location map and registration form; beside them a sticky event card with the date, time, venue, online join link (for confirmed registrants), price, add-to-calendar links, speakers and the register button |
+| Registration form | A three-step checkout: **Registration** (ticket types, quantities, subtotal), **Attendee details** (one card per attendee beside an event summary) and **Review & payment**. Free orders skip the payment step. Logged-out visitors see a **Log in for Member Rates** prompt when a role-restricted ticket is on sale |
 | Emails | Confirmation with .ics attached, pending notices, admin notification, 24h/1h reminders |
 | Styling | Styled mode with its own design; Skeleton mode inherits your framework's CSS variables; No-CSS mode leaves BEM markup |
 | SEO | schema.org Event JSON-LD on every event page |
@@ -71,9 +71,9 @@ Every piece of front-end HTML is a file under `templates/`. Copy any of them to 
 ```
 templates/
 ├── single-event.php            Event page layout
-├── single/                     Its parts: title, datebox, cta, address, virtual, agenda, presenters, ...
+├── single/                     Its parts: title, description, agenda, sponsors, address (location map), datebox, info, cta, presenters, ...
 ├── calendar/                   list-item, grid-card, month-event, empty
-├── registration/               form, attendee, closed, surecart, fluentcart
+├── registration/               form, attendee, summary, member-login, closed, surecart, fluentcart
 ├── emails/wrapper.php          HTML shell around every email
 └── archive-event.php           Classic-theme event archive
 ```

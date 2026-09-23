@@ -54,7 +54,7 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_render_field` | filter | `$html, $field, $value, $prefix` | Rendered HTML of one field |
 | `blt_events_prefill_value` | filter | `$value, $field, $user` | Prefilled value for a field |
 | `blt_events_validation_errors` | filter | `$errors, $clean, $posted, $fieldset` | Validation messages before returning |
-| `blt_events_attendee_fields` | filter | `$fields, $event_id` | Fields collected per additional attendee |
+| `blt_events_attendee_fields` | filter | `$fields, $event_id` | Fields collected per additional attendee (default: first name, last name, email, phone; `first_name` + `last_name` are joined into the attendee name) |
 | `blt_events_countries` | filter | `$countries` | Country list for the country field |
 
 ## Front end
@@ -71,8 +71,10 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_cta_label` | filter | `$label, $event_id, $range` | CTA button text |
 | `blt_events_can_see_online_url` | filter | `$can_see, $event_id` | Whether the visitor may see the join link |
 | `blt_events_map_src` | filter | `$src, $event_id, $provider` | Map iframe URL |
-| `blt_events_single_before_main` / `_after_main` / `_before_sidebar` / `blt_events_single_sidebar` | action | `$event_id` | Insertion points on the event page |
-| `blt_events_presenters` | filter | `$presenters, $event_id` | Presenters shown on the event page |
+| `blt_events_single_before_main` / `_after_main` | action | `$event_id` | Top / bottom of the main column on the event page |
+| `blt_events_single_before_sidebar` / `blt_events_single_sidebar` | action | `$event_id` | Inside the event card: before the date / above the register button (the speakers render on `blt_events_single_sidebar`) |
+| `blt_events_presenters` | filter | `$presenters, $event_id` | Speakers (presenters) shown in the event card |
+| `blt_events_sponsors` | filter | `$sponsors, $event_id` | Sponsor logos on the event page (`id`, `url`, `full`, `alt`); runs even when the section is off |
 | `blt_events_calendar_query_args` | filter | `$args, $view, $atts` | `WP_Query` args of a calendar view |
 | `blt_events_calendar_views` | filter | `$views` | View switcher labels |
 | `blt_events_calendar_html` | filter | `$html, $view, $atts` | Rendered calendar/listing |
@@ -84,6 +86,10 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_format_price` | filter | `$string, $amount, $include_total` | Formatted price |
 | `blt_events_registration_html` | filter | `$html, $event` | Complete registration block |
 | `blt_events_registration_form_args` | filter | `$args, $event_id` | Data for the form template |
+| `blt_events_registration_ticket_rows` | filter | `$rows, $event_id` | Tickets listed on the Registration step, each with a `state` (`available`, `members`, `ended`, `upcoming`); unset rows to hide them |
+| `blt_events_member_login_url` | filter | `$url, $return, $event_id` | Where "Log in for Member Rates" sends a logged-out visitor |
+| `blt_events_registration_summary` | filter | `$summary, $event` | Event facts in the checkout's "Event summary" card |
+| `blt_events_registration_help_email` | filter | `$email, $event_id` | Address in the checkout's "Need help?" box (`''` hides it) |
 | `blt_events_registration_closed_message` | filter | `$message, $reason, $event_id` | Text when registration is closed (`not_open`, `cutoff`, `sold_out`, `no_tickets`, `syncing`) |
 | `blt_events_before_registration_form` / `_after_registration_form` | action | `$event_id, $provider` | Around the form |
 | `blt_events_style_tokens` | filter | `$rules, $mode` | `--blt-e-*` overrides printed inline |

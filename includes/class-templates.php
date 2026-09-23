@@ -151,4 +151,36 @@ class BLT_Events_Templates {
 
 		return '' !== $file && 0 !== strpos( wp_normalize_path( $file ), wp_normalize_path( BLT_EVENTS_PLUGIN_DIR . 'templates/' ) );
 	}
+
+	/**
+	 * A small decorative line icon (24px grid, stroked in currentColor) for
+	 * templates. The markup is a fixed string, safe to echo unescaped.
+	 *
+	 * @param string $name arrow-right | arrow-left | calendar | clock | pin | lock | trash | edit | help | check | image | chevron | video | tag.
+	 * @return string SVG markup, or '' for an unknown name.
+	 */
+	public static function icon( $name ) {
+		$paths = array(
+			'arrow-right' => '<path d="M5 12h14M13 6l6 6-6 6"/>',
+			'arrow-left'  => '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+			'calendar'    => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+			'clock'       => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+			'pin'         => '<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+			'lock'        => '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+			'trash'       => '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+			'edit'        => '<path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/>',
+			'help'        => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>',
+			'check'       => '<path d="M5 12.5l4.5 4.5L19 7"/>',
+			'image'       => '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+			'chevron'     => '<path d="M6 9l6 6 6-6"/>',
+			'video'       => '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10.5l5-3v9l-5-3"/>',
+			'tag'         => '<path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+		);
+
+		if ( ! isset( $paths[ $name ] ) ) {
+			return '';
+		}
+
+		return '<svg class="blt-icon blt-icon--' . $name . '" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $paths[ $name ] . '</svg>';
+	}
 }

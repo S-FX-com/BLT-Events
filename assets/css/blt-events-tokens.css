@@ -71,6 +71,7 @@
 	--blt-e-warning-border: #fde68a;
 
 	/* --- Shape --- */
+	--blt-e-radius-xs: 4px;
 	--blt-e-radius-sm: 6px;
 	--blt-e-radius: 10px;
 	--blt-e-radius-lg: 12px;
@@ -93,8 +94,44 @@
 	--blt-e-gap-lg: 2rem;
 	--blt-e-pad: 2rem;
 
+	/* Fluid spacing scale used by the single event page. Named after the
+	   Automatic.css scale it mirrors (space-xs/s/m, content-gap, grid-gap,
+	   section-space-m), which Skeleton mode maps to directly. */
+	--blt-e-space-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
+	--blt-e-space-s: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+	--blt-e-space-m: clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem);
+	--blt-e-content-gap: var(--blt-e-space-m);
+	--blt-e-grid-gap: var(--blt-e-space-m);
+	--blt-e-section-space-m: clamp(3.75rem, 3.2rem + 2.4vw, 5rem);
+
+	/* Fluid text sizes for the same page (text-s/m/l). */
+	--blt-e-text-s: clamp(0.833rem, 0.8rem + 0.15vw, 0.9rem);
+	--blt-e-text-m: clamp(1rem, 0.93rem + 0.3vw, 1.125rem);
+	--blt-e-text-l: clamp(1.2rem, 1.1rem + 0.45vw, 1.406rem);
+
+	/* --- Neutrals (single event page) --- */
+	--blt-e-neutral: var(--blt-e-fg-strong);
+	--blt-e-neutral-light: var(--blt-e-border);
+	--blt-e-neutral-ultra-light: var(--blt-e-surface-sunken);
+	--blt-e-neutral-semi-light: var(--blt-e-fg-muted);
+	/* Hairlines between page sections and around the event card. */
+	--blt-e-divider: rgba(0, 0, 0, 0.2);
+	/* Category chips: the neutral at 10% / 20%. */
+	--blt-e-chip-bg: rgba(17, 24, 39, 0.1);
+	--blt-e-chip-bg-hover: rgba(17, 24, 39, 0.2);
+	--blt-e-chip-radius: 0;
+	/* Sponsor logo tiles: contained with breathing room. Use `cover` and 0
+	   for photos that should fill the square. */
+	--blt-e-sponsor-fit: contain;
+	--blt-e-sponsor-padding: 12%;
+
 	/* --- Layout --- */
 	--blt-e-form-width: 640px;
+	/* Measure of the event description on the single event page. */
+	--blt-e-prose-width: 715px;
+	/* Max width of the registration checkout: room for the Attendee details
+	   form beside its Event summary. Narrower containers stack the two. */
+	--blt-e-checkout-width: 1120px;
 	/* Max width of the calendar and listing containers. 960px is what the
 	   plugin has always used; Settings > Appearance can widen or narrow it. */
 	--blt-e-content-width: 960px;
