@@ -2,9 +2,9 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: BLT Events 2.4.3\n"
+"Project-Id-Version: BLT Events 2.4.5\n"
 "Report-Msgid-Bugs-To: https://github.com/S-FX-com/BLT-Events/issues\n"
-"POT-Creation-Date: 2026-09-23 18:24+0000\n"
+"POT-Creation-Date: 2026-09-24 17:33+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -17,8 +17,8 @@ msgstr ""
 #: assets/js/blocks.js:135
 #: assets/js/blocks.js:167
 #: includes/admin/class-registrations-list.php:38
-#: includes/admin/class-registrations-list.php:547
-#: includes/admin/class-registrations-list.php:678
+#: includes/admin/class-registrations-list.php:710
+#: includes/admin/class-registrations-list.php:841
 #: includes/cpt/class-event-cpt.php:64
 #: includes/integrations/class-clickmeeting-integration.php:83
 #: includes/integrations/class-goto-integration.php:232
@@ -39,8 +39,8 @@ msgid "Pick the event this form registers people for."
 msgstr ""
 
 #: assets/js/blocks.js:49
-#: includes/admin/class-admin-settings.php:1172
-#: includes/admin/class-admin-settings.php:1625
+#: includes/admin/class-admin-settings.php:1173
+#: includes/admin/class-admin-settings.php:1626
 msgid "Layout"
 msgstr ""
 
@@ -59,7 +59,7 @@ msgid "Grid"
 msgstr ""
 
 #: assets/js/blocks.js:56
-#: includes/admin/class-admin-settings.php:1631
+#: includes/admin/class-admin-settings.php:1632
 msgid "Month calendar"
 msgstr ""
 
@@ -76,17 +76,17 @@ msgid "Maximum events"
 msgstr ""
 
 #: assets/js/blocks.js:76
-#: includes/admin/class-registrations-list.php:231
+#: includes/admin/class-registrations-list.php:278
 msgid "Filter"
 msgstr ""
 
 #: assets/js/blocks.js:78
-#: includes/admin/class-admin-settings.php:1638
+#: includes/admin/class-admin-settings.php:1639
 msgid "Category"
 msgstr ""
 
 #: assets/js/blocks.js:80
-#: includes/admin/class-admin-settings.php:1642
+#: includes/admin/class-admin-settings.php:1643
 #: includes/frontend/class-blocks.php:122
 msgid "All categories"
 msgstr ""
@@ -96,23 +96,23 @@ msgid "Featured events only"
 msgstr ""
 
 #: assets/js/blocks.js:89
-#: includes/admin/class-admin-settings.php:1683
+#: includes/admin/class-admin-settings.php:1684
 msgid "Include past events"
 msgstr ""
 
 #: blt-events.php:398
 #: includes/admin/class-event-metabox.php:582
-#: includes/admin/class-registrations-list.php:554
+#: includes/admin/class-registrations-list.php:717
 msgid "Paid"
 msgstr ""
 
 #: blt-events.php:399
 #: includes/admin/class-event-metabox.php:582
-#: includes/admin/class-registrations-list.php:139
-#: includes/admin/class-registrations-list.php:446
+#: includes/admin/class-registrations-list.php:178
+#: includes/admin/class-registrations-list.php:609
 #: includes/class-emails.php:424
 #: includes/shortcodes/class-calendar-shortcode.php:564
-#: includes/shortcodes/class-registration-shortcode.php:199
+#: includes/shortcodes/class-registration-shortcode.php:205
 #: templates/registration/fluentcart.php:36
 #: templates/registration/form.php:127
 #: templates/registration/summary.php:92
@@ -148,491 +148,491 @@ msgstr ""
 msgid "Add to sponsors"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1003
+#: includes/admin/class-admin-settings.php:1004
 msgid "Configured"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1003
+#: includes/admin/class-admin-settings.php:1004
 msgid "Not configured"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1012
+#: includes/admin/class-admin-settings.php:1013
 msgid "Switching a processor off stops new events from using it and hides its checkout. Its existing orders keep resolving, so refunds on past purchases still reach the right registration."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1019
+#: includes/admin/class-admin-settings.php:1020
 msgid "Default Processor"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1020
+#: includes/admin/class-admin-settings.php:1021
 msgid "Used by every event that does not pick one of its own, on the Registration & Tickets panel of the event editor."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1023
+#: includes/admin/class-admin-settings.php:1024
 msgid "Default payment processor"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1039
+#: includes/admin/class-admin-settings.php:1040
 #: includes/payment/class-payment-providers.php:46
 msgid "Stripe"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1040
+#: includes/admin/class-admin-settings.php:1041
 msgid "API keys from your Stripe dashboard. Secret values are stored but never displayed back."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1044
+#: includes/admin/class-admin-settings.php:1045
 msgid "Secret Key"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1047
+#: includes/admin/class-admin-settings.php:1048
 msgid "Publishable Key"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1053
+#: includes/admin/class-admin-settings.php:1054
 msgid "Webhook Secret"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1057
+#: includes/admin/class-admin-settings.php:1058
 msgid "Needed for refunds and for finishing registrations whose browser closed mid-payment. Listen to payment_intent.succeeded and charge.refunded."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1060
+#: includes/admin/class-admin-settings.php:1061
 msgid "Webhook URL"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1066
+#: includes/admin/class-admin-settings.php:1067
 msgid "Add this endpoint in the Stripe dashboard under Developers > Webhooks."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1075
+#: includes/admin/class-admin-settings.php:1076
 #: includes/payment/class-payment-providers.php:51
 msgid "SureCart"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1081
-#: includes/admin/class-admin-settings.php:1113
-#: includes/admin/class-admin-settings.php:1471
+#: includes/admin/class-admin-settings.php:1082
+#: includes/admin/class-admin-settings.php:1114
+#: includes/admin/class-admin-settings.php:1472
 #: includes/cpt/class-coupon-cpt.php:232
 #: includes/cpt/class-coupon-cpt.php:446
 msgid "Active"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1081
-#: includes/admin/class-admin-settings.php:1113
-#: includes/admin/class-admin-settings.php:1471
+#: includes/admin/class-admin-settings.php:1082
+#: includes/admin/class-admin-settings.php:1114
+#: includes/admin/class-admin-settings.php:1472
 msgid "Not Detected"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1081
-#: includes/admin/class-admin-settings.php:1113
+#: includes/admin/class-admin-settings.php:1082
+#: includes/admin/class-admin-settings.php:1114
 msgid "Plugin"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1082
+#: includes/admin/class-admin-settings.php:1083
 msgid "API"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1082
-#: includes/admin/class-admin-settings.php:1333
+#: includes/admin/class-admin-settings.php:1083
+#: includes/admin/class-admin-settings.php:1334
 msgid "Connected"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1082
+#: includes/admin/class-admin-settings.php:1083
 msgid "Not Connected"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1088
+#: includes/admin/class-admin-settings.php:1089
 msgid "API Token"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1092
+#: includes/admin/class-admin-settings.php:1093
 msgid "Your SureCart secret API token. If the SureCart plugin is installed and connected, this can be left blank."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1095
+#: includes/admin/class-admin-settings.php:1096
 msgid "Checkout Page URL"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1101
+#: includes/admin/class-admin-settings.php:1102
 msgid "The URL of your SureCart checkout page. Leave blank to use default."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1110
+#: includes/admin/class-admin-settings.php:1111
 #: includes/payment/class-payment-providers.php:56
 msgid "FluentCart"
 msgstr ""
 
 #. translators: %s: link to fluentcart.com.
-#: includes/admin/class-admin-settings.php:1117
+#: includes/admin/class-admin-settings.php:1118
 msgid "FluentCart runs on this site, so no API keys are needed. Event ticket types are synced to FluentCart products automatically when an event is saved, and checkout uses FluentCart's instant checkout. Install FluentCart from %s if it is not detected."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1147
+#: includes/admin/class-admin-settings.php:1148
 msgid "Sender"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1148
+#: includes/admin/class-admin-settings.php:1149
 msgid "Who the plugin's emails come from. Leave blank to use the WordPress defaults. Use an address on your own domain so mail providers accept it."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1152
+#: includes/admin/class-admin-settings.php:1153
 msgid "From Name"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1157
+#: includes/admin/class-admin-settings.php:1158
 msgid "From Email"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1162
+#: includes/admin/class-admin-settings.php:1163
 msgid "Reply-To"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1166
+#: includes/admin/class-admin-settings.php:1167
 msgid "Where replies from attendees should land. Optional."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1167
+#: includes/admin/class-admin-settings.php:1168
 msgid "Admin Notifications To"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1171
+#: includes/admin/class-admin-settings.php:1172
 msgid "One or more addresses, comma-separated. Defaults to the site admin email."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1173
+#: includes/admin/class-admin-settings.php:1174
 msgid "A simple branded shell (site name header in your accent colour). Override templates/emails/wrapper.php in your theme to change it."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1173
+#: includes/admin/class-admin-settings.php:1174
 msgid "Wrap emails in the HTML template"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1180
+#: includes/admin/class-admin-settings.php:1181
 msgid "Template variables"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1181
+#: includes/admin/class-admin-settings.php:1182
 msgid "Use these placeholders in any subject or body — they are replaced per registration when the email is sent:"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1196
+#: includes/admin/class-admin-settings.php:1197
 msgid "Off"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1196
+#: includes/admin/class-admin-settings.php:1197
 msgid "On"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1203
+#: includes/admin/class-admin-settings.php:1204
 msgid "Send"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1204
+#: includes/admin/class-admin-settings.php:1205
 msgid "Send this email"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1209
+#: includes/admin/class-admin-settings.php:1210
 msgid "Schedule"
 msgstr ""
 
 #. translators: %s: human-readable time until the next run.
-#: includes/admin/class-admin-settings.php:1215
+#: includes/admin/class-admin-settings.php:1216
 msgid "Reminders are checked every 15 minutes by WP-Cron. Next check in %s."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1220
+#: includes/admin/class-admin-settings.php:1221
 msgid "The reminder task is not scheduled yet. It will be scheduled on the next page load."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1225
+#: includes/admin/class-admin-settings.php:1226
 msgid "Subject"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1230
+#: includes/admin/class-admin-settings.php:1231
 msgid "Body"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1249
+#: includes/admin/class-admin-settings.php:1250
 msgid "Calendar Invite"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1250
+#: includes/admin/class-admin-settings.php:1251
 msgid "The .ics calendar invite attached to confirmation emails and offered on event pages. The description below is what appears inside the invite."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1255
+#: includes/admin/class-admin-settings.php:1256
 msgid "Attach to Emails"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1257
+#: includes/admin/class-admin-settings.php:1258
 msgid "Attach a calendar invite (.ics) to registration confirmation emails"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1262
+#: includes/admin/class-admin-settings.php:1263
 msgid "Invite Description"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1272
+#: includes/admin/class-admin-settings.php:1273
 msgid "Plain text shown inside the calendar entry. Variables: {event_name}, {event_date}, {event_time}, {event_location}, {event_url}"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1300
+#: includes/admin/class-admin-settings.php:1301
 msgid "Online Meeting Integrations"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1301
+#: includes/admin/class-admin-settings.php:1302
 msgid "Connect the platforms you use. Once a provider is connected, online and hybrid events can auto-create a meeting room from the event editor and drop the join link in automatically."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1333
+#: includes/admin/class-admin-settings.php:1334
 msgid "Not connected"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1342
+#: includes/admin/class-admin-settings.php:1343
 msgid "Disconnect"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1350
+#: includes/admin/class-admin-settings.php:1351
 msgid "Connect"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1376
+#: includes/admin/class-admin-settings.php:1377
 msgid "Redirect URI"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1382
+#: includes/admin/class-admin-settings.php:1383
 msgid "Register this exact URL as an allowed redirect URI in the provider's developer console."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1387
+#: includes/admin/class-admin-settings.php:1388
 msgid "Enter and save the client credentials above to enable connecting."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1391
+#: includes/admin/class-admin-settings.php:1392
 msgid "Save the client credentials first, then connect."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1411
+#: includes/admin/class-admin-settings.php:1412
 #: includes/admin/class-event-metabox.php:121
 msgid "Presenters"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1412
+#: includes/admin/class-admin-settings.php:1413
 msgid "Optionally connect an existing \"presenter\" post type (e.g. an ACF-driven Speakers CPT). When connected, events pick presenters from it instead of re-entering them. Leave unset to use the built-in presenter fields on each event."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1417
+#: includes/admin/class-admin-settings.php:1418
 msgid "Presenter Post Type"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1420
+#: includes/admin/class-admin-settings.php:1421
 msgid "— Use built-in presenter fields —"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1426
+#: includes/admin/class-admin-settings.php:1427
 msgid "Choose the post type that stores your presenters/speakers."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1430
+#: includes/admin/class-admin-settings.php:1431
 msgid "Role / Title Field"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1436
+#: includes/admin/class-admin-settings.php:1437
 msgid "ACF/meta field key on the presenter for their role or title. Optional."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1440
+#: includes/admin/class-admin-settings.php:1441
 msgid "Bio Field"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1446
+#: includes/admin/class-admin-settings.php:1447
 msgid "ACF/meta field key for the bio. Optional — falls back to the excerpt."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1450
+#: includes/admin/class-admin-settings.php:1451
 msgid "Photo Field"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1456
+#: includes/admin/class-admin-settings.php:1457
 msgid "ACF image field key for the photo. Optional — falls back to the featured image."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1469
+#: includes/admin/class-admin-settings.php:1470
 msgid "FluentCRM"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1476
+#: includes/admin/class-admin-settings.php:1477
 msgid "Install and activate FluentCRM to sync registrants to lists and tags automatically."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1480
+#: includes/admin/class-admin-settings.php:1481
 msgid "Default List ID"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1481
+#: includes/admin/class-admin-settings.php:1482
 msgid "Registration Tag ID"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1482
+#: includes/admin/class-admin-settings.php:1483
 msgid "Confirmed Tag ID"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1483
+#: includes/admin/class-admin-settings.php:1484
 msgid "Refunded Tag ID"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1507
+#: includes/admin/class-admin-settings.php:1508
 #: includes/frontend/class-blocks.php:72
 msgid "Events Calendar"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1508
+#: includes/admin/class-admin-settings.php:1509
 msgid "Displays your published events. Three layouts are available: a list of event cards, a card grid, and a full month calendar with previous/next navigation. Also available as the \"Events Calendar\" block."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1511
+#: includes/admin/class-admin-settings.php:1512
 msgid "Layout to render: \"list\" (event cards in a vertical list), \"grid\" (card grid), or \"calendar\" (month grid with navigation)."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1512
+#: includes/admin/class-admin-settings.php:1513
 msgid "Limit to one or more event category slugs, comma-separated (e.g. category=\"webinars,meetups\")."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1513
+#: includes/admin/class-admin-settings.php:1514
 msgid "Maximum number of events to show in list/grid views (1–100). The calendar view always shows the whole month."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1514
+#: includes/admin/class-admin-settings.php:1515
 msgid "Set to \"yes\" to include past events in list/grid views."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1515
+#: includes/admin/class-admin-settings.php:1516
 msgid "Set to \"yes\" to show a List / Grid / Month view switcher above the events, letting visitors flip between layouts."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1516
+#: includes/admin/class-admin-settings.php:1517
 msgid "Set to \"yes\" to show only events marked \"Featured\" in the event editor."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1521
+#: includes/admin/class-admin-settings.php:1522
 msgid "Registration Form"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1522
+#: includes/admin/class-admin-settings.php:1523
 msgid "Renders the registration form for an event, including ticket selection, attendee fields, coupons, and payment. On a single event page it picks up the event automatically. Also available as the \"Event Registration Form\" block."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1525
+#: includes/admin/class-admin-settings.php:1526
 msgid "current event"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1525
+#: includes/admin/class-admin-settings.php:1526
 msgid "The ID of the event to register for. Optional inside a single event page."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1538
+#: includes/admin/class-admin-settings.php:1539
 msgid "Blocks and shortcodes"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1539
+#: includes/admin/class-admin-settings.php:1540
 msgid "In the block editor, search the inserter for \"BLT Events\" to add the Events Calendar or the Event Registration Form with visual controls. Anywhere else, paste one of these shortcodes."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1549
-#: includes/admin/class-admin-settings.php:1580
-#: includes/admin/class-admin-settings.php:1708
+#: includes/admin/class-admin-settings.php:1550
+#: includes/admin/class-admin-settings.php:1581
+#: includes/admin/class-admin-settings.php:1709
 msgid "Copied!"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1550
+#: includes/admin/class-admin-settings.php:1551
 msgid "Copy shortcode"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1561
+#: includes/admin/class-admin-settings.php:1562
 msgid "Attribute"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1562
+#: includes/admin/class-admin-settings.php:1563
 #: includes/admin/class-fieldset-builder.php:116
 #: includes/admin/class-fieldset-builder.php:128
 #: includes/admin/class-fieldset-builder.php:193
 msgid "Default"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1563
+#: includes/admin/class-admin-settings.php:1564
 #: includes/admin/class-event-metabox.php:606
 #: includes/admin/class-fieldset-builder.php:188
 #: templates/registration/form.php:109
 msgid "Description"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1578
+#: includes/admin/class-admin-settings.php:1579
 msgid "Example"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1580
-#: includes/admin/class-admin-settings.php:1709
+#: includes/admin/class-admin-settings.php:1581
+#: includes/admin/class-admin-settings.php:1710
 msgid "Copy"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1588
+#: includes/admin/class-admin-settings.php:1589
 msgid "For developers"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1591
+#: includes/admin/class-admin-settings.php:1592
 msgid "Every template can be overridden from the theme (copy templates/* to your-theme/blt-events/*), every query and email passes through a filter, and event data is available in the REST API under the blt_event field of each event. See HOOKS.md and README.md in the plugin folder for the full reference."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1619
+#: includes/admin/class-admin-settings.php:1620
 msgid "Build a Calendar Shortcode"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1620
+#: includes/admin/class-admin-settings.php:1621
 msgid "Pick the options you want and copy the result. Anything left at its default is omitted."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1629
+#: includes/admin/class-admin-settings.php:1630
 msgid "List of event cards"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1630
+#: includes/admin/class-admin-settings.php:1631
 msgid "Card grid"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1650
+#: includes/admin/class-admin-settings.php:1651
 msgid "No event categories exist yet."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1657
+#: includes/admin/class-admin-settings.php:1658
 msgid "Maximum Events"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1661
+#: includes/admin/class-admin-settings.php:1662
 msgid "Ignored by the month calendar, which always shows the whole month."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1667
+#: includes/admin/class-admin-settings.php:1668
 msgid "Options"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1675
+#: includes/admin/class-admin-settings.php:1676
 msgid "View switcher"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1676
+#: includes/admin/class-admin-settings.php:1677
 msgid "Lets visitors flip between list, grid and month themselves."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1684
+#: includes/admin/class-admin-settings.php:1685
 msgid "Off by default, so only upcoming events show."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1691
+#: includes/admin/class-admin-settings.php:1692
 msgid "Featured only"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:1692
+#: includes/admin/class-admin-settings.php:1693
 msgid "Only events marked \"Featured\" in the event editor."
 msgstr ""
 
@@ -698,366 +698,366 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:483
+#: includes/admin/class-admin-settings.php:484
 msgid "Settings sections"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:540
-#: includes/admin/class-admin-settings.php:546
+#: includes/admin/class-admin-settings.php:541
+#: includes/admin/class-admin-settings.php:547
 msgid "Events Page"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:541
+#: includes/admin/class-admin-settings.php:542
 msgid "The page that lists your events (usually one holding the Events Calendar block or shortcode). Used for \"back to events\" links and, optionally, as the destination of the /event/ archive."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:552
+#: includes/admin/class-admin-settings.php:553
 #: includes/admin/class-fieldset-builder.php:65
 msgid "— None —"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:556
+#: includes/admin/class-admin-settings.php:557
 msgid "Leave as “None” to use the default event archive."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:560
+#: includes/admin/class-admin-settings.php:561
 msgid "Event Archive (/event/)"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:563
+#: includes/admin/class-admin-settings.php:564
 msgid "Rendered by the plugin (list with search and view switcher)"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:564
+#: includes/admin/class-admin-settings.php:565
 msgid "Redirect to the Events Page selected above"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:565
+#: includes/admin/class-admin-settings.php:566
 msgid "Leave it to the theme"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:574
+#: includes/admin/class-admin-settings.php:575
 msgid "What visitors see at the event archive URL and on event category pages. A theme that ships its own archive-event.php always wins."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:582
+#: includes/admin/class-admin-settings.php:583
 msgid "Date & Time"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:583
+#: includes/admin/class-admin-settings.php:584
 msgid "How event dates are displayed across calendars, event pages, and emails. Times use the site time format and timezone from Settings > General."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:588
+#: includes/admin/class-admin-settings.php:589
 msgid "Date Format"
 msgstr ""
 
 #. translators: %s: today's date in the current format.
-#: includes/admin/class-admin-settings.php:596
+#: includes/admin/class-admin-settings.php:597
 msgid "PHP date format string. Today would show as: %s"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:606
+#: includes/admin/class-admin-settings.php:607
 msgid "Currency"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:607
+#: includes/admin/class-admin-settings.php:608
 msgid "Prices are always in US Dollars (USD). These settings only control how the currency is shown to visitors."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:612
+#: includes/admin/class-admin-settings.php:613
 msgid "Currency Display"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:617
+#: includes/admin/class-admin-settings.php:618
 msgid "Prefixes prices with the symbol, e.g. $25.00."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:617
+#: includes/admin/class-admin-settings.php:618
 msgid "Show currency symbol"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:618
+#: includes/admin/class-admin-settings.php:619
 msgid "Appends the code after prices, e.g. 25.00 USD."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:618
+#: includes/admin/class-admin-settings.php:619
 msgid "Show currency code"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:630
+#: includes/admin/class-admin-settings.php:631
 msgid "Maps"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:631
+#: includes/admin/class-admin-settings.php:632
 msgid "The map shown on in-person event pages. With maps off (or no coordinates), the venue name and address still display."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:636
+#: includes/admin/class-admin-settings.php:637
 msgid "Map Provider"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:639
+#: includes/admin/class-admin-settings.php:640
 msgid "OpenStreetMap (no key required)"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:640
+#: includes/admin/class-admin-settings.php:641
 msgid "Google Maps"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:641
+#: includes/admin/class-admin-settings.php:642
 msgid "No map (address only)"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:653
+#: includes/admin/class-admin-settings.php:654
 msgid "Google Maps API Key"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:659
+#: includes/admin/class-admin-settings.php:660
 msgid "Required only for the Google Maps provider. Needs the \"Maps Embed API\" enabled on the key."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:667
+#: includes/admin/class-admin-settings.php:668
 msgid "SEO"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:668
+#: includes/admin/class-admin-settings.php:669
 msgid "Structured data lets search engines show event rich results: date, place and price directly in the listing."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:673
+#: includes/admin/class-admin-settings.php:674
 msgid "Structured Data"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:675
+#: includes/admin/class-admin-settings.php:676
 msgid "Print schema.org Event JSON-LD on event pages"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:675
+#: includes/admin/class-admin-settings.php:676
 msgid "Switch off if an SEO plugin already generates Event schema for this post type."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:684
+#: includes/admin/class-admin-settings.php:685
 msgid "Advanced"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:689
+#: includes/admin/class-admin-settings.php:690
 msgid "Uninstall"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:691
+#: includes/admin/class-admin-settings.php:692
 msgid "Delete all plugin data when the plugin is deleted"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:691
+#: includes/admin/class-admin-settings.php:692
 msgid "Removes events, registrations, attendees, fieldsets, coupons and settings when BLT Events is deleted from the Plugins screen. Deactivating never deletes anything."
 msgstr ""
 
 #. translators: %s: link to the Appearance tab.
-#: includes/admin/class-admin-settings.php:699
+#: includes/admin/class-admin-settings.php:700
 msgid "Front-end styling lives in %s."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:700
+#: includes/admin/class-admin-settings.php:701
 msgid "the Appearance tab"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:723
+#: includes/admin/class-admin-settings.php:724
 msgid "Events page created and selected below."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:724
+#: includes/admin/class-admin-settings.php:725
 msgid "The events page could not be created. Add a page with the Events Calendar block or the [blt_events_calendar] shortcode yourself, then select it below."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:751
+#: includes/admin/class-admin-settings.php:752
 msgid "Styled"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:752
+#: includes/admin/class-admin-settings.php:753
 msgid "The plugin brings its own design. Nothing to set up — it looks finished on any theme."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:755
+#: includes/admin/class-admin-settings.php:756
 msgid "Skeleton"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:756
+#: includes/admin/class-admin-settings.php:757
 msgid "Keeps the layout, but takes colours, radii, shadows and fonts from your framework (ACSS, your theme)."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:759
+#: includes/admin/class-admin-settings.php:760
 msgid "No CSS"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:760
+#: includes/admin/class-admin-settings.php:761
 msgid "Loads no front-end stylesheet at all. You style the BEM markup entirely yourself."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:769
+#: includes/admin/class-admin-settings.php:770
 msgid "Styling Mode"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:770
+#: includes/admin/class-admin-settings.php:771
 msgid "How much of its own design the plugin brings to the front end. This applies everywhere: the calendar, the single event page and the registration form."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:773
+#: includes/admin/class-admin-settings.php:774
 msgid "Styling mode"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:785
+#: includes/admin/class-admin-settings.php:786
 msgid "Every value the plugin draws with is a CSS custom property prefixed --blt-e-. Whichever mode you pick, you can redefine any of them from your own stylesheet — no !important needed."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:792
+#: includes/admin/class-admin-settings.php:793
 msgid "Overrides"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:793
+#: includes/admin/class-admin-settings.php:794
 msgid "Leave a field blank to keep what the mode above already gives you. Anything set here wins over both."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:798
+#: includes/admin/class-admin-settings.php:799
 msgid "Accent Colour"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:810
+#: includes/admin/class-admin-settings.php:811
 msgid "Used for buttons, links and highlights. Hover, tint and focus states are derived from it automatically, including a readable text colour on top."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:814
+#: includes/admin/class-admin-settings.php:815
 msgid "Corner Radius"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:830
+#: includes/admin/class-admin-settings.php:831
 msgid "Applies to cards, inputs and buttons. Enter 0 for square corners."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:834
+#: includes/admin/class-admin-settings.php:835
 msgid "Typeface"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:838
+#: includes/admin/class-admin-settings.php:839
 msgid "Plugin system stack"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:839
+#: includes/admin/class-admin-settings.php:840
 msgid "Inherit from the theme"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:843
+#: includes/admin/class-admin-settings.php:844
 msgid "Skeleton mode already inherits the theme font; this forces it in the other modes too."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:847
+#: includes/admin/class-admin-settings.php:848
 msgid "Content Width"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:862
+#: includes/admin/class-admin-settings.php:863
 msgid "Maximum width of the calendar and event layouts. Leave blank to follow the theme."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:870
+#: includes/admin/class-admin-settings.php:871
 #: includes/admin/class-event-migration.php:881
 msgid "Preview"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:871
+#: includes/admin/class-admin-settings.php:872
 msgid "An event card and a register button, drawn with the tokens above. Updates as you type; save to apply it to the site."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:876
+#: includes/admin/class-admin-settings.php:877
 #: includes/admin/class-event-metabox.php:457
 msgid "Webinar"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:877
+#: includes/admin/class-admin-settings.php:878
 msgid "Quarterly Product Briefing"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:878
+#: includes/admin/class-admin-settings.php:879
 msgid "Thursday 14 May · 10:00 – 11:30"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:879
+#: includes/admin/class-admin-settings.php:880
 #: includes/frontend/class-single-event.php:279
 #: includes/shortcodes/class-calendar-shortcode.php:664
 #: templates/single/registration.php:20
 msgid "Register"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:887
+#: includes/admin/class-admin-settings.php:888
 msgid "Single Event Page"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:888
+#: includes/admin/class-admin-settings.php:889
 msgid "The event layout renders inside your theme's own single template. The plugin prints the event title and featured image by default; switch either off if your theme already supplies it."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:893
+#: includes/admin/class-admin-settings.php:894
 msgid "Elements"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:898
+#: includes/admin/class-admin-settings.php:899
 msgid "On by default for the standalone event layout. Turn it off if your theme already prints the title."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:898
+#: includes/admin/class-admin-settings.php:899
 msgid "Print the event title"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:899
+#: includes/admin/class-admin-settings.php:900
 msgid "Print the featured image"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:899
+#: includes/admin/class-admin-settings.php:900
 msgid "Turn off if your theme shows the featured image on single posts."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:900
+#: includes/admin/class-admin-settings.php:901
 msgid "Show the \"All events\" back link"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:901
+#: includes/admin/class-admin-settings.php:902
 msgid "A .ics download and a Google Calendar link in the date box."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:901
+#: includes/admin/class-admin-settings.php:902
 msgid "Show \"Add to calendar\" links"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:913
+#: includes/admin/class-admin-settings.php:914
 msgid "Going Further"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:916
+#: includes/admin/class-admin-settings.php:917
 msgid "To change anything not listed above, redefine the token in your own stylesheet or a code snippet. Yours loads after the plugin's, so it wins:"
 msgstr ""
 
 #. translators: %s: the tokens stylesheet filename.
-#: includes/admin/class-admin-settings.php:926
+#: includes/admin/class-admin-settings.php:927
 msgid "The full list of tokens, with comments, is in %s."
 msgstr ""
 
 #. translators: 1: templates directory, 2: theme override directory.
-#: includes/admin/class-admin-settings.php:935
+#: includes/admin/class-admin-settings.php:936
 msgid "To change the HTML itself, copy any file from %1$s into %2$s in your theme and edit it there. Your copy is used instead of the plugin's."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:960
+#: includes/admin/class-admin-settings.php:961
 msgid "None"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:961
+#: includes/admin/class-admin-settings.php:962
 msgid "Free events only — no checkout."
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:977
+#: includes/admin/class-admin-settings.php:978
 msgid "Payment Processors"
 msgstr ""
 
-#: includes/admin/class-admin-settings.php:978
+#: includes/admin/class-admin-settings.php:979
 msgid "Switch on every processor this site uses. More than one can run at a time — each event can then choose which of them it checks out through."
 msgstr ""
 
@@ -1077,94 +1077,94 @@ msgstr ""
 msgid "Migration"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1002
+#: includes/admin/class-event-metabox.php:1006
 msgid "The set of form fields attendees fill in when registering."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1010
+#: includes/admin/class-event-metabox.php:1014
 msgid "Payment Processor"
 msgstr ""
 
 #. translators: %s: the site-wide default processor name.
-#: includes/admin/class-event-metabox.php:1016
+#: includes/admin/class-event-metabox.php:1020
 msgid "— Site Default (%s) —"
-msgstr ""
-
-#: includes/admin/class-event-metabox.php:1027
-msgid "Which processor this event checks out through. Changing it re-syncs the ticket types to the new processor the next time you save; tickets already sold through the old one keep working."
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:103
 msgid "Ticket Types"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1038
+#: includes/admin/class-event-metabox.php:1031
+msgid "Which processor this event checks out through. Changing it re-syncs the ticket types to the new processor the next time you save; tickets already sold through the old one keep working."
+msgstr ""
+
+#: includes/admin/class-event-metabox.php:1042
 msgid "Group Discount"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1039
+#: includes/admin/class-event-metabox.php:1043
 msgid "Discount registrations above a minimum group size"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1045
+#: includes/admin/class-event-metabox.php:1049
 msgid "Min. Attendees"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1049
+#: includes/admin/class-event-metabox.php:1053
 #: includes/admin/class-fieldset-builder.php:293
-#: includes/admin/class-registrations-list.php:420
+#: includes/admin/class-registrations-list.php:583
 #: includes/cpt/class-event-cpt.php:190
 msgid "Type"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1051
+#: includes/admin/class-event-metabox.php:1055
 msgid "Percentage"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1052
+#: includes/admin/class-event-metabox.php:1056
 msgid "Fixed Amount"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1056
+#: includes/admin/class-event-metabox.php:1060
 #: includes/admin/class-registrations-list.php:40
 msgid "Amount"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1081
+#: includes/admin/class-event-metabox.php:1085
 msgid "Featured Event"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1082
+#: includes/admin/class-event-metabox.php:1086
 msgid "Highlight in featured listings"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1090
+#: includes/admin/class-event-metabox.php:1094
 msgid "Hide from Calendar"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1091
+#: includes/admin/class-event-metabox.php:1095
 msgid "Only accessible via direct link"
-msgstr ""
-
-#: includes/admin/class-event-metabox.php:1118
-msgid "Total Registrations"
-msgstr ""
-
-#: includes/admin/class-event-metabox.php:1119
-#: includes/class-helpers.php:268
-msgid "Confirmed"
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:112
 msgid "Event Schedule"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1120
+#: includes/admin/class-event-metabox.php:1122
+msgid "Total Registrations"
+msgstr ""
+
+#: includes/admin/class-event-metabox.php:1123
+#: includes/class-helpers.php:268
+msgid "Confirmed"
+msgstr ""
+
+#: includes/admin/class-event-metabox.php:1124
 #: includes/class-helpers.php:267
 msgid "Pending"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:1126
+#: includes/admin/class-event-metabox.php:1130
 msgid "View All Registrations"
 msgstr ""
 
@@ -1221,8 +1221,8 @@ msgstr ""
 
 #: includes/admin/class-event-metabox.php:337
 #: includes/admin/class-registrations-list.php:43
-#: includes/admin/class-registrations-list.php:410
-#: includes/admin/class-registrations-list.php:559
+#: includes/admin/class-registrations-list.php:573
+#: includes/admin/class-registrations-list.php:722
 #: includes/class-fieldsets.php:48
 #: includes/cpt/class-coupon-cpt.php:323
 msgid "Date"
@@ -1245,11 +1245,11 @@ msgid "The end time is hidden because no end time is set."
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:389
-#: includes/admin/class-registrations-list.php:373
+#: includes/admin/class-registrations-list.php:536
 #: includes/class-helpers.php:525
 #: includes/cpt/class-event-cpt.php:202
 #: includes/shortcodes/class-calendar-shortcode.php:633
-#: includes/shortcodes/class-registration-shortcode.php:426
+#: includes/shortcodes/class-registration-shortcode.php:432
 msgid "Online"
 msgstr ""
 
@@ -1258,7 +1258,7 @@ msgid "Virtual / webinar"
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:390
-#: includes/admin/class-registrations-list.php:374
+#: includes/admin/class-registrations-list.php:537
 #: includes/cpt/class-event-cpt.php:203
 #: includes/shortcodes/class-calendar-shortcode.php:634
 msgid "In-Person"
@@ -1269,7 +1269,7 @@ msgid "Physical venue"
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:391
-#: includes/admin/class-registrations-list.php:375
+#: includes/admin/class-registrations-list.php:538
 #: includes/cpt/class-event-cpt.php:204
 #: includes/shortcodes/class-calendar-shortcode.php:635
 msgid "Hybrid"
@@ -1389,7 +1389,7 @@ msgid "Delete ticket"
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:598
-#: includes/admin/class-registrations-list.php:683
+#: includes/admin/class-registrations-list.php:846
 #: templates/registration/form.php:110
 #: templates/registration/form.php:239
 msgid "Price"
@@ -1443,96 +1443,102 @@ msgstr ""
 msgid "Displays a collapsible schedule of sessions on the single event page."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:687
+#: includes/admin/class-event-metabox.php:688
 msgid "Start"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:688
+#: includes/admin/class-event-metabox.php:689
 msgid "End"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:689
+#: includes/admin/class-event-metabox.php:690
 msgid "Session"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:697
+#: includes/admin/class-event-metabox.php:696
+#: includes/admin/class-event-metabox.php:806
+#: includes/admin/class-event-metabox.php:878
+msgid "Drag to reorder"
+msgstr ""
+
+#: includes/admin/class-event-metabox.php:699
 msgid "e.g. Registration & networking"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:698
+#: includes/admin/class-event-metabox.php:700
 msgid "Remove session"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:702
+#: includes/admin/class-event-metabox.php:704
 msgid "Add Session"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:703
+#: includes/admin/class-event-metabox.php:705
 msgid "Each session shows as \"start - end: session\". Leave times blank for an untimed item."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:722
+#: includes/admin/class-event-metabox.php:724
 msgid "Show presenters on the event page"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:726
+#: includes/admin/class-event-metabox.php:728
 msgid "Pick presenters from your connected presenter post type."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:727
+#: includes/admin/class-event-metabox.php:729
 msgid "Add presenters below. Connect a presenter post type in Settings to reuse existing profiles instead."
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:74
-#: includes/admin/class-registrations-list.php:408
+#: includes/admin/class-registrations-list.php:571
 msgid "Event Details"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:758
+#: includes/admin/class-event-metabox.php:760
 msgid "Search presenters…"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:766
-#: includes/admin/class-event-metabox.php:819
+#: includes/admin/class-event-metabox.php:768
+#: includes/admin/class-event-metabox.php:822
 msgid "Remove presenter"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:770
+#: includes/admin/class-event-metabox.php:772
 msgid "Presenters are pulled live from the connected post type, so edits there update everywhere."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:791
+#: includes/admin/class-event-metabox.php:793
 msgid "Add Presenter"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:811
+#: includes/admin/class-event-metabox.php:814
 msgid "Photo"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:812
+#: includes/admin/class-event-metabox.php:815
 msgid "Remove"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:815
+#: includes/admin/class-event-metabox.php:818
 #: includes/admin/class-fieldset-builder.php:113
 #: includes/admin/class-fieldset-builder.php:177
-#: includes/admin/class-registrations-list.php:548
+#: includes/admin/class-registrations-list.php:711
 msgid "Name"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:816
+#: includes/admin/class-event-metabox.php:819
 msgid "Role / title"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:817
+#: includes/admin/class-event-metabox.php:820
 msgid "Short bio (optional)"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:843
+#: includes/admin/class-event-metabox.php:846
 msgid "Show sponsors on the event page"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:844
+#: includes/admin/class-event-metabox.php:847
 msgid "A grid of sponsor logos below the agenda."
 msgstr ""
 
@@ -1541,105 +1547,101 @@ msgstr ""
 msgid "Event Type"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:854
+#: includes/admin/class-event-metabox.php:857
 msgid "No sponsors added yet."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:855
+#: includes/admin/class-event-metabox.php:858
 msgid "Add Sponsor Logos"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:856
+#: includes/admin/class-event-metabox.php:859
 msgid "Logos show as square tiles in this order; drag a logo to reorder. With a link, the logo opens the sponsor's site in a new tab; without one, it opens larger in a lightbox."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:875
-msgid "Drag to reorder"
-msgstr ""
-
-#: includes/admin/class-event-metabox.php:881
+#: includes/admin/class-event-metabox.php:885
 msgid "Sponsor link"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:881
+#: includes/admin/class-event-metabox.php:885
 msgid "Sponsor link (optional), https://…"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:882
+#: includes/admin/class-event-metabox.php:886
 msgid "Remove sponsor"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:928
+#: includes/admin/class-event-metabox.php:932
 msgid "Registration Open"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:929
+#: includes/admin/class-event-metabox.php:933
 msgid "Allow attendees to register for this event"
-msgstr ""
-
-#: includes/admin/class-event-metabox.php:936
-#: includes/admin/class-event-metabox.php:1122
-msgid "Capacity"
-msgstr ""
-
-#: includes/admin/class-event-metabox.php:938
-#: includes/cpt/class-event-cpt.php:242
-msgid "Unlimited"
 msgstr ""
 
 #: includes/admin/class-event-metabox.php:94
 msgid "Registration Configuration"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:946
+#: includes/admin/class-event-metabox.php:940
+#: includes/admin/class-event-metabox.php:1126
+msgid "Capacity"
+msgstr ""
+
+#: includes/admin/class-event-metabox.php:942
+#: includes/cpt/class-event-cpt.php:242
+msgid "Unlimited"
+msgstr ""
+
+#: includes/admin/class-event-metabox.php:950
 msgid "e.g. 100"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:947
+#: includes/admin/class-event-metabox.php:951
 msgid "Maximum registrations allowed."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:949
+#: includes/admin/class-event-metabox.php:953
 msgid "This event has unlimited capacity. Toggle off to set a maximum."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:953
+#: includes/admin/class-event-metabox.php:957
 msgid "Registration Cutoff"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:956
+#: includes/admin/class-event-metabox.php:960
 msgid "Cutoff Date"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:960
+#: includes/admin/class-event-metabox.php:964
 msgid "Cutoff Time"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:964
+#: includes/admin/class-event-metabox.php:968
 msgid "Registration closes at this date and time. Leave blank for no automatic cutoff."
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:972
+#: includes/admin/class-event-metabox.php:976
 msgid "Collect Details for Each Attendee"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:973
+#: includes/admin/class-event-metabox.php:977
 msgid "When more than one ticket is bought, ask for the name and contact of every attendee, not just the buyer"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:983
+#: includes/admin/class-event-metabox.php:987
 msgid "Require Manual Approval"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:984
+#: includes/admin/class-event-metabox.php:988
 msgid "Registrations require admin review before confirmation"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:991
+#: includes/admin/class-event-metabox.php:995
 msgid "Registration Fieldset"
 msgstr ""
 
-#: includes/admin/class-event-metabox.php:993
+#: includes/admin/class-event-metabox.php:997
 msgid "— Default Fieldset —"
 msgstr ""
 
@@ -1847,7 +1849,7 @@ msgid "Add Consent Field"
 msgstr ""
 
 #: includes/admin/class-fieldset-builder.php:243
-#: includes/admin/class-registrations-list.php:246
+#: includes/admin/class-registrations-list.php:365
 msgid "Cancel"
 msgstr ""
 
@@ -2096,55 +2098,36 @@ msgstr ""
 msgid "Create New Fieldset"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:140
+#: includes/admin/class-registrations-list.php:153
+#: includes/admin/class-registrations-list.php:351
+msgid "Restore"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:154
+#: includes/admin/class-registrations-list.php:352
+msgid "Delete Permanently"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:154
+msgid "Permanently delete this registration? This cannot be undone."
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:161
+#: includes/admin/class-registrations-list.php:194
+#: includes/admin/class-registrations-list.php:332
+msgid "Trash"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:179
 msgid "N/A"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:218
+#: includes/admin/class-registrations-list.php:271
 msgid "All Events"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:226
-msgid "All Statuses"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:244
-msgid "Confirm"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:245
-msgid "Mark as pending"
-msgstr ""
-
-#. translators: 1: number of registrations, 2: status label.
-#: includes/admin/class-registrations-list.php:277
-msgid "%1$d registration marked as %2$s."
-msgid_plural "%1$d registrations marked as %2$s."
-msgstr[0] ""
-msgstr[1] ""
-
-#: includes/admin/class-registrations-list.php:322
-msgid "Attendees for: %s"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:324
-msgid "Event Registrations"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:330
-msgid "All Registrations"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:332
-msgid "Export Attendees CSV"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:333
-msgid "Export Registrations CSV"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:348
-msgid "Search"
+#: includes/admin/class-registrations-list.php:309
+msgid "All"
 msgstr ""
 
 #: includes/admin/class-registrations-list.php:36
@@ -2152,9 +2135,21 @@ msgstr ""
 msgid "Customer"
 msgstr ""
 
+#: includes/admin/class-registrations-list.php:363
+msgid "Confirm"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:364
+msgid "Mark as pending"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:366
+msgid "Move to Trash"
+msgstr ""
+
 #: includes/admin/class-registrations-list.php:37
-#: includes/admin/class-registrations-list.php:549
-#: includes/admin/class-registrations-list.php:680
+#: includes/admin/class-registrations-list.php:712
+#: includes/admin/class-registrations-list.php:843
 #: includes/class-activator.php:399
 #: includes/class-fieldsets.php:44
 #: includes/class-fieldsets.php:279
@@ -2162,15 +2157,76 @@ msgid "Email"
 msgstr ""
 
 #: includes/admin/class-registrations-list.php:39
-#: includes/admin/class-registrations-list.php:482
-#: includes/admin/class-registrations-list.php:551
+#: includes/admin/class-registrations-list.php:645
+#: includes/admin/class-registrations-list.php:714
 #: includes/cpt/class-event-cpt.php:191
 #: templates/registration/summary.php:63
 msgid "Attendees"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:390
-#: includes/admin/class-registrations-list.php:682
+#: includes/admin/class-registrations-list.php:41
+#: includes/admin/class-registrations-list.php:719
+msgid "Provider"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:42
+#: includes/admin/class-registrations-list.php:721
+#: includes/cpt/class-coupon-cpt.php:230
+#: includes/cpt/class-coupon-cpt.php:374
+msgid "Status"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:427
+msgid "%d registration moved to Trash."
+msgid_plural "%d registrations moved to Trash."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-registrations-list.php:428
+msgid "%d registration restored."
+msgid_plural "%d registrations restored."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-registrations-list.php:429
+msgid "%d registration permanently deleted."
+msgid_plural "%d registrations permanently deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: number of registrations, 2: status label.
+#: includes/admin/class-registrations-list.php:437
+msgid "%1$d registration marked as %2$s."
+msgid_plural "%1$d registrations marked as %2$s."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-registrations-list.php:484
+msgid "Attendees for: %s"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:486
+msgid "Event Registrations"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:492
+msgid "All Registrations"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:494
+msgid "Export Attendees CSV"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:495
+msgid "Export Registrations CSV"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:511
+msgid "Search"
+msgstr ""
+
+#: includes/admin/class-registrations-list.php:553
+#: includes/admin/class-registrations-list.php:845
 #: includes/class-emails.php:403
 #: includes/class-registrations.php:522
 #: includes/class-registrations.php:614
@@ -2179,80 +2235,68 @@ msgstr ""
 msgid "Ticket"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:41
-#: includes/admin/class-registrations-list.php:556
-msgid "Provider"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:42
-#: includes/admin/class-registrations-list.php:558
-#: includes/cpt/class-coupon-cpt.php:230
-#: includes/cpt/class-coupon-cpt.php:374
-msgid "Status"
-msgstr ""
-
-#: includes/admin/class-registrations-list.php:425
+#: includes/admin/class-registrations-list.php:588
 #: templates/single/address.php:24
 msgid "Location"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:430
+#: includes/admin/class-registrations-list.php:593
 #: includes/cpt/class-event-cpt.php:68
 msgid "Edit Event"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:432
+#: includes/admin/class-registrations-list.php:595
 #: includes/cpt/class-event-cpt.php:70
 msgid "View Event"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:437
+#: includes/admin/class-registrations-list.php:600
 msgid "Ticket Overview"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:439
+#: includes/admin/class-registrations-list.php:602
 msgid "No ticket types configured."
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:453
-#: includes/admin/class-registrations-list.php:552
+#: includes/admin/class-registrations-list.php:616
+#: includes/admin/class-registrations-list.php:715
 #: templates/registration/form.php:112
 #: templates/registration/form.php:241
 #: templates/registration/summary.php:91
 msgid "Total"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:460
+#: includes/admin/class-registrations-list.php:623
 msgid "(Unlimited)"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:469
+#: includes/admin/class-registrations-list.php:632
 msgid "Attendance Overview"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:486
-#: includes/admin/class-registrations-list.php:687
+#: includes/admin/class-registrations-list.php:649
+#: includes/admin/class-registrations-list.php:850
 msgid "Checked in"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:502
+#: includes/admin/class-registrations-list.php:665
 msgid "Unauthorized"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:546
+#: includes/admin/class-registrations-list.php:709
 msgid "ID"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:550
-#: includes/admin/class-registrations-list.php:681
+#: includes/admin/class-registrations-list.php:713
+#: includes/admin/class-registrations-list.php:844
 #: includes/class-activator.php:407
 #: includes/class-fieldsets.php:45
 #: includes/class-fieldsets.php:280
-#: includes/shortcodes/class-registration-shortcode.php:267
+#: includes/shortcodes/class-registration-shortcode.php:273
 msgid "Phone"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:553
+#: includes/admin/class-registrations-list.php:716
 #: includes/cpt/class-coupon-cpt.php:202
 #: includes/cpt/class-coupon-cpt.php:372
 #: templates/registration/form.php:251
@@ -2260,53 +2304,53 @@ msgstr ""
 msgid "Discount"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:555
+#: includes/admin/class-registrations-list.php:718
 #: includes/cpt/class-coupon-cpt.php:95
 msgid "Coupon"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:557
+#: includes/admin/class-registrations-list.php:720
 msgid "Payment ID"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:564
+#: includes/admin/class-registrations-list.php:727
 msgid "Consents"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:566
+#: includes/admin/class-registrations-list.php:729
 msgid "Custom Fields (JSON)"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:677
+#: includes/admin/class-registrations-list.php:840
 msgid "Registration ID"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:679
+#: includes/admin/class-registrations-list.php:842
 msgid "Attendee"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:684
+#: includes/admin/class-registrations-list.php:847
 msgid "Booked by"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:685
+#: includes/admin/class-registrations-list.php:848
 msgid "Booker email"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:686
+#: includes/admin/class-registrations-list.php:849
 #: includes/class-emails.php:131
 msgid "Registration status"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:688
+#: includes/admin/class-registrations-list.php:851
 msgid "Check-in time"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:723
+#: includes/admin/class-registrations-list.php:886
 msgid "No"
 msgstr ""
 
-#: includes/admin/class-registrations-list.php:723
+#: includes/admin/class-registrations-list.php:886
 msgid "Yes"
 msgstr ""
 
@@ -2465,13 +2509,13 @@ msgstr ""
 
 #: includes/class-activator.php:383
 #: includes/class-fieldsets.php:277
-#: includes/shortcodes/class-registration-shortcode.php:264
+#: includes/shortcodes/class-registration-shortcode.php:270
 msgid "First Name"
 msgstr ""
 
 #: includes/class-activator.php:391
 #: includes/class-fieldsets.php:278
-#: includes/shortcodes/class-registration-shortcode.php:265
+#: includes/shortcodes/class-registration-shortcode.php:271
 msgid "Last Name"
 msgstr ""
 
@@ -2529,7 +2573,7 @@ msgid "First name"
 msgstr ""
 
 #: includes/class-emails.php:120
-#: includes/shortcodes/class-registration-shortcode.php:266
+#: includes/shortcodes/class-registration-shortcode.php:272
 msgid "Email address"
 msgstr ""
 
@@ -2924,7 +2968,7 @@ msgid "Registration successful! A confirmation email is on its way."
 msgstr ""
 
 #: includes/class-registrations.php:248
-#: includes/shortcodes/class-registration-shortcode.php:140
+#: includes/shortcodes/class-registration-shortcode.php:146
 msgid "Registration for this event has closed."
 msgstr ""
 
@@ -2946,7 +2990,7 @@ msgid "Still to be collected from the attendee: %s."
 msgstr ""
 
 #: includes/class-registrations.php:291
-#: includes/shortcodes/class-registration-shortcode.php:177
+#: includes/shortcodes/class-registration-shortcode.php:183
 msgid "Please select at least one ticket to continue."
 msgstr ""
 
@@ -3570,12 +3614,12 @@ msgid "Processing payment…"
 msgstr ""
 
 #: includes/payment/class-stripe-handler.php:126
-#: includes/shortcodes/class-registration-shortcode.php:179
+#: includes/shortcodes/class-registration-shortcode.php:185
 msgid "Register & Pay"
 msgstr ""
 
 #: includes/payment/class-stripe-handler.php:127
-#: includes/shortcodes/class-registration-shortcode.php:186
+#: includes/shortcodes/class-registration-shortcode.php:192
 msgid "Registration Complete"
 msgstr ""
 
@@ -3718,114 +3762,114 @@ msgstr ""
 msgid "Next month"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:139
+#: includes/shortcodes/class-registration-shortcode.php:145
 msgid "Registration is currently closed for this event."
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:141
+#: includes/shortcodes/class-registration-shortcode.php:147
 msgid "This event is sold out."
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:142
+#: includes/shortcodes/class-registration-shortcode.php:148
 msgid "Tickets are not currently on sale for this event."
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:143
+#: includes/shortcodes/class-registration-shortcode.php:149
 msgid "Tickets for this event are being set up. Please check back shortly."
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:175
+#: includes/shortcodes/class-registration-shortcode.php:181
 msgid "Next"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:176
+#: includes/shortcodes/class-registration-shortcode.php:182
 msgid "Back"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:178
+#: includes/shortcodes/class-registration-shortcode.php:184
 msgid "Step %1$d of %2$d"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:180
+#: includes/shortcodes/class-registration-shortcode.php:186
 msgid "Register — Free"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:181
+#: includes/shortcodes/class-registration-shortcode.php:187
 msgid "Select tickets to continue"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:182
+#: includes/shortcodes/class-registration-shortcode.php:188
 msgid "Continue to review & payment"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:183
+#: includes/shortcodes/class-registration-shortcode.php:189
 msgid "Complete payment"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:184
+#: includes/shortcodes/class-registration-shortcode.php:190
 #: templates/registration/summary.php:99
 msgid "Complete registration"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:185
+#: includes/shortcodes/class-registration-shortcode.php:191
 msgid "Registering…"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:187
+#: includes/shortcodes/class-registration-shortcode.php:193
 #: templates/registration/form.php:317
 msgid "You are registered"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:188
+#: includes/shortcodes/class-registration-shortcode.php:194
 msgid "Registration received"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:189
+#: includes/shortcodes/class-registration-shortcode.php:195
 msgid "Coupon applied: %s"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:190
+#: includes/shortcodes/class-registration-shortcode.php:196
 msgid "An error occurred. Please try again."
 msgstr ""
 
 #. translators: %d: attendee number.
-#: includes/shortcodes/class-registration-shortcode.php:192
+#: includes/shortcodes/class-registration-shortcode.php:198
 #: templates/registration/form.php:171
 msgid "Attendee %d"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:194
+#: includes/shortcodes/class-registration-shortcode.php:200
 msgid "%1$d of %2$d"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:196
+#: includes/shortcodes/class-registration-shortcode.php:202
 msgid "%d ticket"
 msgstr ""
 
 #. translators: %d: number of tickets.
-#: includes/shortcodes/class-registration-shortcode.php:198
+#: includes/shortcodes/class-registration-shortcode.php:204
 #: templates/registration/form.php:150
 msgid "%d tickets"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:200
+#: includes/shortcodes/class-registration-shortcode.php:206
 msgid "Name not given"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:201
+#: includes/shortcodes/class-registration-shortcode.php:207
 msgid "Please choose at least one option."
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:330
+#: includes/shortcodes/class-registration-shortcode.php:336
 msgid "Members only"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:335
+#: includes/shortcodes/class-registration-shortcode.php:341
 msgid "Sales ended"
 msgstr ""
 
 #. translators: %s: date the ticket goes on sale.
-#: includes/shortcodes/class-registration-shortcode.php:340
+#: includes/shortcodes/class-registration-shortcode.php:346
 msgid "On sale %s"
 msgstr ""
 
@@ -3833,11 +3877,11 @@ msgstr ""
 msgid "No valid event specified."
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:430
+#: includes/shortcodes/class-registration-shortcode.php:436
 msgid "%s, and online"
 msgstr ""
 
-#: includes/shortcodes/class-registration-shortcode.php:431
+#: includes/shortcodes/class-registration-shortcode.php:437
 msgid "In person and online"
 msgstr ""
 
