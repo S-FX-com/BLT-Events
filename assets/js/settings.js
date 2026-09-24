@@ -11,6 +11,35 @@
 	'use strict';
 
 	$(function () {
+		// --- Unsaved changes warning ---
+		// Each tab is its own <form>, so this only ever tracks the one
+		// visible on the current page load.
+		var $settingsForm = $('.blt-events-settings form');
+
+		if ($settingsForm.length) {
+			var isDirty = false;
+
+			$settingsForm.on('change input', 'input, select, textarea', function () {
+				isDirty = true;
+			});
+
+			// A real save also unloads the page, so the flag has to clear
+			// before that happens or Save would trigger its own warning.
+			$settingsForm.on('submit', function () {
+				isDirty = false;
+			});
+
+			$(window).on('beforeunload', function (e) {
+				if (!isDirty) {
+					return undefined;
+				}
+
+				e.preventDefault();
+				e.returnValue = '';
+				return '';
+			});
+		}
+
 		// --- Payment provider selection ---
 		var $providerRadios = $('input[name="blt_events_payment_provider"]');
 		var $cards = $providerRadios.closest('.blt-select-card');
@@ -121,6 +150,12 @@
 
 			function syncPreview() {
 				var mode = $modeRadios.filter(':checked').val();
+
+				$modeRadios.closest('.blt-select-card').each(function () {
+					var $card = $(this);
+					$card.toggleClass('is-selected', $card.find('input[type="radio"]').val() === mode);
+				});
+
 				$('[data-blt-style-panel]').toggle(mode !== 'off');
 
 				var primary = ($primary.val() || '').trim();

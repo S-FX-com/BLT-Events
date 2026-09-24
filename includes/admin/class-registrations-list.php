@@ -74,11 +74,13 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 		if ( ! empty( $_GET['event_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$where[] = array( 'column' => 'event_id', 'value' => absint( $_GET['event_id'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
-		if ( ! empty( $_GET['status'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$status = sanitize_key( wp_unslash( $_GET['status'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			if ( array_key_exists( $status, BLT_Events_Helpers::registration_statuses() ) ) {
-				$where[] = array( 'column' => 'status', 'value' => $status );
-			}
+		$status = sanitize_key( wp_unslash( $_GET['status'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 'trash' === $status || array_key_exists( $status, BLT_Events_Helpers::registration_statuses() ) ) {
+			$where[] = array( 'column' => 'status', 'value' => $status );
+		} else {
+			// Empty, or an unrecognized value: the default "All" view hides
+			// the Trash, matching every other WordPress list table.
+			$where[] = array( 'column' => 'status', 'value' => 'trash', 'compare' => '!=' );
 		}
 		if ( ! empty( $_GET['s'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$term    = sanitize_text_field( wp_unslash( $_GET['s'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -122,7 +124,44 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			$out .= '<br /><span class="blt-text-muted">' . esc_html( $item->customer_phone ) . '</span>';
 		}
 
+		$out .= $this->row_actions( $this->row_action_links( $item ) );
+
 		return $out;
+	}
+
+	/**
+	 * Row action links for a registration: Trash while active, or Restore
+	 * and Delete Permanently once it's in the Trash.
+	 *
+	 * @param object $item Registration row.
+	 * @return array Action slug => HTML link.
+	 */
+	private function row_action_links( $item ) {
+		$base_url = remove_query_arg( array( 'action', 'action2', 'registration_id', '_wpnonce' ) );
+		$actions  = array();
+
+		if ( 'trash' === $item->status ) {
+			$restore_url = wp_nonce_url(
+				add_query_arg( array( 'action' => 'restore', 'registration_id' => $item->id ), $base_url ),
+				'blt_registration_restore_' . $item->id
+			);
+			$delete_url = wp_nonce_url(
+				add_query_arg( array( 'action' => 'delete', 'registration_id' => $item->id ), $base_url ),
+				'blt_registration_delete_' . $item->id
+			);
+
+			$actions['restore'] = '<a href="' . esc_url( $restore_url ) . '">' . esc_html__( 'Restore', 'blt-events' ) . '</a>';
+			$actions['delete']  = '<a href="' . esc_url( $delete_url ) . '" class="submitdelete" onclick="return confirm(\'' . esc_js( __( 'Permanently delete this registration? This cannot be undone.', 'blt-events' ) ) . '\');">' . esc_html__( 'Delete Permanently', 'blt-events' ) . '</a>';
+		} else {
+			$trash_url = wp_nonce_url(
+				add_query_arg( array( 'action' => 'trash', 'registration_id' => $item->id ), $base_url ),
+				'blt_registration_trash_' . $item->id
+			);
+
+			$actions['trash'] = '<a href="' . esc_url( $trash_url ) . '" class="submitdelete">' . esc_html__( 'Trash', 'blt-events' ) . '</a>';
+		}
+
+		return $actions;
 	}
 
 	public function column_event( $item ) {
@@ -149,6 +188,19 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 	}
 
 	public function column_status( $item ) {
+		if ( 'trash' === $item->status ) {
+			$out = sprintf(
+				'<span class="blt-badge blt-badge-trash">%s</span>',
+				esc_html__( 'Trash', 'blt-events' )
+			);
+
+			foreach ( self::get_review_reasons( $item ) as $reason ) {
+				$out .= '<div class="blt-review-reason">' . esc_html( $reason ) . '</div>';
+			}
+
+			return $out;
+		}
+
 		$known = BLT_Events_Helpers::registration_statuses();
 		$slug  = array_key_exists( $item->status, $known ) ? $item->status : 'refunded';
 
@@ -214,6 +266,7 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 		$current_status = sanitize_key( $_GET['status'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		?>
 		<div class="alignleft actions">
+			<input type="hidden" name="status" value="<?php echo esc_attr( $current_status ); ?>" />
 			<select name="event_id">
 				<option value=""><?php esc_html_e( 'All Events', 'blt-events' ); ?></option>
 				<?php foreach ( $events as $ev_id ) : ?>
@@ -222,18 +275,84 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 					</option>
 				<?php endforeach; ?>
 			</select>
-			<select name="status">
-				<option value=""><?php esc_html_e( 'All Statuses', 'blt-events' ); ?></option>
-				<?php foreach ( BLT_Events_Helpers::registration_statuses() as $s => $label ) : ?>
-					<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $current_status, $s ); ?>><?php echo esc_html( $label ); ?></option>
-				<?php endforeach; ?>
-			</select>
 			<?php submit_button( __( 'Filter', 'blt-events' ), '', 'filter_action', false ); ?>
 		</div>
 		<?php
 	}
 
+	/**
+	 * Status filter links shown above the table (All / Pending / Confirmed /
+	 * ... / Trash), each with a live count — the same pattern as every
+	 * other WordPress list table's status views.
+	 *
+	 * @return array View slug => HTML link.
+	 */
+	public function get_views() {
+		$event_id = absint( $_GET['event_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$current  = sanitize_key( $_GET['status'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$counts   = $this->reg_db->count_by_status( $event_id );
+
+		$total = 0;
+		foreach ( $counts as $status => $count ) {
+			if ( 'trash' !== $status ) {
+				$total += $count;
+			}
+		}
+
+		$base_url = remove_query_arg( array( 'status', 'paged' ) );
+
+		$views = array(
+			'all' => sprintf(
+				'<a href="%1$s" class="%2$s">%3$s <span class="count">(%4$s)</span></a>',
+				esc_url( $base_url ),
+				'' === $current ? 'current' : '',
+				esc_html__( 'All', 'blt-events' ),
+				number_format_i18n( $total )
+			),
+		);
+
+		foreach ( BLT_Events_Helpers::registration_statuses() as $status => $label ) {
+			if ( empty( $counts[ $status ] ) ) {
+				continue;
+			}
+			$views[ $status ] = sprintf(
+				'<a href="%1$s" class="%2$s">%3$s <span class="count">(%4$s)</span></a>',
+				esc_url( add_query_arg( 'status', $status, $base_url ) ),
+				$current === $status ? 'current' : '',
+				esc_html( $label ),
+				number_format_i18n( $counts[ $status ] )
+			);
+		}
+
+		if ( ! empty( $counts['trash'] ) ) {
+			$views['trash'] = sprintf(
+				'<a href="%1$s" class="%2$s">%3$s <span class="count">(%4$s)</span></a>',
+				esc_url( add_query_arg( 'status', 'trash', $base_url ) ),
+				'trash' === $current ? 'current' : '',
+				esc_html__( 'Trash', 'blt-events' ),
+				number_format_i18n( $counts['trash'] )
+			);
+		}
+
+		return $views;
+	}
+
 	public function get_bulk_actions() {
+		$status = sanitize_key( $_GET['status'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( 'trash' === $status ) {
+			/**
+			 * Filter the bulk actions on the Registrations screen while
+			 * viewing the Trash. Keys are 'restore' or 'delete'.
+			 *
+			 * @param array $actions Action slug => label.
+			 */
+			return apply_filters( 'blt_events_registration_bulk_actions_trash', array(
+				'restore' => __( 'Restore', 'blt-events' ),
+				'delete'  => __( 'Delete Permanently', 'blt-events' ),
+			) );
+		}
+
 		/**
 		 * Filter the bulk actions on the Registrations screen. Keys are
 		 * target statuses.
@@ -244,12 +363,21 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			'confirmed' => __( 'Confirm', 'blt-events' ),
 			'pending'   => __( 'Mark as pending', 'blt-events' ),
 			'cancelled' => __( 'Cancel', 'blt-events' ),
+			'trash'     => __( 'Move to Trash', 'blt-events' ),
 		) );
 	}
 
 	private function process_bulk_action() {
 		$action = $this->current_action();
-		if ( ! $action || ! array_key_exists( $action, $this->get_bulk_actions() ) ) {
+		if ( ! $action ) {
+			return;
+		}
+
+		$known_actions = array_merge(
+			array_keys( $this->get_bulk_actions() ),
+			array( 'trash', 'restore', 'delete' )
+		);
+		if ( ! in_array( $action, $known_actions, true ) ) {
 			return;
 		}
 
@@ -257,30 +385,64 @@ class BLT_Events_Registrations_List_Table extends WP_List_Table {
 			return;
 		}
 
-		check_admin_referer( 'bulk-' . $this->_args['plural'] );
+		// Row action links pass a single id with their own nonce; bulk
+		// submissions from the dropdown pass the list table's own nonce.
+		if ( isset( $_GET['registration_id'] ) ) {
+			$id = absint( $_GET['registration_id'] );
+			check_admin_referer( 'blt_registration_' . $action . '_' . $id );
+			$ids = array( $id );
+		} else {
+			check_admin_referer( 'bulk-' . $this->_args['plural'] );
+			$ids = array_map( 'absint', (array) ( $_REQUEST['registration_ids'] ?? array() ) );
+		}
 
-		$ids     = array_map( 'absint', (array) ( $_REQUEST['registration_ids'] ?? array() ) );
 		$changed = 0;
 
 		foreach ( array_filter( $ids ) as $id ) {
-			if ( BLT_Events_Registrations::update_status( $id, $action ) ) {
+			switch ( $action ) {
+				case 'trash':
+					$done = BLT_Events_Registrations::trash( $id );
+					break;
+				case 'restore':
+					$done = BLT_Events_Registrations::restore( $id );
+					break;
+				case 'delete':
+					$done = BLT_Events_Registrations::delete_permanently( $id );
+					break;
+				default:
+					$done = BLT_Events_Registrations::update_status( $id, $action );
+					break;
+			}
+
+			if ( $done ) {
 				$changed++;
 			}
 		}
 
-		if ( $changed ) {
-			add_action( 'admin_notices', function () use ( $changed, $action ) {
-				printf(
-					'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
-					esc_html( sprintf(
-						/* translators: 1: number of registrations, 2: status label. */
-						_n( '%1$d registration marked as %2$s.', '%1$d registrations marked as %2$s.', $changed, 'blt-events' ),
-						$changed,
-						BLT_Events_Helpers::status_label( $action )
-					) )
-				);
-			} );
+		if ( ! $changed ) {
+			return;
 		}
+
+		$messages = array(
+			'trash'   => _n( '%d registration moved to Trash.', '%d registrations moved to Trash.', $changed, 'blt-events' ),
+			'restore' => _n( '%d registration restored.', '%d registrations restored.', $changed, 'blt-events' ),
+			'delete'  => _n( '%d registration permanently deleted.', '%d registrations permanently deleted.', $changed, 'blt-events' ),
+		);
+
+		if ( isset( $messages[ $action ] ) ) {
+			$text = sprintf( $messages[ $action ], $changed );
+		} else {
+			$text = sprintf(
+				/* translators: 1: number of registrations, 2: status label. */
+				_n( '%1$d registration marked as %2$s.', '%1$d registrations marked as %2$s.', $changed, 'blt-events' ),
+				$changed,
+				BLT_Events_Helpers::status_label( $action )
+			);
+		}
+
+		add_action( 'admin_notices', function () use ( $text ) {
+			printf( '<div class="notice notice-success is-dismissible"><p>%s</p></div>', esc_html( $text ) );
+		} );
 	}
 }
 
@@ -345,6 +507,7 @@ class BLT_Events_Registrations_List {
 					<form method="get">
 						<input type="hidden" name="post_type" value="event" />
 						<input type="hidden" name="page" value="blt-registrations" />
+						<?php $table->views(); ?>
 						<?php $table->search_box( __( 'Search', 'blt-events' ), 'search_registration' ); ?>
 						<?php $table->display(); ?>
 					</form>

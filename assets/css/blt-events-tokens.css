@@ -32,6 +32,10 @@
 	--blt-e-primary-tint: #f0f0ff;
 	/* Text drawn on top of --blt-e-primary. */
 	--blt-e-on-primary: #ffffff;
+	/* Static fallback for browsers without color-mix() support (Safari <
+	   16.2, Firefox < 113) — the @supports block below replaces this with
+	   a version derived from --blt-e-primary once it's safe to use, same
+	   guard convention as blt-events-skeleton.css's own color-mix() use. */
 	--blt-e-focus-ring: rgba(99, 102, 241, 0.3);
 	--blt-e-focus-glow: rgba(99, 102, 241, 0.1);
 
@@ -70,11 +74,14 @@
 	--blt-e-warning-bg: #fffbeb;
 	--blt-e-warning-border: #fde68a;
 
-	/* --- Shape --- */
+	/* --- Shape ---
+	   Matches ACSS's own --radius-xs/-s/-m/-l scale (4/8/16/32px), same
+	   reasoning as the text-* sizes above: Styled mode's numbers should
+	   land exactly where Skeleton mode's do, not just be close. */
 	--blt-e-radius-xs: 4px;
-	--blt-e-radius-sm: 6px;
-	--blt-e-radius: 10px;
-	--blt-e-radius-lg: 12px;
+	--blt-e-radius-sm: 8px;
+	--blt-e-radius: 16px;
+	--blt-e-radius-lg: 32px;
 	--blt-e-radius-pill: 999px;
 
 	/* --- Depth --- */
@@ -96,30 +103,39 @@
 
 	/* Fluid spacing scale used by the single event page. Named after the
 	   Automatic.css scale it mirrors (space-xs/s/m, content-gap, grid-gap,
-	   section-space-m), which Skeleton mode maps to directly. */
-	--blt-e-space-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
-	--blt-e-space-s: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
-	--blt-e-space-m: clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem);
+	   section-space-m), which Skeleton mode maps to directly. Copied from
+	   ACSS's own clamp curves, same reasoning as text-* and radius-* above. */
+	--blt-e-space-xs: clamp(1.1256rem, 1.0500rem + 0.2099vw, 1.3333rem);
+	--blt-e-space-s: clamp(1.5004rem, 1.3187rem + 0.5047vw, 2rem);
+	--blt-e-space-m: clamp(2rem, 1.6364rem + 1.0101vw, 3rem);
 	--blt-e-content-gap: var(--blt-e-space-m);
 	--blt-e-grid-gap: var(--blt-e-space-m);
-	--blt-e-section-space-m: clamp(3.75rem, 3.2rem + 2.4vw, 5rem);
+	--blt-e-section-space-m: clamp(4rem, 1.0909rem + 8.0808vw, 12rem);
 
-	/* Fluid text sizes for the same page (text-s/m/l). */
-	--blt-e-text-s: clamp(0.833rem, 0.8rem + 0.15vw, 0.9rem);
-	--blt-e-text-m: clamp(1rem, 0.93rem + 0.3vw, 1.125rem);
-	--blt-e-text-l: clamp(1.2rem, 1.1rem + 0.45vw, 1.406rem);
+	/* Fluid text sizes for the same page (text-xs/s/m/l/xl/xxl). Copied
+	   from ACSS's own --text-* clamp curves (not just approximated) so
+	   Styled mode's numbers land exactly where Skeleton mode's do once it
+	   resolves var(--text-*, ...) against a real ACSS install, instead of
+	   two independently-tuned scales that happen to be close. */
+	--blt-e-text-xs: clamp(1.4rem, 1.3273rem + 0.2020vw, 1.6rem);
+	--blt-e-text-s: clamp(1.6rem, 1.5273rem + 0.2020vw, 1.8rem);
+	--blt-e-text-m: clamp(2rem, 1.8545rem + 0.4040vw, 2.4rem);
+	--blt-e-text-l: clamp(2.4rem, 2.1091rem + 0.8081vw, 3.2rem);
+	--blt-e-text-xl: clamp(3rem, 2.3455rem + 1.8182vw, 4.8rem);
+	--blt-e-text-xxl: clamp(3.6rem, 2.5455rem + 2.9293vw, 6.5rem);
 
 	/* --- Neutrals (single event page) --- */
 	--blt-e-neutral: var(--blt-e-fg-strong);
 	--blt-e-neutral-light: var(--blt-e-border);
 	--blt-e-neutral-ultra-light: var(--blt-e-surface-sunken);
 	--blt-e-neutral-semi-light: var(--blt-e-fg-muted);
+	--blt-e-neutral-semi-dark: var(--blt-e-fg-soft);
 	/* Hairlines between page sections and around the event card. */
 	--blt-e-divider: rgba(0, 0, 0, 0.2);
 	/* Category chips: the neutral at 10% / 20%. */
 	--blt-e-chip-bg: rgba(17, 24, 39, 0.1);
 	--blt-e-chip-bg-hover: rgba(17, 24, 39, 0.2);
-	--blt-e-chip-radius: 0;
+	--blt-e-chip-radius: var(--blt-e-radius-xs);
 	/* Sponsor logo tiles: contained with breathing room. Use `cover` and 0
 	   for photos that should fill the square. */
 	--blt-e-sponsor-fit: contain;
@@ -132,7 +148,24 @@
 	/* Max width of the registration checkout: room for the Attendee details
 	   form beside its Event summary. Narrower containers stack the two. */
 	--blt-e-checkout-width: 1120px;
-	/* Max width of the calendar and listing containers. 960px is what the
-	   plugin has always used; Settings > Appearance can widen or narrow it. */
-	--blt-e-content-width: 960px;
+	/* The checkout's own full-panel background. Not --blt-e-surface-sunken
+	   directly: that token is correctly mapped for smaller recessed
+	   elements (disabled buttons, tiles), but on some frameworks its
+	   mapped colour is a much bigger step down than a whole-panel
+	   background should read as. */
+	--blt-e-checkout-bg: var(--blt-e-surface-sunken);
+	/* Max width of the calendar and listing containers. 1350px matches
+	   ACSS's own default content width; Settings > Appearance can widen or
+	   narrow it. */
+	--blt-e-content-width: 1350px;
+}
+
+/* Where color-mix() is supported, derive the focus ring/glow from the
+   actual primary colour (custom or default) instead of the static indigo
+   fallback above. */
+@supports (color: color-mix(in oklch, red 10%, transparent)) {
+	:root {
+		--blt-e-focus-ring: color-mix(in srgb, var(--blt-e-primary) 30%, transparent);
+		--blt-e-focus-glow: color-mix(in srgb, var(--blt-e-primary) 10%, transparent);
+	}
 }

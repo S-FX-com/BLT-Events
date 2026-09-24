@@ -879,6 +879,128 @@ class BLT_Events_Registrations {
 	}
 
 	/**
+	 * Move a registration to trash. Not a real business status — kept out
+	 * of registration_statuses() so it can never be picked from a status
+	 * dropdown — the prior status is stashed in custom_fields so restore()
+	 * can put it back.
+	 *
+	 * @param int $registration_id The registration ID.
+	 * @return bool
+	 */
+	public static function trash( $registration_id ) {
+		$registration_id = absint( $registration_id );
+		$reg              = self::$reg_db->get( $registration_id );
+		if ( ! $reg || 'trash' === $reg->status ) {
+			return false;
+		}
+
+		$custom_fields                       = json_decode( (string) $reg->custom_fields, true );
+		$custom_fields                       = is_array( $custom_fields ) ? $custom_fields : array();
+		$custom_fields['_pre_trash_status']  = $reg->status;
+
+		$result = self::$reg_db->update( $registration_id, array(
+			'status'        => 'trash',
+			'custom_fields' => wp_json_encode( $custom_fields ),
+		) );
+
+		if ( false === $result ) {
+			return false;
+		}
+
+		/**
+		 * Fires when a registration is moved to trash.
+		 *
+		 * @param int $registration_id The registration ID.
+		 */
+		do_action( 'blt_registration_trashed', $registration_id );
+
+		// The status column changed, so integrations listening for that
+		// generic transition need to hear about it too — just not the
+		// confirmed/cancelled/refunded-specific actions, which would
+		// re-trigger one-time side effects like a confirmation email.
+		do_action( 'blt_registration_status_changed', $registration_id, 'trash', $reg->status );
+
+		return true;
+	}
+
+	/**
+	 * Restore a trashed registration to whatever status it held before.
+	 *
+	 * @param int $registration_id The registration ID.
+	 * @return bool
+	 */
+	public static function restore( $registration_id ) {
+		$registration_id = absint( $registration_id );
+		$reg              = self::$reg_db->get( $registration_id );
+		if ( ! $reg || 'trash' !== $reg->status ) {
+			return false;
+		}
+
+		$custom_fields = json_decode( (string) $reg->custom_fields, true );
+		$custom_fields = is_array( $custom_fields ) ? $custom_fields : array();
+
+		$restored_status = ( isset( $custom_fields['_pre_trash_status'] )
+			&& array_key_exists( $custom_fields['_pre_trash_status'], BLT_Events_Helpers::registration_statuses() ) )
+			? $custom_fields['_pre_trash_status']
+			: 'pending';
+		unset( $custom_fields['_pre_trash_status'] );
+
+		$result = self::$reg_db->update( $registration_id, array(
+			'status'        => $restored_status,
+			'custom_fields' => wp_json_encode( $custom_fields ),
+		) );
+
+		if ( false === $result ) {
+			return false;
+		}
+
+		/**
+		 * Fires when a trashed registration is restored.
+		 *
+		 * @param int    $registration_id The registration ID.
+		 * @param string $status          The status it was restored to.
+		 */
+		do_action( 'blt_registration_restored', $registration_id, $restored_status );
+
+		// Same reasoning as trash(): notify of the generic transition
+		// without re-firing a confirmed/cancelled/refunded-specific action.
+		do_action( 'blt_registration_status_changed', $registration_id, $restored_status, 'trash' );
+
+		return true;
+	}
+
+	/**
+	 * Permanently delete a registration and its attendee rows. Irreversible.
+	 *
+	 * @param int $registration_id The registration ID.
+	 * @return bool
+	 */
+	public static function delete_permanently( $registration_id ) {
+		$registration_id = absint( $registration_id );
+		$reg              = self::$reg_db->get( $registration_id );
+		if ( ! $reg ) {
+			return false;
+		}
+
+		self::$att_db->delete_by_registration( $registration_id );
+		$result = self::$reg_db->delete( $registration_id );
+
+		if ( false === $result ) {
+			return false;
+		}
+
+		/**
+		 * Fires when a registration is permanently deleted.
+		 *
+		 * @param int    $registration_id The (now deleted) registration ID.
+		 * @param object $reg             The registration row, for last access to its data.
+		 */
+		do_action( 'blt_registration_deleted', $registration_id, $reg );
+
+		return true;
+	}
+
+	/**
 	 * Confirm a pending registration (e.g., after payment).
 	 */
 	public static function confirm_registration( $registration_id, $payment_data = array() ) {

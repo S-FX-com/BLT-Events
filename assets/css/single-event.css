@@ -30,11 +30,22 @@
 	color: var(--blt-e-fg);
 	font-family: var(--blt-e-font);
 	/* Size from the root, not the theme's (often large) body text, so the
-	   card and accordion keep the design's proportions. */
-	font-size: 1rem;
+	   card and accordion keep the design's proportions. 1.6rem rather than
+	   1rem: rem is always relative to the page root, and ACSS's 62.5% root
+	   makes 1rem = 10px, so this corrects back to a real 16px base. */
+	font-size: 1.6rem;
 	line-height: 1.5;
+	/* Explicit width, not just max-width: some caching/speed plugins apply
+	   content-visibility:auto (size containment) to below-the-fold
+	   sections, and a width:auto box can't be sized without rendering it,
+	   so the browser paints an estimate until it scrolls into view. An
+	   explicit width sidesteps that; min(..., 100%) keeps it from
+	   overflowing on viewports narrower than the content width. */
+	width: min(var(--blt-e-content-width), 100%);
 	max-width: var(--blt-e-content-width);
 	margin: 0 auto;
+	/* Left/right stay on .blt-event__layout so the hero can bleed full-width. */
+	padding: var(--blt-e-space-m) 0 var(--blt-e-section-space-m);
 }
 
 .blt-event *,
@@ -76,7 +87,7 @@
 	margin: 0;
 	overflow: hidden;
 	aspect-ratio: 16 / 9;
-	border-radius: var(--blt-e-radius-lg);
+	border-radius: var(--blt-e-radius);
 	background: var(--blt-e-surface-sunken);
 }
 
@@ -132,6 +143,7 @@
 	/* Stretch, not start: the card column must be as tall as the main column
 	   for the card to have room to stick. */
 	align-items: stretch;
+	padding: 0 var(--blt-e-space-m);
 }
 
 .blt-event__main {
@@ -195,14 +207,13 @@
 	margin: 0;
 	color: var(--blt-e-neutral);
 	font-family: var(--blt-e-font-heading);
-	font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+	font-size: var(--blt-e-text-xxl);
 	font-weight: 700;
 	line-height: 1.15;
 }
 
 .blt-event__description {
-	max-width: var(--blt-e-prose-width);
-	font-size: 1rem;
+	font-size: 1.6rem;
 	line-height: 1.65;
 }
 
@@ -215,19 +226,32 @@
 }
 
 /* --- Sections (agenda, sponsors, location, registration) --- */
+/* All four sides set as physical longhands (not just padding-top): these
+   are <section> elements, and frameworks like ACSS style bare <section>
+   tags directly (padding-block / padding-inline) at zero specificity,
+   expecting a component's own class to override it. Only setting
+   padding-top left padding-inline/-bottom unopposed and let it bleed in. */
 .blt-event__section {
 	display: flex;
 	flex-direction: column;
 	gap: var(--blt-e-space-s);
-	padding-top: var(--blt-e-content-gap);
+	padding: var(--blt-e-content-gap) 0 0;
 	border-top: 1px solid var(--blt-event-border);
+}
+
+/* Agenda and Sponsors sit right under the title/description with no
+   divider above them; Location and Registration keep it. */
+.blt-event__agenda,
+.blt-event__sponsors {
+	padding-top: 0;
+	border-top: 0;
 }
 
 .blt-event__section-title {
 	margin: 0;
 	color: var(--blt-e-neutral);
 	font-family: var(--blt-e-font-heading);
-	font-size: clamp(1.35rem, 1.25rem + 0.5vw, 1.6rem);
+	font-size: var(--blt-e-text-xl);
 	font-weight: 700;
 	line-height: 1.25;
 }
@@ -273,16 +297,24 @@
 .blt-event__agenda-time {
 	margin: 0;
 	color: var(--blt-e-neutral);
-	font-size: 0.875rem;
+	font-size: 1.4rem;
 	font-weight: 600;
 	line-height: 1.4;
 	font-variant-numeric: tabular-nums;
 }
 
+/* Only the expandable (non-static) time, matching .blt-event__category's
+   chip look. */
+.blt-event__agenda-summary .blt-event__agenda-time {
+	padding: calc(var(--blt-e-space-xs) / 2) calc(var(--blt-e-space-s) / 2);
+	border-radius: var(--blt-e-chip-radius);
+	background: var(--blt-e-chip-bg);
+}
+
 .blt-event__agenda-chevron {
 	display: inline-flex;
 	color: var(--blt-e-primary);
-	font-size: 1.25rem;
+	font-size: 2rem;
 	transition: transform 0.2s ease;
 }
 
@@ -296,7 +328,7 @@
 
 .blt-event__agenda-label {
 	margin: 0;
-	color: var(--blt-e-fg-soft);
+	color: var(--blt-e-fg);
 	line-height: 1.55;
 }
 
@@ -445,14 +477,14 @@
 
 .blt-event__datebox-label {
 	color: var(--blt-e-fg-muted);
-	font-size: var(--blt-e-text-s);
+	font-size: var(--blt-e-text-xs);
 	font-weight: 500;
 	line-height: 1.4;
 }
 
 .blt-event__datebox-value {
 	color: var(--blt-e-neutral);
-	font-size: var(--blt-e-text-l);
+	font-size: var(--blt-e-text-m);
 	font-weight: 700;
 	line-height: 1.25;
 }
@@ -481,7 +513,7 @@
 	gap: var(--blt-e-space-xs);
 	margin: 0;
 	color: var(--blt-e-fg-soft);
-	font-size: 0.95rem;
+	font-size: 1.52rem;
 	line-height: 1.45;
 }
 
@@ -530,7 +562,7 @@
 
 .blt-event__virtual-text {
 	color: var(--blt-event-muted);
-	font-size: 0.85rem;
+	font-size: 1.36rem;
 }
 
 /* Speakers */
@@ -569,8 +601,8 @@
 	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
-	width: 60px;
-	height: 60px;
+	width: 48px;
+	height: 48px;
 	border: 3px solid var(--blt-e-surface);
 	border-radius: 50%;
 	background: var(--blt-e-neutral-ultra-light);
@@ -606,8 +638,8 @@ a.blt-event__presenter-name:focus-visible {
 }
 
 .blt-event__presenter-role {
-	color: var(--blt-e-neutral-semi-light);
-	font-size: 0.875rem;
+	color: var(--blt-e-neutral-semi-dark);
+	font-size: 1.4rem;
 }
 
 /* Register button */
@@ -619,14 +651,14 @@ a.blt-event__presenter-name:focus-visible {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 0.5rem;
+	gap: var(--blt-e-gap-sm);
 	width: 100%;
 	min-height: 46px;
 	padding: 0.75rem 1.25rem;
 	border-radius: var(--blt-e-radius-sm);
 	background: var(--blt-e-primary);
 	color: var(--blt-e-on-primary);
-	font-size: 0.95rem;
+	font-size: 1.52rem;
 	font-weight: 600;
 	line-height: 1.2;
 	text-decoration: none;
@@ -656,7 +688,7 @@ a.blt-event__presenter-name:focus-visible {
 /* --- Parts from theme overrides of the pre-2.5 templates --- */
 .blt-event__card-title {
 	margin: 0 0 0.6rem;
-	font-size: 1.05rem;
+	font-size: 1.68rem;
 	font-weight: 700;
 }
 
@@ -664,7 +696,7 @@ a.blt-event__presenter-name:focus-visible {
 .blt-event__presenter-bio {
 	margin: 0;
 	color: var(--blt-event-muted);
-	font-size: 0.85rem;
+	font-size: 1.36rem;
 }
 
 .blt-event__cta-price {
@@ -675,7 +707,7 @@ a.blt-event__presenter-name:focus-visible {
 
 .blt-event__cta-from {
 	color: var(--blt-event-muted);
-	font-size: 0.7rem;
+	font-size: 1.12rem;
 	letter-spacing: 0.05em;
 }
 
@@ -685,9 +717,18 @@ a.blt-event__presenter-name:focus-visible {
 
 /* --- Tablet and below --- */
 @media (max-width: 991px) {
+	/* Stacked, there's no sticky sidebar pulling extra room below the
+	   content, so all four sides match. The inset also moves up here from
+	   .blt-event__layout, so the hero shares it instead of staying
+	   full-bleed once everything's a single column. */
+	.blt-event {
+		padding: var(--blt-e-space-m);
+	}
+
 	/* Stack, with the card right under the title so the date, place and
 	   register button come before the long content. */
 	.blt-event__layout {
+		padding: 0;
 		display: flex;
 		flex-direction: column;
 		gap: var(--blt-e-content-gap);
@@ -808,7 +849,7 @@ a.blt-event__presenter-name:focus-visible {
 .blt-lightbox__caption {
 	color: #fff;
 	font-family: var(--blt-e-font);
-	font-size: 0.9rem;
+	font-size: 1.44rem;
 	text-align: center;
 }
 
@@ -824,7 +865,7 @@ a.blt-event__presenter-name:focus-visible {
 	border-radius: 50%;
 	background: rgba(255, 255, 255, 0.92);
 	color: #111;
-	font-size: 1.6rem;
+	font-size: 2.56rem;
 	line-height: 1;
 	cursor: pointer;
 }

@@ -57,7 +57,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $has_image = ! empty( $has_image ) || ( $show_featured && $featured_image );
 $has_hero  = $has_image || ( $show_back && $events_url );
 ?>
-<div class="blt-event blt-event--<?php echo esc_attr( $event_type ); ?> <?php echo $has_image ? 'blt-event--has-image' : 'blt-event--no-image'; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
+<article class="blt-event blt-event--<?php echo esc_attr( $event_type ); ?> <?php echo $has_image ? 'blt-event--has-image' : 'blt-event--no-image'; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
 	<?php if ( $has_hero ) : ?>
 		<div class="blt-event__hero<?php echo $has_image ? '' : ' blt-event__hero--plain'; ?>">
 			<?php BLT_Events_Templates::include_template( 'single/back-link.php', $args ); ?>
@@ -124,4 +124,4 @@ $has_hero  = $has_image || ( $show_back && $events_url );
 			</div>
 		</aside>
 	</div>
-</div>
+</article>
