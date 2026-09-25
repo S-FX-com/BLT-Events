@@ -441,6 +441,7 @@ jQuery(document).ready(function ($) {
 	$("#blt-add-agenda").on("click", function () {
 		var $row = $(
 			'<div class="blt-agenda-row">' +
+				'<span class="blt-drag-handle dashicons dashicons-menu" aria-hidden="true"></span>' +
 				'<input type="time" class="blt-input" name="agenda[' + agendaIndex + '][start]" />' +
 				'<input type="time" class="blt-input" name="agenda[' + agendaIndex + '][end]" />' +
 				'<input type="text" class="blt-input" name="agenda[' + agendaIndex + '][label]" />' +
@@ -458,6 +459,16 @@ jQuery(document).ready(function ($) {
 			$(this).closest(".blt-agenda-row").find("input").val("");
 		}
 	});
+
+	// Posted in DOM order, so dragging a row is all reordering takes.
+	if ($.fn.sortable && $agendaRows.length) {
+		$agendaRows.sortable({
+			items: "> .blt-agenda-row",
+			handle: ".blt-drag-handle",
+			axis: "y",
+			tolerance: "pointer",
+		});
+	}
 
 	/* ----------------------------------------------------------------
 	 * Presenters
@@ -521,6 +532,16 @@ jQuery(document).ready(function ($) {
 		$row.find(".blt-presenter-photo-preview").removeClass("has-image").empty();
 		$(this).hide();
 	});
+
+	// Posted in DOM order, so dragging a row is all reordering takes.
+	if ($.fn.sortable && $presenterRows.length) {
+		$presenterRows.sortable({
+			items: "> .blt-presenter-row",
+			handle: ".blt-drag-handle",
+			axis: "y",
+			tolerance: "pointer",
+		});
+	}
 
 	// Connected mode: AJAX search over the presenter CPT with chips.
 	var $presenterBox = $(".blt-presenters[data-connected='1']");
@@ -648,7 +669,7 @@ jQuery(document).ready(function ($) {
 	if ($.fn.sortable && $sponsorRows.length) {
 		$sponsorRows.sortable({
 			items: "> .blt-sponsor-row",
-			handle: ".blt-sponsor-thumb",
+			handle: ".blt-drag-handle",
 			axis: "y",
 			tolerance: "pointer",
 		});

@@ -2,7 +2,29 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 2.4.5
+
+### Fixed
+
+- **Release zip missing the update checker's vendor folder.** The build's `--exclude 'vendor'` matched at any depth, silently stripping `includes/lib/plugin-update-checker/vendor/` along with the intended root-level dev dependency folder. Anchored to the root with `--exclude '/vendor'`.
+- **Settings notices jumped to the top of the page after a delay.** Missing `.wp-header-end` marker on the Settings screen; WordPress now positions notices right after the page header like every other admin screen.
+- **Free events with a $0 ticket type could be routed to an unconfigured payment processor.** Routing now checks whether any ticket actually has a price, not just whether ticket rows exist.
+- **A cancelled/refunded/trashed registration's checked-in attendees could push the check-in percentage over 100%.** `count_checked_in()` now applies the same seat-holding-status filter as the attendee total it's shown as a percentage of.
+- A duplicate-registration check now also excludes trashed registrations, so a legitimately re-registering attendee isn't blocked by their own trashed row.
+
+### Added
+
+- **Registrations Trash.** Registrations can be moved to Trash, restored, or permanently deleted from the Registrations screen, matching WordPress's native post-trash pattern (status views with counts, context-aware bulk actions, per-row actions). New hooks `blt_registration_trashed`, `blt_registration_restored`, `blt_registration_deleted`, and filter `blt_events_registration_bulk_actions_trash`.
+- **Reactive Appearance settings.** Switching styling mode, or editing the primary colour/radius, now updates the live preview immediately and triggers the native "unsaved changes" browser warning if you navigate away without saving.
+- **Drag-to-reorder** for Agenda, Presenters and Sponsors in the event editor, with a consistent handle across all three.
+- Semantic HTML pass on the single event page: the event wrapper is now an `<article>`, and the Registration section is a properly labelled `<section>` matching its siblings (Agenda, Sponsors, Location).
+
+### Changed
+
+- Single Event Display and the registration checkout were audited against Automatic.css: type scale, spacing scale and corner radii now use ACSS's own values in Skeleton mode (and as Styled mode's defaults), instead of independently-tuned approximations. Fixes several places where a framework default was unexpectedly overriding this plugin's own styling due to a specificity mismatch (`<section>` padding, the checkout's submit button, paragraph margins).
+- `--blt-e-content-width` default changed from 960px to 1350px to match Automatic.css's own default content width.
+
+## 2.4.4
 
 ### Changed
 

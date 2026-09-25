@@ -165,7 +165,7 @@ body:not(.is-dragging-metaboxes) #blt_top-sortables.empty-container {
 .blt-agenda-header,
 .blt-agenda-row {
 	display: grid;
-	grid-template-columns: 120px 120px 1fr 28px;
+	grid-template-columns: 20px 120px 120px 1fr 28px;
 	gap: 8px;
 	align-items: center;
 }
@@ -213,12 +213,36 @@ body:not(.is-dragging-metaboxes) #blt_top-sortables.empty-container {
 	}
 
 	.blt-agenda-row {
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 20px 1fr 1fr;
 	}
 
 	.blt-agenda-row input[type="text"] {
-		grid-column: 1 / -1;
+		grid-column: 2 / -1;
 	}
+
+	/* Full-width span, not auto-placement: otherwise this lands in the
+	   narrow 20px handle column (the only cell the label's own row leaves
+	   free) instead of getting its own row. */
+	.blt-agenda-remove {
+		grid-column: 1 / -1;
+		justify-self: end;
+	}
+}
+
+/* --- Drag handle (Agenda / Presenters / Sponsors) --- */
+.blt-drag-handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	color: var(--blt-muted-fg);
+	cursor: grab;
+	font-size: 16px;
+}
+
+.blt-drag-handle:active {
+	cursor: grabbing;
 }
 
 /* --- Presenters --- */
@@ -228,11 +252,15 @@ body:not(.is-dragging-metaboxes) #blt_top-sortables.empty-container {
 
 .blt-presenter-row {
 	display: grid;
-	grid-template-columns: auto 1fr 28px;
+	grid-template-columns: 20px auto 1fr 28px;
 	gap: 12px;
 	align-items: start;
 	padding: 12px 0;
 	border-top: 1px solid var(--blt-border);
+}
+
+.blt-presenter-row .blt-drag-handle {
+	margin-top: 26px;
 }
 
 .blt-presenter-row:first-child {
@@ -349,7 +377,7 @@ body:not(.is-dragging-metaboxes) #blt_top-sortables.empty-container {
 
 .blt-sponsor-row {
 	display: grid;
-	grid-template-columns: 56px 1fr 28px;
+	grid-template-columns: 20px 56px 1fr 28px;
 	gap: 12px;
 	align-items: center;
 	padding: 8px;
@@ -375,7 +403,6 @@ body:not(.is-dragging-metaboxes) #blt_top-sortables.empty-container {
 	overflow: hidden;
 	border-radius: var(--blt-radius-sm);
 	background: var(--blt-input-bg);
-	cursor: move;
 }
 
 .blt-sponsor-thumb img {

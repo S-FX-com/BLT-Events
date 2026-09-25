@@ -92,7 +92,7 @@ jobs:
             --exclude '*.md' \
             --exclude 'blt-family-smoke.php' \
             --exclude 'tests' \
-            --exclude 'vendor' \
+            --exclude '/vendor' \
             --exclude 'node_modules' \
             --exclude 'composer.json' \
             --exclude 'composer.lock' \

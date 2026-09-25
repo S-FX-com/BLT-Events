@@ -477,6 +477,7 @@ class BLT_Events_Admin_Settings {
 				<h1><?php esc_html_e( 'BLT Events', 'blt-events' ); ?> <span class="blt-admin-page-header-sub"><?php esc_html_e( 'Settings', 'blt-events' ); ?></span></h1>
 				<?php self::render_update_action(); ?>
 			</div>
+			<hr class="wp-header-end" />
 
 			<?php settings_errors(); ?>
 

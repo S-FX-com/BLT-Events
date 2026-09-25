@@ -684,6 +684,7 @@ class BLT_Events_Event_Metabox {
 
 			<div class="blt-agenda-panel" id="blt-agenda-panel" <?php echo $enabled ? '' : 'style="display:none;"'; ?>>
 				<div class="blt-agenda-header" aria-hidden="true">
+					<span></span>
 					<span><?php esc_html_e( 'Start', 'blt-events' ); ?></span>
 					<span><?php esc_html_e( 'End', 'blt-events' ); ?></span>
 					<span><?php esc_html_e( 'Session', 'blt-events' ); ?></span>
@@ -692,6 +693,7 @@ class BLT_Events_Event_Metabox {
 				<div id="blt-agenda-rows">
 					<?php foreach ( $items as $i => $item ) : ?>
 						<div class="blt-agenda-row">
+							<span class="blt-drag-handle dashicons dashicons-menu" title="<?php esc_attr_e( 'Drag to reorder', 'blt-events' ); ?>" aria-hidden="true"></span>
 							<input type="time" class="blt-input" name="agenda[<?php echo (int) $i; ?>][start]" value="<?php echo esc_attr( $item['start'] ?? '' ); ?>" />
 							<input type="time" class="blt-input" name="agenda[<?php echo (int) $i; ?>][end]" value="<?php echo esc_attr( $item['end'] ?? '' ); ?>" />
 							<input type="text" class="blt-input" name="agenda[<?php echo (int) $i; ?>][label]" value="<?php echo esc_attr( $item['label'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'e.g. Registration & networking', 'blt-events' ); ?>" />
@@ -801,6 +803,7 @@ class BLT_Events_Event_Metabox {
 		$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
 		?>
 		<div class="blt-presenter-row">
+			<span class="blt-drag-handle dashicons dashicons-menu" title="<?php esc_attr_e( 'Drag to reorder', 'blt-events' ); ?>" aria-hidden="true"></span>
 			<div class="blt-presenter-photo">
 				<div class="blt-presenter-photo-preview <?php echo $image_url ? 'has-image' : ''; ?>">
 					<?php if ( $image_url ) : ?>
@@ -872,7 +875,8 @@ class BLT_Events_Event_Metabox {
 		$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
 		?>
 		<div class="blt-sponsor-row">
-			<div class="blt-sponsor-thumb" title="<?php esc_attr_e( 'Drag to reorder', 'blt-events' ); ?>">
+			<span class="blt-drag-handle dashicons dashicons-menu" title="<?php esc_attr_e( 'Drag to reorder', 'blt-events' ); ?>" aria-hidden="true"></span>
+			<div class="blt-sponsor-thumb">
 				<?php if ( $image_url ) : ?>
 					<img src="<?php echo esc_url( $image_url ); ?>" alt="" />
 				<?php endif; ?>
