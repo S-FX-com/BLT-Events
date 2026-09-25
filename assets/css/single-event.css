@@ -190,7 +190,7 @@
 	border-radius: var(--blt-e-chip-radius);
 	background: var(--blt-e-chip-bg);
 	color: var(--blt-e-neutral);
-	font-size: var(--blt-e-text-s);
+	font-size: var(--blt-e-text-xs);
 	font-weight: 500;
 	line-height: 1.5;
 	text-decoration: none;
@@ -207,7 +207,7 @@
 	margin: 0;
 	color: var(--blt-e-neutral);
 	font-family: var(--blt-e-font-heading);
-	font-size: var(--blt-e-text-xxl);
+	font-size: var(--blt-e-text-xl);
 	font-weight: 700;
 	line-height: 1.15;
 }
@@ -251,7 +251,7 @@
 	margin: 0;
 	color: var(--blt-e-neutral);
 	font-family: var(--blt-e-font-heading);
-	font-size: var(--blt-e-text-xl);
+	font-size: var(--blt-e-text-l);
 	font-weight: 700;
 	line-height: 1.25;
 }
@@ -484,7 +484,7 @@
 
 .blt-event__datebox-value {
 	color: var(--blt-e-neutral);
-	font-size: var(--blt-e-text-m);
+	font-size: var(--blt-e-text-s);
 	font-weight: 700;
 	line-height: 1.25;
 }
