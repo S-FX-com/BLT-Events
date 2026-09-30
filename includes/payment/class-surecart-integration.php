@@ -25,12 +25,43 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		// Sync products when an event is saved
 		add_action( 'save_post_event', array( __CLASS__, 'sync_event_products' ), 20, 1 );
 
+		// Surface any sync failure right on the event edit screen — the site
+		// admin usually has no access to the server's error log.
+		add_action( 'admin_notices', array( __CLASS__, 'render_sync_error_notice' ) );
+
 		// Handle SureCart purchase confirmation
 		add_action( 'surecart/checkout_confirmed', array( __CLASS__, 'handle_checkout_confirmed' ), 10, 2 );
 		add_action( 'surecart/purchase_revoked', array( __CLASS__, 'handle_purchase_revoked' ), 10, 1 );
 
 		// Enqueue SureCart checkout JS
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ) );
+	}
+
+	/**
+	 * Shows the last sync_event_products() failures, if any, on the event's
+	 * own edit screen — cleared automatically the next time sync succeeds.
+	 */
+	public static function render_sync_error_notice() {
+		$screen = get_current_screen();
+		if ( ! $screen || $screen->id !== 'event' || empty( $_GET['post'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		$post_id = absint( $_GET['post'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$errors  = get_post_meta( $post_id, '_blt_sc_sync_errors', true );
+
+		if ( empty( $errors ) || ! is_array( $errors ) ) {
+			return;
+		}
+
+		echo '<div class="notice notice-error is-dismissible"><p><strong>' .
+			esc_html__( 'SureCart ticket sync failed:', 'blt-events' ) . '</strong></p><ul style="list-style: disc; margin-left: 1.5em;">';
+
+		foreach ( $errors as $error ) {
+			echo '<li>' . esc_html( $error ) . '</li>';
+		}
+
+		echo '</ul></div>';
 	}
 
 	public static function is_configured() {
@@ -74,6 +105,9 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		}
 
 		if ( ! self::is_configured() ) {
+			update_post_meta( $post_id, '_blt_sc_sync_errors', array(
+				__( 'No SureCart API token configured — add one under Settings → Payments.', 'blt-events' ),
+			) );
 			return;
 		}
 
@@ -81,40 +115,62 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 		// than one provider enabled, syncing every event would create a
 		// SureCart product for tickets that are sold somewhere else entirely.
 		if ( ! self::is_active_provider( 'surecart', $post_id ) ) {
+			delete_post_meta( $post_id, '_blt_sc_sync_errors' );
 			return;
 		}
 
 		$ticket_types_raw = get_post_meta( $post_id, '_blt_ticket_types', true );
 		$ticket_types     = is_string( $ticket_types_raw ) ? json_decode( $ticket_types_raw, true ) : $ticket_types_raw;
 
+		// Falls through even when empty (every ticket type just removed),
+		// rather than returning early, so the archiving cleanup below still
+		// runs against whatever was previously stored.
 		if ( empty( $ticket_types ) || ! is_array( $ticket_types ) ) {
-			return;
+			$ticket_types = array();
 		}
 
 		$event_title   = get_the_title( $post_id );
 		$product_ids   = get_post_meta( $post_id, '_blt_sc_product_ids', true ) ?: array();
 		$price_ids     = get_post_meta( $post_id, '_blt_sc_price_ids', true ) ?: array();
+		$sync_errors   = array();
 
 		foreach ( $ticket_types as $i => $ticket ) {
 			$ticket_name  = $ticket['name'] ?? 'Ticket';
 			$ticket_price = isset( $ticket['price'] ) ? (float) $ticket['price'] : 0;
 			$product_name = $event_title . ' — ' . $ticket_name;
 
-			// Create or get existing product
+			// A stored product ID doesn't mean the product still exists —
+			// it may have been deleted directly in SureCart, independently
+			// of this postmeta. Confirm it's still there before trusting it,
+			// otherwise every price created against it fails validation with
+			// nothing but a generic "Failed to save price".
+			if ( ! empty( $product_ids[ $i ] ) ) {
+				$existing_product = self::api_request( 'products/' . $product_ids[ $i ], array(), 'GET' );
+				if ( is_wp_error( $existing_product ) ) {
+					unset( $product_ids[ $i ], $price_ids[ $i ] );
+				}
+			}
+
+			// Create or get existing product. SureCart's API expects every
+			// resource's fields nested under a wrapper key named after it.
 			if ( empty( $product_ids[ $i ] ) ) {
 				$product = self::api_request( 'products', array(
-					'name'        => $product_name,
-					'description' => sprintf( __( 'Event ticket: %s', 'blt-events' ), $event_title ),
-					'recurring'   => false,
-					'metadata'    => array(
-						'blt_event_id'    => $post_id,
-						'blt_ticket_index' => $i,
+					'product' => array(
+						'name'        => $product_name,
+						'description' => sprintf( __( 'Event ticket: %s', 'blt-events' ), $event_title ),
+						'recurring'   => false,
+						'status'      => 'published',
+						'metadata'    => array(
+							'blt_event_id'    => $post_id,
+							'blt_ticket_index' => $i,
+						),
 					),
 				) );
 
 				if ( ! is_wp_error( $product ) && isset( $product['id'] ) ) {
 					$product_ids[ $i ] = $product['id'];
 				} else {
+					self::record_sync_error( $sync_errors, $ticket_name, $product, $post_id, $i, 'product' );
 					continue;
 				}
 			}
@@ -132,26 +188,72 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 					}
 
 					// Archive old price
-					self::api_request( 'prices/' . $price_ids[ $i ], array( 'archived' => true ), 'PATCH' );
+					self::api_request( 'prices/' . $price_ids[ $i ], array( 'price' => array( 'archived' => true ) ), 'PATCH' );
 				}
 			}
 
-			// Create new price
-			$price_data = array(
-				'product'  => $product_ids[ $i ],
-				'amount'   => $price_amount_cents,
-				'currency' => strtolower( BLT_Events_Helpers::get_currency_code() ),
-			);
-
-			$price = self::api_request( 'prices', $price_data );
+			// Create new price. No `currency` field: SureCart prices always
+			// take the connected account's own currency and reject the
+			// field outright if it's sent.
+			$price = self::api_request( 'prices', array(
+				'price' => array(
+					'product_id' => $product_ids[ $i ],
+					'amount'     => $price_amount_cents,
+				),
+			) );
 
 			if ( ! is_wp_error( $price ) && isset( $price['id'] ) ) {
 				$price_ids[ $i ] = $price['id'];
+			} else {
+				self::record_sync_error( $sync_errors, $ticket_name, $price, $post_id, $i, 'price' );
 			}
+		}
+
+		// Archive the product (and its price) for any ticket type that no
+		// longer exists — removed or trashed from the event. Archived, not
+		// deleted: past orders/registrations still reference these.
+		foreach ( $product_ids as $i => $product_id ) {
+			if ( isset( $ticket_types[ $i ] ) ) {
+				continue;
+			}
+
+			if ( ! empty( $price_ids[ $i ] ) ) {
+				self::api_request( 'prices/' . $price_ids[ $i ], array( 'price' => array( 'archived' => true ) ), 'PATCH' );
+				unset( $price_ids[ $i ] );
+			}
+
+			self::api_request( 'products/' . $product_id, array( 'product' => array( 'archived' => true ) ), 'PATCH' );
+			unset( $product_ids[ $i ] );
+		}
+
+		if ( empty( $sync_errors ) ) {
+			delete_post_meta( $post_id, '_blt_sc_sync_errors' );
+		} else {
+			update_post_meta( $post_id, '_blt_sc_sync_errors', $sync_errors );
 		}
 
 		update_post_meta( $post_id, '_blt_sc_product_ids', $product_ids );
 		update_post_meta( $post_id, '_blt_sc_price_ids', $price_ids );
+	}
+
+	/**
+	 * Record a failed product/price sync: append the user-facing message and,
+	 * under WP_DEBUG, log the same detail for anyone who does have log access.
+	 *
+	 * @param array          $sync_errors  By reference; user-facing messages shown on the edit screen.
+	 * @param string         $ticket_name  The ticket type's name.
+	 * @param mixed|WP_Error $result       The failed api_request() result.
+	 * @param int            $post_id      The event post ID.
+	 * @param int            $ticket_index Ticket's index in _blt_ticket_types.
+	 * @param string         $what         'product' or 'price', for the debug log line.
+	 */
+	private static function record_sync_error( &$sync_errors, $ticket_name, $result, $post_id, $ticket_index, $what ) {
+		$error         = is_wp_error( $result ) ? $result->get_error_message() : __( 'Unexpected response', 'blt-events' );
+		$sync_errors[] = sprintf( '%1$s: %2$s', $ticket_name, $error );
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf( 'BLT Events: SureCart %1$s sync failed for event %2$d ticket %3$d - %4$s', $what, $post_id, $ticket_index, $error ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
 	}
 
 	/**
@@ -500,6 +602,21 @@ class BLT_Events_SureCart_Integration extends BLT_Events_Payment_Provider {
 
 		if ( $code >= 400 ) {
 			$message = isset( $body['message'] ) ? $body['message'] : __( 'SureCart API error.', 'blt-events' );
+
+			// The top-level message is often a generic "Failed to save X";
+			// the actual field-level reason lives in a sibling `errors` key.
+			if ( ! empty( $body['errors'] ) ) {
+				$details = array();
+				foreach ( (array) $body['errors'] as $field => $field_errors ) {
+					foreach ( (array) $field_errors as $field_error ) {
+						$details[] = is_string( $field ) ? $field . ' ' . $field_error : $field_error;
+					}
+				}
+				if ( $details ) {
+					$message .= ' (' . implode( '; ', $details ) . ')';
+				}
+			}
+
 			return new WP_Error( 'surecart_error', $message );
 		}
 

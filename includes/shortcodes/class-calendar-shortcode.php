@@ -384,11 +384,21 @@ class BLT_Events_Calendar_Shortcode {
 			'post_status'    => 'publish',
 			'posts_per_page' => $limit,
 			'paged'          => $paged,
-			'meta_key'       => '_blt_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-			'meta_type'      => 'DATE',
-			'orderby'        => 'meta_value',
-			'order'          => 'ASC',
-			'meta_query'     => array( self::visibility_meta_query() ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+			'orderby'        => array(
+				'event_date'       => 'ASC',
+				'event_start_time' => 'ASC',
+			),
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				self::visibility_meta_query(),
+				'event_date'       => array(
+					'key'  => '_blt_event_date',
+					'type' => 'DATE',
+				),
+				'event_start_time' => array(
+					'key'     => '_blt_event_start_time',
+					'compare' => 'EXISTS',
+				),
+			),
 		);
 
 		if ( $search !== '' ) {
@@ -491,8 +501,12 @@ class BLT_Events_Calendar_Shortcode {
 		?>
 		<div class="blt-list-toolbar">
 			<div class="blt-list-nav">
-				<a class="blt-list-navbtn <?php echo $prev_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $prev_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Previous events', 'blt-events' ); ?>"<?php echo $prev_url ? '' : ' aria-disabled="true"'; ?>>&lsaquo;</a>
-				<a class="blt-list-navbtn <?php echo $next_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $next_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Next events', 'blt-events' ); ?>"<?php echo $next_url ? '' : ' aria-disabled="true"'; ?>>&rsaquo;</a>
+				<a class="blt-list-navbtn blt-list-navbtn--prev <?php echo $prev_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $prev_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Previous events', 'blt-events' ); ?>"<?php echo $prev_url ? '' : ' aria-disabled="true"'; ?>>
+					<?php echo BLT_Events_Templates::icon( 'chevron' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</a>
+				<a class="blt-list-navbtn blt-list-navbtn--next <?php echo $next_url ? '' : 'is-disabled'; ?>" href="<?php echo esc_url( $next_url ?: '#' ); ?>" aria-label="<?php esc_attr_e( 'Next events', 'blt-events' ); ?>"<?php echo $next_url ? '' : ' aria-disabled="true"'; ?>>
+					<?php echo BLT_Events_Templates::icon( 'chevron' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</a>
 				<label class="blt-list-range">
 					<span class="screen-reader-text"><?php esc_html_e( 'Event date range', 'blt-events' ); ?></span>
 					<select name="blt_range">
@@ -500,6 +514,7 @@ class BLT_Events_Calendar_Shortcode {
 						<option value="week" <?php selected( $range, 'week' ); ?>><?php esc_html_e( 'This Week', 'blt-events' ); ?></option>
 						<option value="month" <?php selected( $range, 'month' ); ?>><?php esc_html_e( 'This Month', 'blt-events' ); ?></option>
 					</select>
+					<?php echo BLT_Events_Templates::icon( 'chevron' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</label>
 				<?php if ( 'yes' === $atts['switcher'] ) : ?>
 					<?php self::render_view_menu( 'list' ); ?>

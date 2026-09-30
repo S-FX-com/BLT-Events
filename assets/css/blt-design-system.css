@@ -425,6 +425,21 @@
 	color: var(--blt-warning-fg);
 }
 
+/* Solid-fill badges (Events list table Status column) — deliberately a
+   different style from the outline/tint Type badges above: the -fg tint
+   color used as a solid background instead, white text on top. */
+.blt-badge-solid {
+	color: #fff;
+}
+
+.blt-badge-status-upcoming {
+	background: var(--blt-success-fg);
+}
+
+.blt-badge-status-expired {
+	background: var(--blt-neutral-fg);
+}
+
 /* --- Callout --- */
 .blt-ui .blt-callout {
 	display: flex;

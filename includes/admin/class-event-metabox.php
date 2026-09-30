@@ -526,17 +526,13 @@ class BLT_Events_Event_Metabox {
 	public static function render_tickets_box( $post ) {
 		$ticket_types = BLT_Events_Helpers::get_ticket_types( $post->ID );
 
-		if ( empty( $ticket_types ) && get_post_status( $post ) === 'auto-draft' ) {
-			$ticket_types = array( array( 'name' => __( 'General Admission', 'blt-events' ), 'price' => '0', 'description' => '' ) );
-		}
-
 		$roles = array();
 		foreach ( wp_roles()->get_names() as $slug => $label ) {
 			$roles[ $slug ] = translate_user_role( $label );
 		}
 		?>
 		<div class="blt-editor" id="blt-ticket-types">
-			<p class="blt-help blt-tickets-intro"><?php esc_html_e( 'Define ticket types for this event. Set price to 0 for free tickets. Sale dates control when each ticket is available for purchase.', 'blt-events' ); ?></p>
+			<p class="blt-help blt-tickets-intro"><?php esc_html_e( 'Optional — leave empty for a simple free RSVP. Add ticket types to sell paid tickets or offer several options; sale dates control when each one is available for purchase.', 'blt-events' ); ?></p>
 
 			<div id="blt-tickets-empty" class="blt-tickets-empty" <?php echo empty( $ticket_types ) ? '' : 'style="display:none;"'; ?>>
 				<span class="dashicons dashicons-groups"></span>
@@ -600,7 +596,7 @@ class BLT_Events_Event_Metabox {
 							<span class="blt-input-prefix-symbol"><?php echo esc_html( $symbol ); ?></span>
 							<input type="number" class="blt-input blt-ticket-price-input" name="ticket_types[<?php echo esc_attr( $i ); ?>][price]" value="<?php echo esc_attr( $price ); ?>" step="0.01" min="0" placeholder="0.00" />
 						</div>
-						<p class="blt-help"><?php esc_html_e( 'Set to 0 for a free ticket', 'blt-events' ); ?></p>
+						<p class="blt-help"><?php esc_html_e( 'Set to 0 to include a free option alongside paid tickets', 'blt-events' ); ?></p>
 					</div>
 					<div class="blt-field">
 						<label class="blt-label"><?php esc_html_e( 'Description', 'blt-events' ); ?></label>

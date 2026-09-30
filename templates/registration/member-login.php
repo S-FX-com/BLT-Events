@@ -16,9 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="blt-member-login" role="note">
-	<span class="blt-member-login__icon"><?php echo BLT_Events_Templates::icon( 'lock' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed SVG. ?></span>
 	<div class="blt-member-login__text">
-		<p class="blt-member-login__title"><?php esc_html_e( 'Member rates available', 'blt-events' ); ?></p>
+		<div class="blt-member-login__head">
+			<span class="blt-member-login__icon"><?php echo BLT_Events_Templates::icon( 'lock' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed SVG. ?></span>
+			<p class="blt-member-login__title"><?php esc_html_e( 'Member rates available', 'blt-events' ); ?></p>
+		</div>
 		<p class="blt-member-login__desc"><?php esc_html_e( 'Members can register at a reduced rate. Log in to see the tickets available to you.', 'blt-events' ); ?></p>
 	</div>
 	<a class="blt-member-login__btn" href="<?php echo esc_url( $login_url ); ?>"><?php esc_html_e( 'Log in for Member Rates', 'blt-events' ); ?></a>

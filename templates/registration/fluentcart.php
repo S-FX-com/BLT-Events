@@ -46,7 +46,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 
 		<div class="blt-checkout-actions">
-			<button type="button" class="blt-fc-checkout-btn blt-submit-btn" disabled>
+			<button type="button" class="blt-fc-checkout-btn blt-reg__btn blt-reg__btn--primary" disabled>
 				<?php esc_html_e( 'Proceed to Checkout', 'blt-events' ); ?>
 			</button>
 			<p class="blt-checkout-note"><?php esc_html_e( 'You will be redirected to the secure checkout page.', 'blt-events' ); ?></p>

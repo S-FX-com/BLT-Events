@@ -252,7 +252,7 @@
 	color: var(--blt-e-neutral);
 	font-family: var(--blt-e-font-heading);
 	font-size: var(--blt-e-text-l);
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.25;
 }
 
@@ -512,7 +512,7 @@
 	align-items: flex-start;
 	gap: var(--blt-e-space-xs);
 	margin: 0;
-	color: var(--blt-e-fg-soft);
+	color: var(--blt-e-fg);
 	font-size: 1.52rem;
 	line-height: 1.45;
 }
@@ -520,7 +520,6 @@
 .blt-event__info-icon {
 	display: inline-flex;
 	flex-shrink: 0;
-	margin-top: 0.1em;
 	color: var(--blt-e-neutral);
 	font-size: var(--blt-e-text-m);
 }
@@ -576,7 +575,7 @@
 	margin: 0;
 	color: var(--blt-e-neutral);
 	font-size: var(--blt-e-text-s);
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.4;
 }
 

@@ -102,15 +102,26 @@
 	--blt-e-pad: 2rem;
 
 	/* Fluid spacing scale used by the single event page. Named after the
-	   Automatic.css scale it mirrors (space-xs/s/m, content-gap, grid-gap,
-	   section-space-m), which Skeleton mode maps to directly. Copied from
-	   ACSS's own clamp curves, same reasoning as text-* and radius-* above. */
+	   Automatic.css scale it mirrors (space-xs through xxl, content-gap,
+	   grid-gap, section-space-xs through xxl, section-padding-x, gutter),
+	   which Skeleton mode maps to directly. Copied from ACSS's own clamp
+	   curves, same reasoning as text-* and radius-* above. */
 	--blt-e-space-xs: clamp(1.1256rem, 1.0500rem + 0.2099vw, 1.3333rem);
 	--blt-e-space-s: clamp(1.5004rem, 1.3187rem + 0.5047vw, 2rem);
 	--blt-e-space-m: clamp(2rem, 1.6364rem + 1.0101vw, 3rem);
+	--blt-e-space-l: clamp(2.666rem, 1.9991rem + 1.8525vw, 4.5rem);
+	--blt-e-space-xl: clamp(3.5538rem, 2.3915rem + 3.2285vw, 6.75rem);
+	--blt-e-space-xxl: clamp(4.7372rem, 2.778rem + 5.4422vw, 10.125rem);
 	--blt-e-content-gap: var(--blt-e-space-m);
 	--blt-e-grid-gap: var(--blt-e-space-m);
+	--blt-e-section-space-xs: clamp(2.2511rem, 1.1303rem + 3.1133vw, 5.3333rem);
+	--blt-e-section-space-s: clamp(3.0008rem, 1.1828rem + 5.0497vw, 8rem);
 	--blt-e-section-space-m: clamp(4rem, 1.0909rem + 8.0808vw, 12rem);
+	--blt-e-section-space-l: clamp(5.332rem, 0.7255rem + 12.796vw, 18rem);
+	--blt-e-section-space-xl: clamp(7.1076rem, -0.1261rem + 20.0934vw, 27rem);
+	--blt-e-section-space-xxl: clamp(9.4744rem, -1.8077rem + 31.339vw, 40.5rem);
+	--blt-e-section-padding-x: var(--blt-e-space-m);
+	--blt-e-gutter: var(--blt-e-space-m);
 
 	/* Fluid text sizes for the same page (text-xs/s/m/l/xl/xxl). Copied
 	   from ACSS's own --text-* clamp curves (not just approximated) so

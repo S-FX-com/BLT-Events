@@ -2,6 +2,32 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.4.6
+
+### Added
+
+- **Events admin list table**: a Status column (solid "Upcoming"/"Expired" badge), plus Event Categories, Type and Status filter dropdowns. The native "All dates" dropdown now filters — and the list sorts — by the event's own start date instead of the post's publish date, and the default sort (no column explicitly clicked) is soonest-upcoming-first.
+- **SureCart checkout**: ticket types sync to real, published SureCart products and prices automatically. A "SureCart ticket sync failed" notice on the event edit screen surfaces the actual API error for hosts without server or debug-log access. Removing or trashing a ticket type archives (never deletes) its SureCart product and price.
+- **Event Calendar List Display** restyled to match the approved Bricks Builder design: toolbar, range dropdown, search field, month headers and event rows, with full mobile layout parity.
+
+### Fixed
+
+- SureCart checkout never actually completed a sync: prices were sent unwrapped (SureCart's API requires every resource nested under a key named after it), referenced the product under the wrong field name (`product` instead of `product_id`), and included a `currency` field SureCart's API rejects outright (a price always takes the connected account's own currency).
+- A ticket type's SureCart product could be silently reused for an unrelated, later ticket type at the same list position after the original was deleted — array position was the only identity a ticket type had. Sync now verifies a stored product ID still exists before trusting it.
+- New paid ticket types created their SureCart product as a Draft, so checkout failed until it was manually published.
+- Sale Start/End Date silently auto-filled from the event's own date when there was exactly one ticket type, contradicting the "leave blank to keep on sale whenever registration is open" hint text.
+- A new event's Ticket Types box defaulted to a "General Admission, $0" row instead of the actual empty state.
+- Currency Display's "Show currency symbol" and "Show currency code" toggles could both be switched on (or both off) at once; exactly one is now enforced.
+- The Settings screen's unsaved-changes warning stayed stuck after reverting a field to its saved value, instead of clearing once the form matched its original state again.
+- Several places where a theme's own default styling silently overrode this plugin's (registration/checkout paragraph margins, ticket quantity input margin and border, a disabled checkout button's text color changing on hover) due to a specificity mismatch.
+
+### Changed
+
+- Heading weight standardized across the plugin: only `<h1>` may be 700; `<h2>`–`<h6>` are 600 (two intentional exceptions kept at 700: the calendar list's event title, the ticket selection heading).
+- SureCart/FluentCart checkout buttons now use the same `.blt-reg__btn--primary` style as the rest of the registration flow, instead of the older `.blt-submit-btn` look.
+- "Define ticket types…" help text updated to reflect that a free event no longer needs a ticket type at all (it uses the plain RSVP flow).
+- Token scale extended: `--blt-e-space-xl`/`-xxl`, `--blt-e-section-space-*`, `--blt-e-section-padding-x`, `--blt-e-gutter`, and Skeleton-mode background/border tints for the success/danger/warning status colors, for parity with the already-remapped foreground colors.
+
 ## 2.4.5
 
 ### Fixed

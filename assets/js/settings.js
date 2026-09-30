@@ -17,10 +17,16 @@
 		var $settingsForm = $('.blt-events-settings form');
 
 		if ($settingsForm.length) {
+			// Compared against the live form on every change, rather than a
+			// one-way flag flipped true on the first change: switching a
+			// field back to its original value (e.g. undoing an edit before
+			// navigating away) should also clear the warning, not just
+			// setting a new one.
+			var initialState = $settingsForm.serialize();
 			var isDirty = false;
 
 			$settingsForm.on('change input', 'input, select, textarea', function () {
-				isDirty = true;
+				isDirty = $settingsForm.serialize() !== initialState;
 			});
 
 			// A real save also unloads the page, so the flag has to clear
@@ -92,6 +98,20 @@
 			$providerRadios.on('change', syncProviderPanels);
 			$enableBoxes.on('change', syncProviderPanels);
 			syncProviderPanels();
+		}
+
+		// --- Currency display: exactly one of symbol / code, never both or neither ---
+		var $currencySymbol = $('input[name="blt_events_display_currency_sign"]');
+		var $currencyCode = $('input[name="blt_events_display_currency"]');
+
+		if ($currencySymbol.length && $currencyCode.length) {
+			$currencySymbol.on('change', function () {
+				$currencyCode.prop('checked', !this.checked);
+			});
+
+			$currencyCode.on('change', function () {
+				$currencySymbol.prop('checked', !this.checked);
+			});
 		}
 
 		// --- Appearance: live token preview ---
