@@ -34,6 +34,13 @@ class BLT_Events_Event_CPT {
         add_action( 'manage_' . self::$slug . '_posts_custom_column', array( __CLASS__, 'render_admin_column' ), 10, 2 );
         add_filter( 'manage_edit-' . self::$slug . '_sortable_columns', array( __CLASS__, 'sortable_admin_columns' ) );
         add_action( 'pre_get_posts', array( __CLASS__, 'handle_admin_column_sorting' ) );
+
+        // Admin list table filters: Event Categories, Type and Status
+        // dropdowns, and the "All dates" dropdown re-pointed at the event
+        // start date instead of the post's publish date.
+        add_action( 'restrict_manage_posts', array( __CLASS__, 'render_admin_filters' ), 10, 2 );
+        add_action( 'pre_get_posts', array( __CLASS__, 'handle_admin_filters' ) );
+        add_filter( 'months_dropdown_results', array( __CLASS__, 'months_dropdown_by_event_date' ), 10, 2 );
     }
 
     /**
@@ -188,10 +195,26 @@ class BLT_Events_Event_CPT {
         }
 
         $new['blt_event_type'] = __( 'Type', 'blt-events' );
+        $new['blt_status']     = __( 'Status', 'blt-events' );
         $new['blt_attendees']  = __( 'Attendees', 'blt-events' );
         $new['blt_event_date'] = __( 'Start Date', 'blt-events' );
 
         return $new;
+    }
+
+    /**
+     * Whether an event's start date is today or later, site time. The
+     * single source of truth for "Upcoming" across the admin list, its
+     * Status filter, and this column — matches the same >= today
+     * comparison the front-end calendar's default (non-past) listing uses.
+     *
+     * @param int $post_id Event post ID.
+     * @return bool
+     */
+    private static function is_upcoming( $post_id ) {
+        $event_date = get_post_meta( $post_id, '_blt_event_date', true );
+
+        return $event_date && $event_date >= current_time( 'Y-m-d' );
     }
 
     public static function render_admin_column( $column, $post_id ) {
@@ -212,6 +235,15 @@ class BLT_Events_Event_CPT {
                     '<span class="blt-badge %1$s">%2$s</span>',
                     esc_attr( $classes[ $type ] ?? 'blt-badge-type-in-person' ),
                     esc_html( $labels[ $type ] ?? $labels['in-person'] )
+                );
+                break;
+
+            case 'blt_status':
+                $upcoming = self::is_upcoming( $post_id );
+                printf(
+                    '<span class="blt-badge blt-badge-solid %1$s">%2$s</span>',
+                    esc_attr( $upcoming ? 'blt-badge-status-upcoming' : 'blt-badge-status-expired' ),
+                    esc_html( $upcoming ? __( 'Upcoming', 'blt-events' ) : __( 'Expired', 'blt-events' ) )
                 );
                 break;
 
@@ -261,15 +293,23 @@ class BLT_Events_Event_CPT {
     }
 
     /**
-     * Sort by event start date when the Start Date column header is clicked.
-     * Events without a date sort together at the end via NOT EXISTS.
+     * Sort by event start date: by default (no column explicitly clicked),
+     * and whenever the Start Date column header is clicked. Descending in
+     * both cases — upcoming events first (soonest future last within that
+     * group), then past events, oldest at the very end. Events without a
+     * date sort together at the end via NOT EXISTS.
      */
     public static function handle_admin_column_sorting( $query ) {
         if ( ! is_admin() || ! $query->is_main_query() ) {
             return;
         }
 
-        if ( $query->get( 'post_type' ) !== self::$slug || $query->get( 'orderby' ) !== 'blt_event_date' ) {
+        if ( $query->get( 'post_type' ) !== self::$slug ) {
+            return;
+        }
+
+        $orderby = $query->get( 'orderby' );
+        if ( '' !== $orderby && 'blt_event_date' !== $orderby ) {
             return;
         }
 
@@ -285,5 +325,184 @@ class BLT_Events_Event_CPT {
             ),
         ) );
         $query->set( 'orderby', array( 'blt_date' => $query->get( 'order' ) ?: 'DESC' ) );
+    }
+
+    /* ------------------------------------------------------------------
+     * Admin list table filters
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Event Categories, Type and Status dropdowns above the list table.
+     * Event Categories relies on WordPress's own handling of a registered
+     * taxonomy's query var (same mechanism as core's own taxonomy filters);
+     * Type and Status are handled in handle_admin_filters() below.
+     */
+    public static function render_admin_filters( $post_type, $which ) {
+        if ( self::$slug !== $post_type || 'top' !== $which ) {
+            return;
+        }
+
+        wp_dropdown_categories( array(
+            'taxonomy'        => 'event_category',
+            'name'            => 'event_category',
+            'value_field'     => 'slug',
+            'show_option_all' => __( 'All Event Categories', 'blt-events' ),
+            'hide_empty'      => false,
+            'selected'        => sanitize_key( $_GET['event_category'] ?? '' ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        ) );
+
+        $type_labels  = array(
+            'online'    => __( 'Online', 'blt-events' ),
+            'in-person' => __( 'In-Person', 'blt-events' ),
+            'hybrid'    => __( 'Hybrid', 'blt-events' ),
+        );
+        $current_type = sanitize_key( $_GET['blt_event_type_filter'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        ?>
+        <select name="blt_event_type_filter">
+            <option value=""><?php esc_html_e( 'All Types', 'blt-events' ); ?></option>
+            <?php foreach ( $type_labels as $slug => $label ) : ?>
+                <option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $current_type, $slug ); ?>><?php echo esc_html( $label ); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?php
+        $current_status = sanitize_key( $_GET['blt_status_filter'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        ?>
+        <select name="blt_status_filter">
+            <option value=""><?php esc_html_e( 'All Statuses', 'blt-events' ); ?></option>
+            <option value="upcoming" <?php selected( $current_status, 'upcoming' ); ?>><?php esc_html_e( 'Upcoming', 'blt-events' ); ?></option>
+            <option value="expired" <?php selected( $current_status, 'expired' ); ?>><?php esc_html_e( 'Expired', 'blt-events' ); ?></option>
+        </select>
+        <?php
+    }
+
+    /**
+     * Apply the Type and Status filters, and re-point the "All dates"
+     * dropdown at the event start date instead of the post's publish date.
+     * Runs after handle_admin_column_sorting() (registered first, so it
+     * fires first at the same default priority): any meta_query it already
+     * set is nested as its own AND'd group rather than overwritten, since
+     * a flat merge would incorrectly fold its internal OR relation into
+     * these filters.
+     */
+    public static function handle_admin_filters( $query ) {
+        if ( ! is_admin() || ! $query->is_main_query() ) {
+            return;
+        }
+
+        if ( $query->get( 'post_type' ) !== self::$slug ) {
+            return;
+        }
+
+        $clauses = array();
+
+        $type = sanitize_key( $_GET['blt_event_type_filter'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if ( in_array( $type, array( 'online', 'in-person', 'hybrid' ), true ) ) {
+            $clauses[] = array(
+                'key'   => '_blt_event_type',
+                'value' => $type,
+            );
+        }
+
+        // Same >= today boundary as is_upcoming() and the front-end
+        // calendar's default (non-past) listing.
+        $status = sanitize_key( $_GET['blt_status_filter'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if ( 'upcoming' === $status ) {
+            $clauses[] = array(
+                'key'     => '_blt_event_date',
+                'value'   => current_time( 'Y-m-d' ),
+                'compare' => '>=',
+                'type'    => 'DATE',
+            );
+        } elseif ( 'expired' === $status ) {
+            $clauses[] = array(
+                'key'     => '_blt_event_date',
+                'value'   => current_time( 'Y-m-d' ),
+                'compare' => '<',
+                'type'    => 'DATE',
+            );
+        }
+
+        // WordPress's own "All dates" dropdown filters post_date (the
+        // publish date); clear it and filter by the event's own start
+        // date instead. The dropdown's own options come from
+        // months_dropdown_by_event_date() below, so the two stay in sync.
+        $m = $query->get( 'm' );
+        if ( ! empty( $m ) ) {
+            $query->set( 'm', '' );
+
+            $digits = preg_replace( '/\D/', '', (string) $m );
+            $start  = null;
+
+            if ( 6 === strlen( $digits ) ) {
+                $start = substr( $digits, 0, 4 ) . '-' . substr( $digits, 4, 2 ) . '-01';
+                $end   = gmdate( 'Y-m-d', strtotime( $start . ' +1 month' ) );
+            } elseif ( 4 === strlen( $digits ) ) {
+                $start = $digits . '-01-01';
+                $end   = ( (int) $digits + 1 ) . '-01-01';
+            }
+
+            if ( $start ) {
+                $clauses[] = array(
+                    'key'     => '_blt_event_date',
+                    'value'   => array( $start, $end ),
+                    'compare' => 'BETWEEN',
+                    'type'    => 'DATE',
+                );
+            }
+        }
+
+        if ( empty( $clauses ) ) {
+            return;
+        }
+
+        $existing = (array) $query->get( 'meta_query' );
+
+        if ( ! empty( $existing ) ) {
+            $meta_query = array_merge(
+                array(
+                    'relation' => 'AND',
+                    $existing,
+                ),
+                $clauses
+            );
+        } elseif ( count( $clauses ) > 1 ) {
+            $meta_query = array_merge( array( 'relation' => 'AND' ), $clauses );
+        } else {
+            $meta_query = $clauses;
+        }
+
+        $query->set( 'meta_query', $meta_query );
+    }
+
+    /**
+     * Populate the "All dates" dropdown from event start dates instead of
+     * post publish dates.
+     *
+     * @param array  $months    Result rows with year/month columns.
+     * @param string $post_type The post type being listed.
+     * @return array
+     */
+    public static function months_dropdown_by_event_date( $months, $post_type ) {
+        if ( self::$slug !== $post_type ) {
+            return $months;
+        }
+
+        global $wpdb;
+
+        // Same as WP core's own months_dropdown_results default (a direct,
+        // uncached aggregate query) — there's no WP API for "distinct
+        // year/month across a meta value", and this only runs on the
+        // admin list screen.
+        return $wpdb->get_results( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+            "SELECT DISTINCT YEAR( pm.meta_value ) AS year, MONTH( pm.meta_value ) AS month
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_blt_event_date'
+               AND pm.meta_value != ''
+               AND p.post_type = %s
+               AND p.post_status NOT IN ( 'trash', 'auto-draft' )
+             ORDER BY pm.meta_value DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $post_type
+        ) );
     }
 }

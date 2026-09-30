@@ -58,6 +58,27 @@
 	});
 
 	/**
+	 * Ticket quantity inputs read as muted at 0 and full-strength once a
+	 * ticket is actually selected.
+	 */
+	var QTY_SELECTOR = ".blt-ticket-quantity, .sc-ticket-quantity, .blt-fc-quantity";
+
+	function syncQtyColor($input) {
+		var val = parseInt($input.val(), 10) || 0;
+		$input.toggleClass("has-qty", val > 0);
+	}
+
+	$(document).on("input change", QTY_SELECTOR, function () {
+		syncQtyColor($(this));
+	});
+
+	$(function () {
+		$(QTY_SELECTOR).each(function () {
+			syncQtyColor($(this));
+		});
+	});
+
+	/**
 	 * Handle "Other" options on dropdowns and radio groups.
 	 */
 	$(document).on("change", ".blt-field-wrap select", function () {

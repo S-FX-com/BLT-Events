@@ -16,6 +16,7 @@ package-lock.json
 .DS_Store
 Thumbs.db
 .vscode/
+.claude/
 
 # Personal, local-only files
 Ghino - Code Checklist.md

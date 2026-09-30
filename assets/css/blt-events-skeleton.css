@@ -57,8 +57,14 @@
 
 	/* --- Status --- */
 	--blt-e-success: var(--success, #059669);
+	--blt-e-success-bg: var(--success-bg, #f0fdf4);
+	--blt-e-success-border: var(--success-border, #bbf7d0);
 	--blt-e-danger: var(--danger, var(--error, #dc2626));
+	--blt-e-danger-bg: var(--danger-bg, #fef2f2);
+	--blt-e-danger-border: var(--danger-border, #fecaca);
 	--blt-e-warning: var(--warning, #92400e);
+	--blt-e-warning-bg: var(--warning-bg, #fffbeb);
+	--blt-e-warning-border: var(--warning-border, #fde68a);
 
 	/* --- Shape --- */
 	--blt-e-radius-xs: var(--radius-xs, 4px);
@@ -81,9 +87,19 @@
 	--blt-e-space-xs: var(--space-xs, clamp(1.1256rem, 1.0500rem + 0.2099vw, 1.3333rem));
 	--blt-e-space-s: var(--space-s, clamp(1.5004rem, 1.3187rem + 0.5047vw, 2rem));
 	--blt-e-space-m: var(--space-m, clamp(2rem, 1.6364rem + 1.0101vw, 3rem));
+	--blt-e-space-l: var(--space-l, clamp(2.666rem, 1.9991rem + 1.8525vw, 4.5rem));
+	--blt-e-space-xl: var(--space-xl, clamp(3.5538rem, 2.3915rem + 3.2285vw, 6.75rem));
+	--blt-e-space-xxl: var(--space-xxl, clamp(4.7372rem, 2.778rem + 5.4422vw, 10.125rem));
 	--blt-e-content-gap: var(--content-gap, var(--blt-e-space-m));
 	--blt-e-grid-gap: var(--grid-gap, var(--blt-e-space-m));
+	--blt-e-section-space-xs: var(--section-space-xs, clamp(2.2511rem, 1.1303rem + 3.1133vw, 5.3333rem));
+	--blt-e-section-space-s: var(--section-space-s, clamp(3.0008rem, 1.1828rem + 5.0497vw, 8rem));
 	--blt-e-section-space-m: var(--section-space-m, clamp(4rem, 1.0909rem + 8.0808vw, 12rem));
+	--blt-e-section-space-l: var(--section-space-l, clamp(5.332rem, 0.7255rem + 12.796vw, 18rem));
+	--blt-e-section-space-xl: var(--section-space-xl, clamp(7.1076rem, -0.1261rem + 20.0934vw, 27rem));
+	--blt-e-section-space-xxl: var(--section-space-xxl, clamp(9.4744rem, -1.8077rem + 31.339vw, 40.5rem));
+	--blt-e-section-padding-x: var(--section-padding-x, var(--blt-e-space-m));
+	--blt-e-gutter: var(--gutter, var(--blt-e-space-m));
 	--blt-e-text-xs: var(--text-xs, clamp(1.4rem, 1.3273rem + 0.2020vw, 1.6rem));
 	--blt-e-text-s: var(--text-s, clamp(1.6rem, 1.5273rem + 0.2020vw, 1.8rem));
 	--blt-e-text-m: var(--text-m, clamp(2rem, 1.8545rem + 0.4040vw, 2.4rem));
@@ -112,5 +128,12 @@
 		--blt-e-chip-bg: var(--neutral-trans-10, color-mix(in oklch, var(--blt-e-neutral) 10%, transparent));
 		--blt-e-chip-bg-hover: var(--neutral-trans-20, color-mix(in oklch, var(--blt-e-neutral) 20%, transparent));
 		--blt-e-divider: var(--black-trans-20, color-mix(in oklch, var(--black, #000) 20%, transparent));
+
+		--blt-e-success-bg: var(--success-bg, color-mix(in oklch, var(--blt-e-success) 8%, transparent));
+		--blt-e-success-border: var(--success-border, color-mix(in oklch, var(--blt-e-success) 35%, transparent));
+		--blt-e-danger-bg: var(--danger-bg, color-mix(in oklch, var(--blt-e-danger) 8%, transparent));
+		--blt-e-danger-border: var(--danger-border, color-mix(in oklch, var(--blt-e-danger) 35%, transparent));
+		--blt-e-warning-bg: var(--warning-bg, color-mix(in oklch, var(--blt-e-warning) 8%, transparent));
+		--blt-e-warning-border: var(--warning-border, color-mix(in oklch, var(--blt-e-warning) 35%, transparent));
 	}
 }

@@ -14,18 +14,27 @@
 	border-radius: var(--blt-e-radius);
 }
 
+.blt-ticket-selection h3 {
+	margin: 0 0 1rem;
+	font-size: 1.84rem;
+	font-weight: 700;
+	color: var(--blt-e-fg-strong);
+}
+
 .blt-ticket-type {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	padding: 0.875rem 0;
-	border-bottom: 1px solid var(--blt-e-border);
 	flex-wrap: wrap;
 	gap: 0.5rem;
 }
 
-.blt-ticket-type:last-of-type {
-	border-bottom: none;
+/* A divider between rows only, not after the last one: :last-of-type
+   doesn't work here since .blt-total-amount is a trailing sibling <div>,
+   which keeps the last .blt-ticket-type from ever being "last of type". */
+.blt-ticket-type + .blt-ticket-type {
+	border-top: 1px solid var(--blt-e-border);
 }
 
 .blt-ticket-name {
@@ -55,14 +64,21 @@
 	gap: 0.25rem;
 }
 
+/* The +/- glyph is drawn with ::before/::after bars, not the button's own
+   text: a font's "+"/"−" characters rarely sit dead-center in their line
+   box, so no amount of padding/line-height tuning centers them reliably
+   across browsers. The text node is still there for anyone overriding
+   this rule, just visually hidden via font-size: 0. */
 .blt-qty-btn {
+	position: relative;
 	cursor: pointer;
-	font-size: 18px;
+	padding: 0;
+	font-size: 0;
 	background: var(--blt-e-surface);
 	height: 32px;
 	width: 32px;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: 50%;
+	border-radius: var(--blt-e-radius-sm);
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -71,24 +87,61 @@
 	line-height: 1;
 }
 
+.blt-qty-btn::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 10px;
+	height: 2px;
+	background: currentColor;
+	transform: translate(-50%, -50%);
+}
+
+.blt-qty-btn.plus-btn::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 2px;
+	height: 10px;
+	background: currentColor;
+	transform: translate(-50%, -50%);
+}
+
 .blt-qty-btn:hover {
 	border-color: var(--blt-e-primary);
 	color: var(--blt-e-primary);
 }
 
-.blt-ticket-quantity,
-.sc-ticket-quantity {
+/* Tag- and ancestor-qualified (2 classes + 1 type), not just the bare
+   class: a theme's own `input[type="number"] { margin: 0 0 10px; }`
+   (1 class-tier + 1 type) otherwise outranks a plain `.sc-ticket-quantity`
+   (1 class-tier only) and its margin bleeds through. */
+.blt-registration-form input.blt-ticket-quantity,
+.blt-ticket-selection input.sc-ticket-quantity,
+.blt-ticket-selection input.blt-fc-quantity {
 	width: 48px;
+	margin: 0;
 	text-align: center;
 	border: 1px solid var(--blt-e-border-strong);
 	border-radius: var(--blt-e-radius-sm);
 	height: 32px;
 	font-size: 1.52rem;
+	color: var(--blt-e-fg-muted);
 	-moz-appearance: textfield;
 }
 
+/* Toggled by JS (blt-events.js) once the quantity goes above 0. */
+.blt-registration-form input.blt-ticket-quantity.has-qty,
+.blt-ticket-selection input.sc-ticket-quantity.has-qty,
+.blt-ticket-selection input.blt-fc-quantity.has-qty {
+	color: var(--blt-e-fg-strong);
+}
+
 .blt-ticket-quantity::-webkit-inner-spin-button,
-.sc-ticket-quantity::-webkit-inner-spin-button {
+.sc-ticket-quantity::-webkit-inner-spin-button,
+.blt-fc-quantity::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 }
 
@@ -132,21 +185,30 @@
 	gap: 0;
 }
 
+/* Explicit grid-column on each: .blt-ticket-desc is only rendered when a
+   ticket has a description, and without a fixed column, auto-placement
+   would shift every column after it (including the quantity controls)
+   one slot left whenever it's missing. */
 .blt-ticket-name {
+	grid-column: 1;
 	min-width: 0;
 	font-weight: 600;
 }
 
 .blt-ticket-desc {
+	grid-column: 2;
 	flex-basis: auto;
 	order: 0;
 }
 
 .blt-ticket-price {
+	grid-column: 3;
 	margin: 0;
 }
 
 .blt-quantity-controls {
+	grid-column: 4;
+	align-items: center;
 	justify-content: flex-end;
 }
 
@@ -316,7 +378,7 @@
 }
 
 /* Scarcity hint */
-.blt-spots-left {
+.blt-event__registration .blt-registration-form .blt-spots-left {
 	margin: -0.5rem 0 1rem;
 	font-size: 1.36rem;
 	font-weight: 600;
@@ -475,11 +537,10 @@
 
 /* --- SureCart Form --- */
 .blt-surecart-form {
-	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
 	background: var(--blt-e-surface);
-	border-radius: var(--blt-e-radius-lg);
+	border-radius: var(--blt-e-radius);
 	box-shadow: var(--blt-e-shadow);
 }
 
@@ -488,11 +549,12 @@
 	text-align: center;
 }
 
-.blt-checkout-note {
+.blt-event__registration .blt-checkout-actions .blt-checkout-note {
 	margin-top: 0.5rem;
-	color: var(--blt-e-fg-muted);
+	color: var(--blt-e-fg-soft);
 	font-size: 1.4rem;
 	font-style: italic;
+	text-wrap: balance;
 }
 
 .blt-checkout-message {
@@ -565,8 +627,19 @@
 
 .blt-registration-form h3,
 .blt-registration-form h4,
-.blt-registration-form h5,
-.blt-registration-form p {
+.blt-registration-form h5 {
+	margin: 0;
+}
+
+/* Tag-qualified with the section wrapper (2 classes), not just
+   `.blt-registration-form p` (1 class + 1 type): themes that style
+   `body.single p` directly (1 class + 2 types) outrank the weaker form,
+   so every paragraph across all four checkout variants needs the extra
+   class to reliably win. */
+.blt-event__registration .blt-registration-form p,
+.blt-event__registration .blt-registration-closed p,
+.blt-event__registration .blt-surecart-form p,
+.blt-event__registration .blt-fluentcart-form p {
 	margin: 0;
 }
 
@@ -662,7 +735,7 @@
 	outline: none;
 }
 
-.blt-registration-form .blt-reg__subtitle {
+.blt-event__registration .blt-registration-form .blt-reg__subtitle {
 	margin-top: 0.4rem;
 	font-size: 1.44rem;
 	color: var(--blt-e-fg-muted);
@@ -770,6 +843,7 @@ button.blt-reg__btn:focus-visible,
 button.blt-reg__btn:disabled {
 	background: var(--blt-e-fg-subtle);
 	border-color: var(--blt-e-fg-subtle);
+	color: var(--blt-e-on-primary);
 	cursor: not-allowed;
 }
 
@@ -806,14 +880,28 @@ button.blt-reg__btn:disabled {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.75rem 1rem;
-	padding: 1rem 1.25rem;
+	gap: var(--blt-e-space-s);
+	padding: var(--blt-e-space-s);
 	background: var(--blt-e-primary-tint);
 	border: 1px solid var(--blt-e-border);
-	border-radius: var(--blt-e-radius);
+	border-radius: var(--blt-e-radius-sm);
 	font-family: var(--blt-e-font);
 	font-size: 1.6rem;
 	line-height: 1.5;
+}
+
+.blt-member-login__text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-space-xs);
+	flex: 1 1 240px;
+	min-width: 0;
+}
+
+.blt-member-login__head {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
 }
 
 .blt-member-login__icon {
@@ -822,21 +910,16 @@ button.blt-reg__btn:disabled {
 	font-size: 2rem;
 }
 
-.blt-member-login__text {
-	flex: 1 1 240px;
-	min-width: 0;
-}
-
-.blt-member-login__title {
+.blt-member-login .blt-member-login__title {
 	margin: 0;
 	font-weight: 600;
 	color: var(--blt-e-fg);
 }
 
-.blt-member-login__desc {
-	margin: 0.15rem 0 0;
+.blt-event__registration .blt-member-login .blt-member-login__desc {
+	margin: 0;
 	font-size: 1.36rem;
-	color: var(--blt-e-fg-muted);
+	color: var(--blt-e-fg-soft);
 }
 
 .blt-member-login__btn {
@@ -945,7 +1028,6 @@ button.blt-reg__btn:disabled {
 	height: 32px;
 	border-radius: var(--blt-e-radius-sm);
 	background: var(--blt-e-surface-alt);
-	font-size: 16px;
 }
 
 .blt-ticket-table .blt-ticket-quantity {
@@ -1166,7 +1248,7 @@ a.blt-ticket-pill--members:focus {
 .blt-registration-form .blt-review-card__title {
 	color: var(--blt-e-fg-muted);
 	font-size: 1.2rem;
-	font-weight: 700;
+	font-weight: 600;
 	letter-spacing: 0.05em;
 	text-transform: uppercase;
 }
@@ -1569,7 +1651,7 @@ a.blt-ticket-pill--members:focus {
 	font-size: 1.4rem;
 }
 
-.blt-registration-form .blt-summary__secure {
+.blt-event__registration .blt-registration-form .blt-summary__secure {
 	display: flex;
 	align-items: center;
 	align-self: center;

@@ -10,8 +10,8 @@
 .blt-events-empty {
 	padding: 3rem;
 	text-align: center;
-	color: var(--blt-e-fg-muted);
-	font-size: 1.1rem;
+	color: var(--blt-e-fg-soft);
+	font-size: var(--blt-e-text-s);
 }
 
 /* --- Featured badge (list, grid, month) --- */
@@ -134,6 +134,7 @@
 .blt-event-title {
 	margin: 0 0 0.5rem;
 	font-size: 1.15rem;
+	font-weight: 600;
 	line-height: 1.3;
 }
 
@@ -296,33 +297,46 @@
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 1rem;
-	margin-bottom: 2rem;
+	gap: var(--blt-e-space-xs);
+	margin-bottom: var(--blt-e-space-m);
 }
 
 .blt-list-nav {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--blt-e-space-xs);
 }
 
 .blt-list-navbtn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 34px;
-	height: 34px;
-	font-size: 1.3rem;
-	line-height: 1;
-	color: var(--blt-e-fg);
+	width: 55px;
+	height: 55px;
+	color: var(--blt-e-neutral);
 	text-decoration: none;
-	border: 0;
+	border: 1px solid var(--blt-e-border-strong);
 	border-radius: var(--blt-e-radius-sm);
-	transition: border-color 0.15s, color 0.15s;
+	transition: background-color 0.15s;
+}
+
+.blt-list-navbtn svg {
+	width: 18px;
+	height: 18px;
+}
+
+/* The shared chevron icon points down; rotate to the direction each
+   button needs instead of keeping separate left/right icon assets. */
+.blt-list-navbtn--prev svg {
+	transform: rotate(90deg);
+}
+
+.blt-list-navbtn--next svg {
+	transform: rotate(-90deg);
 }
 
 .blt-list-navbtn:hover {
-	border-color: var(--blt-e-fg);
+	background: var(--blt-e-neutral-ultra-light);
 }
 
 .blt-list-navbtn.is-disabled {
@@ -347,31 +361,55 @@
 	position: relative;
 	display: inline-flex;
 	align-items: center;
-	height: 34px;
+	margin: 0;
+	padding-left: 0.5rem;
+	height: 55px;
 	border: 1px solid var(--blt-e-border-strong);
 	border-radius: var(--blt-e-radius-sm);
 	background: var(--blt-e-surface);
 }
 
-.blt-list-range::after {
-	content: "⌄";
-	padding: 0 0.65rem 0 0.2rem;
+/* Overlaid on the select (not a flex sibling taking its own layout
+   space): the select spans the label's full width underneath it, so a
+   click landing visually on the chevron still hits the real control
+   instead of falling through to the <label> — label-click delegation to
+   open a native <select> isn't reliable across browsers. */
+.blt-list-range svg {
+	position: absolute;
+	top: 50%;
+	right: 0.65rem;
+	transform: translateY(-50%);
+	width: 18px;
+	height: 18px;
 	pointer-events: none;
-	color: var(--blt-e-fg);
+	color: var(--blt-e-neutral);
+	stroke-width: 2.5;
 }
 
 .blt-list-range select {
+	width: 100%;
 	height: 100%;
-	padding: 0 0 0 0.8rem;
+	/* No fixed width on .blt-list-range: a native <select> already sizes
+	   to its widest <option> ("This Month"), so every value stays fully
+	   visible whichever one is selected. padding-right clears the
+	   overlaid chevron; the left inset lives on .blt-list-range itself. */
+	padding-right: 4rem;
 	border: 0;
 	outline: 0;
 	appearance: none;
 	background: transparent;
-	color: var(--blt-e-fg);
+	color: var(--blt-e-neutral);
 	font: inherit;
-	font-size: 0.85rem;
-	font-weight: 600;
+	font-size: var(--blt-e-text-s);
+	font-weight: 500;
 	cursor: pointer;
+}
+
+/* Best-effort only: Chromium and Firefox respect padding on <option> for
+   the dropdown popup itself; Safari's native popup ignores it entirely,
+   since that part of the UI is rendered outside CSS's reach there. */
+.blt-list-range select option {
+	padding: 0.5rem 0.8rem;
 }
 
 .blt-events-listing.is-loading .blt-list-results {
@@ -451,10 +489,11 @@
 	display: flex;
 	align-items: stretch;
 	gap: 0;
-	flex: 1 1 380px;
+	flex: 1 1 384px;
 	max-width: 460px;
+	height: 55px;
 	border: 1px solid var(--blt-e-border-strong);
-	border-radius: var(--blt-e-radius);
+	border-radius: var(--blt-e-radius-sm);
 	overflow: hidden;
 	background: var(--blt-e-surface);
 }
@@ -464,16 +503,23 @@
 	align-items: center;
 	gap: 0.5rem;
 	flex: 1;
+	margin: 0;
 	padding: 0 0.75rem;
 	color: var(--blt-e-fg-muted);
 }
 
+.blt-list-search-field .blt-list-icon {
+	width: 20px;
+	height: 20px;
+}
+
 .blt-list-search input[type="search"] {
 	flex: 1;
+	margin: 0;
 	border: none;
 	outline: none;
 	background: transparent;
-	font-size: 0.9rem;
+	font-size: var(--blt-e-text-s);
 	color: var(--blt-e-fg);
 	min-width: 0;
 	box-shadow: none;
@@ -482,26 +528,26 @@
 
 .blt-list-find {
 	flex-shrink: 0;
-	padding: 0 1.1rem;
+	padding: 0 var(--blt-e-space-xs);
 	border: none;
-	background: var(--blt-e-link);
-	color: var(--blt-e-surface);
-	font-size: 0.85rem;
+	background: var(--blt-e-primary);
+	color: var(--blt-e-on-primary);
+	font-size: var(--blt-e-text-s);
 	font-weight: 600;
 	cursor: pointer;
-	transition: background 0.15s;
+	transition: background-color 0.15s;
 }
 
 .blt-list-find:hover {
-	background: var(--blt-e-link-hover);
+	background: var(--blt-e-primary-hover);
 }
 
 /* Month header */
 .blt-list-month {
 	display: flex;
 	align-items: center;
-	gap: 1.5rem;
-	margin: 2rem 0 1rem;
+	gap: var(--blt-e-space-l);
+	margin: var(--blt-e-space-l) 0 var(--blt-e-space-m);
 }
 
 .blt-list-month:first-child {
@@ -510,10 +556,9 @@
 
 .blt-list-month h2 {
 	margin: 0;
-	font-size: 0.8rem;
-	font-weight: 700;
-	letter-spacing: 0.03em;
-	color: var(--blt-e-fg);
+	font-size: var(--blt-e-text-m);
+	font-weight: 600;
+	color: var(--blt-e-fg-strong);
 	white-space: nowrap;
 }
 
@@ -526,59 +571,90 @@
 
 /* Event row */
 .blt-list-event {
+	position: relative;
 	display: grid;
-	grid-template-columns: 46px minmax(0, 1fr) minmax(220px, 294px);
-	gap: clamp(1rem, 3vw, 2.5rem);
-	padding: 1.5rem 0 2rem;
-	border-bottom: 1px solid var(--blt-e-border);
+	grid-template-columns: 85px minmax(0, 1fr) minmax(0, 430px);
+	align-items: center;
+	gap: var(--blt-e-content-gap);
+	padding: var(--blt-e-space-m) var(--blt-e-space-s) var(--blt-e-space-m);
+	border: 0;
+	border-top: 1px solid var(--blt-e-border);
+	transition: background-color 0.15s ease;
+}
+
+.blt-list-event:hover {
+	background: var(--blt-e-neutral-ultra-light);
 }
 
 .blt-list-date {
-	text-align: left;
-	padding-top: 0.25rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	align-self: stretch;
+	justify-content: flex-start;
+	gap: calc(var(--blt-e-space-xs) / 2);
+	text-align: center;
 }
 
 .blt-list-day {
 	display: block;
-	font-size: 1.45rem;
+	font-size: var(--blt-e-text-l);
 	font-weight: 700;
 	line-height: 1;
-	color: var(--blt-e-fg);
+	color: var(--blt-e-neutral);
 }
 
 .blt-list-weekday {
 	display: block;
-	font-size: 0.75rem;
+	font-size: var(--blt-e-text-s);
 	font-weight: 600;
-	color: var(--blt-e-fg-muted);
-	margin-top: 0.25rem;
+	text-transform: uppercase;
+	color: var(--blt-e-neutral);
+	margin-top: 0;
+}
+
+.blt-list-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-space-xs);
+	min-width: 0;
+	height: 100%;
 }
 
 .blt-list-datetime {
-	margin: 0 0 0.4rem;
-	font-size: 0.85rem;
-	color: var(--blt-e-fg-muted);
+	margin: 0;
+	font-size: var(--blt-e-text-s);
+	color: var(--blt-e-fg-soft);
 }
 
 .blt-list-title {
-	margin: 0 0 0.6rem;
-	font-size: 1.1rem;
+	margin: 0;
+	font-size: var(--blt-e-text-l);
 	line-height: 1.35;
 	font-weight: 700;
 }
 
 .blt-list-title a {
-	color: var(--blt-e-fg);
+	color: var(--blt-e-fg-strong);
 	text-decoration: none;
 }
 
-.blt-list-title a:hover {
+/* Stretched link: the whole row reads as one click target without
+   nesting <a> inside <a> — the title link covers the row via ::after,
+   everything else (image link) sits below it in stacking order. */
+.blt-list-title a::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
+
+.blt-list-event:hover .blt-list-title a {
 	color: var(--blt-e-link);
 }
 
 .blt-list-excerpt {
-	margin: 0 0 0.75rem;
-	font-size: 0.9rem;
+	margin: 0;
+	font-size: var(--blt-e-text-m);
 	line-height: 1.5;
 	color: var(--blt-e-fg-soft);
 	display: -webkit-box;
@@ -590,21 +666,29 @@
 .blt-list-location {
 	display: flex;
 	align-items: center;
-	gap: 0.4rem;
-	margin: 0;
-	font-size: 0.85rem;
+	gap: var(--blt-e-space-xs);
+	margin: var(--blt-e-content-gap) 0 0;
+	font-size: var(--blt-e-text-s);
 	color: var(--blt-e-fg-soft);
 }
 
 .blt-list-location .blt-list-icon {
 	flex-shrink: 0;
+	color: var(--blt-e-neutral);
+}
+
+.blt-list-event:hover .blt-list-location span {
+	text-decoration: underline;
 }
 
 .blt-list-image {
+	position: relative;
+	z-index: 1;
 	display: block;
 	overflow: hidden;
-	aspect-ratio: 3 / 2;
-	border-radius: 0;
+	align-self: stretch;
+	aspect-ratio: 4 / 3;
+	border-radius: var(--blt-e-radius);
 	background: var(--blt-e-surface-sunken);
 }
 
@@ -617,22 +701,33 @@
 
 @media (max-width: 782px) {
 	.blt-list-event {
-		grid-template-columns: 48px minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr);
 	}
 
-	.blt-list-image {
-		grid-column: 1 / -1;
-		margin-top: 0.5rem;
-	}
-
-	.blt-list-image img {
-		max-height: 220px;
+	.blt-list-date {
+		display: none;
 	}
 
 	.blt-list-search {
 		flex-basis: 100%;
 		order: 3;
 		max-width: none;
+	}
+}
+
+@media (max-width: 767px) {
+	/* .blt-list-nav has no explicit width of its own, so it only ever
+	   shrinks to fit prev+next+range — giving range flex:1 had no extra
+	   space to grow into. .blt-list-search already wraps to its own row
+	   below at this point (782px rule above), so nav is alone on this
+	   row and can safely take the full width. */
+	.blt-list-nav {
+		width: 100%;
+	}
+
+	.blt-list-range {
+		flex: 1;
+		padding-left: 0;
 	}
 }
 
@@ -831,16 +926,6 @@
 }
 
 @media (max-width: 520px) {
-	.blt-list-event {
-		grid-template-columns: 42px minmax(0, 1fr);
-		gap: 0.9rem;
-		padding: 1.25rem 0;
-	}
-
-	.blt-list-image {
-		grid-column: 1 / -1;
-	}
-
 	.blt-list-month {
 		margin-top: 1.5rem;
 	}
