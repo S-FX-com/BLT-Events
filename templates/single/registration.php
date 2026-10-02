@@ -4,15 +4,16 @@
  *
  * Override: your-theme/blt-events/single/registration.php
  *
- * @var int  $event_id
- * @var bool $has_shortcode When the description already holds the form/block, nothing is added here.
+ * @var int    $event_id
+ * @var bool   $has_shortcode When the description already holds the form/block, nothing is added here.
+ * @var string $external_registration_url Set when a third-party site/microsite handles registration — nothing is added here either.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( $has_shortcode ) {
+if ( $has_shortcode || ! empty( $external_registration_url ) ) {
 	return;
 }
 ?>

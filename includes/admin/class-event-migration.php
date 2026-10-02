@@ -453,7 +453,10 @@ class BLT_Events_Event_Migration {
 			'_blt_event_all_day'     => $data['all_day'] ? '1' : '0',
 			'_blt_event_no_end_time' => $data['end_time'] ? '0' : '1',
 			'_blt_multi_day'         => $data['end_date'] && $data['end_date'] !== $data['date'] ? '1' : '0',
-			'_blt_event_days'        => $event_days ? wp_json_encode( $event_days ) : '',
+			// update_post_meta() (called in the loop below) unslashes its
+			// value, which would strip the JSON's escapes; slash it first
+			// so it round-trips intact.
+			'_blt_event_days'        => $event_days ? wp_slash( wp_json_encode( $event_days ) ) : '',
 			'_blt_event_type'        => $data['event_type'],
 			'_blt_event_venue'       => $data['venue'],
 			'_blt_event_location'    => $data['location'],
@@ -462,10 +465,10 @@ class BLT_Events_Event_Migration {
 			'_blt_event_online_url'  => $data['online_url'],
 			'_blt_capacity'          => $data['capacity'],
 			'_blt_registration_open' => ! empty( $data['tickets'] ) ? '1' : '0',
-			'_blt_ticket_types'      => wp_json_encode( $data['tickets'] ),
+			'_blt_ticket_types'      => wp_slash( wp_json_encode( $data['tickets'] ) ),
 			self::SOURCE_META        => $source,
 			self::SOURCE_ID_META     => (string) $event->ID,
-			self::ORGANIZER_META     => wp_json_encode( $data['organizer'] ),
+			self::ORGANIZER_META     => wp_slash( wp_json_encode( $data['organizer'] ) ),
 		);
 		foreach ( $meta as $key => $value ) {
 			update_post_meta( $new_id, $key, $value );

@@ -2,6 +2,25 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.4.7
+
+### Added
+
+- **External Registration URL**: an optional field on the event editor's Registration box. When set, the single event's Register button links straight to it, the plugin's own registration panel/form and price info row are hidden, and the Registration Open toggle still controls whether registration shows as open or closed.
+
+### Fixed
+
+- Names and other text containing non-ASCII characters (e.g. `Agustín`) were corrupted to escaped unicode (`Agustu00edn`) after saving an event, across every JSON-encoded meta field (event days, ticket types, agenda, presenters, group discount, meeting room, and legacy-event migration data).
+- Event Calendar List Display: the Previous/Next pagination buttons no longer go stale after an AJAX page change — Next correctly disables at the last page, and Previous now works at all.
+- The Event Category taxonomy is now publicly queryable, so it can be targeted by a theme or page builder's own taxonomy archive template.
+
+### Changed
+
+- Event Calendar List Display's date-range dropdown now defaults to "All Upcoming Events" (paged using the shortcode's own Maximum Events setting), alongside "Events Today", "Events This Week" and "Events This Month".
+- Event Calendar List Display: rows get a minimum height on larger screens, expand to full width with no reserved image column when an event has no featured image, drop the featured image's fixed aspect ratio, and use a transparent top border plus a consistent 0.3s transition on every hover-state change; the Featured chip's styling was refined, the hover underline moved from the location to the title, and the event-card hover shadow was removed.
+- "Registration Closed" notice no longer has a max-width, uses the small border-radius token, and balances its message text.
+- Single event description: bold text now reads in a neutral color, while a link inside bold text keeps its own link styling.
+
 ## 2.4.6
 
 ### Added

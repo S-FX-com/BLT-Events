@@ -300,13 +300,19 @@ class BLT_Events_Calendar_Shortcode {
 	private static function sanitize_range( $range ) {
 		$range = sanitize_key( (string) $range );
 
-		return in_array( $range, array( 'today', 'week', 'month' ), true ) ? $range : 'today';
+		return in_array( $range, array( 'all', 'today', 'week', 'month' ), true ) ? $range : 'all';
 	}
 
 	/**
-	 * Add the date-window constraint used by the list toolbar.
+	 * Add the date-window constraint used by the list toolbar. "All" adds
+	 * no upper bound — the unconditional ">= today" filter already applied
+	 * in render_list_results() is enough on its own.
 	 */
 	private static function maybe_add_range_filter( &$args, $range ) {
+		if ( 'all' === $range ) {
+			return;
+		}
+
 		$today = current_time( 'Y-m-d' );
 
 		if ( 'today' === $range ) {
@@ -352,11 +358,15 @@ class BLT_Events_Calendar_Shortcode {
 		}
 
 		$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$range  = self::sanitize_range( isset( $_POST['range'] ) ? wp_unslash( $_POST['range'] ) : 'today' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$range  = self::sanitize_range( isset( $_POST['range'] ) ? wp_unslash( $_POST['range'] ) : 'all' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$paged  = isset( $_POST['paged'] ) ? max( 1, absint( wp_unslash( $_POST['paged'] ) ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
+		$result = self::render_list_results( $atts, self::sanitize_limit( $atts ), $paged, $search, $range );
+
 		wp_send_json_success( array(
-			'html' => self::render_list_results( $atts, self::sanitize_limit( $atts ), $paged, $search, $range ),
+			'html'    => $result['html'],
+			'hasPrev' => $result['has_prev'],
+			'hasNext' => $result['has_next'],
 		) );
 	}
 
@@ -369,9 +379,10 @@ class BLT_Events_Calendar_Shortcode {
 		$limit  = self::sanitize_limit( $atts );
 		$paged  = max( 1, (int) ( $_GET['blt_paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$search = isset( $_GET['blt_search'] ) ? sanitize_text_field( wp_unslash( $_GET['blt_search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$range  = self::sanitize_range( isset( $_GET['blt_range'] ) ? wp_unslash( $_GET['blt_range'] ) : 'today' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$range  = self::sanitize_range( isset( $_GET['blt_range'] ) ? wp_unslash( $_GET['blt_range'] ) : 'all' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		return self::render_list_results( $atts, $limit, $paged, $search, $range, true );
+		$result = self::render_list_results( $atts, $limit, $paged, $search, $range, true );
+		return $result['html'];
 	}
 
 	/**
@@ -423,7 +434,7 @@ class BLT_Events_Calendar_Shortcode {
 		ob_start();
 		?>
 		<?php if ( $with_toolbar ) : ?>
-		<div class="blt-events-calendar blt-events-listing" data-category="<?php echo esc_attr( $atts['category'] ); ?>" data-featured="<?php echo esc_attr( $atts['featured'] ); ?>" data-past="<?php echo esc_attr( $atts['past'] ); ?>" data-limit="<?php echo esc_attr( $limit ); ?>">
+		<div class="blt-events-calendar blt-events-listing" data-category="<?php echo esc_attr( $atts['category'] ); ?>" data-featured="<?php echo esc_attr( $atts['featured'] ); ?>" data-past="<?php echo esc_attr( $atts['past'] ); ?>" data-limit="<?php echo esc_attr( $limit ); ?>" data-paged="<?php echo esc_attr( $paged ); ?>">
 			<?php self::render_list_toolbar( $atts, $query, $paged, $search, $range ); ?>
 			<div class="blt-list-results" aria-live="polite">
 		<?php endif; ?>
@@ -483,7 +494,12 @@ class BLT_Events_Calendar_Shortcode {
 		<?php endif; ?>
 		<?php
 		wp_reset_postdata();
-		return ob_get_clean();
+
+		return array(
+			'html'     => ob_get_clean(),
+			'has_prev' => $paged > 1,
+			'has_next' => $paged < (int) $query->max_num_pages,
+		);
 	}
 
 	/**
@@ -510,9 +526,10 @@ class BLT_Events_Calendar_Shortcode {
 				<label class="blt-list-range">
 					<span class="screen-reader-text"><?php esc_html_e( 'Event date range', 'blt-events' ); ?></span>
 					<select name="blt_range">
-						<option value="today" <?php selected( $range, 'today' ); ?>><?php esc_html_e( 'Today', 'blt-events' ); ?></option>
-						<option value="week" <?php selected( $range, 'week' ); ?>><?php esc_html_e( 'This Week', 'blt-events' ); ?></option>
-						<option value="month" <?php selected( $range, 'month' ); ?>><?php esc_html_e( 'This Month', 'blt-events' ); ?></option>
+						<option value="all" <?php selected( $range, 'all' ); ?>><?php esc_html_e( 'All Upcoming Events', 'blt-events' ); ?></option>
+						<option value="today" <?php selected( $range, 'today' ); ?>><?php esc_html_e( 'Events Today', 'blt-events' ); ?></option>
+						<option value="week" <?php selected( $range, 'week' ); ?>><?php esc_html_e( 'Events This Week', 'blt-events' ); ?></option>
+						<option value="month" <?php selected( $range, 'month' ); ?>><?php esc_html_e( 'Events This Month', 'blt-events' ); ?></option>
 					</select>
 					<?php echo BLT_Events_Templates::icon( 'chevron' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</label>

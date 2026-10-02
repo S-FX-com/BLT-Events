@@ -262,7 +262,9 @@ class BLT_Events_Meeting_Providers {
 			'join_url'   => (string) ( $result['join_url'] ?? '' ),
 			'created_at' => current_time( 'mysql' ),
 		);
-		update_post_meta( $event_id, '_blt_meeting_room', wp_json_encode( $room ) );
+		// update_post_meta() unslashes its value, which would strip the
+		// JSON's escapes; slash it first so it round-trips intact.
+		update_post_meta( $event_id, '_blt_meeting_room', wp_slash( wp_json_encode( $room ) ) );
 
 		return $room['join_url'] ?: null;
 	}

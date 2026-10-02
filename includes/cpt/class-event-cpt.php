@@ -144,6 +144,7 @@ class BLT_Events_Event_CPT {
         $args = apply_filters( 'blt_events_taxonomy_args', array(
             'hierarchical'      => true,
             'labels'            => $labels,
+            'public'            => true,
             'show_ui'           => true,
             'show_admin_column' => true,
             'query_var'         => true,

@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<article class="blt-list-event<?php echo $is_featured ? ' is-featured' : ''; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
+<article class="blt-list-event<?php echo $is_featured ? ' is-featured' : ''; ?><?php echo $thumbnail ? '' : ' blt-list-event--no-image'; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
 	<div class="blt-list-date" aria-hidden="true">
 		<span class="blt-list-day"><?php echo esc_html( $day ); ?></span>
 		<span class="blt-list-weekday"><?php echo esc_html( $weekday ); ?></span>
