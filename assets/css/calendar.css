@@ -18,11 +18,11 @@
 .blt-featured-badge {
 	display: inline-block;
 	margin-left: 0.5rem;
-	padding: 0.1rem 0.5rem;
+	padding: 0.8rem 1.6rem;
 	border-radius: var(--blt-e-radius-pill);
 	background: var(--blt-e-primary-tint);
 	color: var(--blt-e-primary);
-	font-size: 0.7rem;
+	font-size: 1.2rem;
 	font-weight: 700;
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
@@ -223,7 +223,6 @@
 }
 
 .blt-events-grid .blt-event-card:hover {
-	box-shadow: 0 8px 24px var(--blt-e-border-subtle);
 	transform: translateY(-2px);
 }
 
@@ -317,7 +316,7 @@
 	text-decoration: none;
 	border: 1px solid var(--blt-e-border-strong);
 	border-radius: var(--blt-e-radius-sm);
-	transition: background-color 0.15s;
+	transition: all 0.3s ease;
 }
 
 .blt-list-navbtn svg {
@@ -535,7 +534,7 @@
 	font-size: var(--blt-e-text-s);
 	font-weight: 600;
 	cursor: pointer;
-	transition: background-color 0.15s;
+	transition: all 0.3s ease;
 }
 
 .blt-list-find:hover {
@@ -576,14 +575,22 @@
 	grid-template-columns: 85px minmax(0, 1fr) minmax(0, 430px);
 	align-items: center;
 	gap: var(--blt-e-content-gap);
+	min-height: 25rem;
 	padding: var(--blt-e-space-m) var(--blt-e-space-s) var(--blt-e-space-m);
 	border: 0;
 	border-top: 1px solid var(--blt-e-border);
-	transition: background-color 0.15s ease;
+	transition: all 0.3s ease;
+}
+
+/* No featured image: drop the reserved image column entirely instead of
+   leaving its width empty — the body column expands to fill the row. */
+.blt-list-event--no-image {
+	grid-template-columns: 85px minmax(0, 1fr);
 }
 
 .blt-list-event:hover {
 	background: var(--blt-e-neutral-ultra-light);
+	border-top-color: transparent;
 }
 
 .blt-list-date {
@@ -637,6 +644,7 @@
 .blt-list-title a {
 	color: var(--blt-e-fg-strong);
 	text-decoration: none;
+	transition: all 0.3s ease;
 }
 
 /* Stretched link: the whole row reads as one click target without
@@ -650,6 +658,7 @@
 
 .blt-list-event:hover .blt-list-title a {
 	color: var(--blt-e-link);
+	text-decoration: underline;
 }
 
 .blt-list-excerpt {
@@ -677,17 +686,12 @@
 	color: var(--blt-e-neutral);
 }
 
-.blt-list-event:hover .blt-list-location span {
-	text-decoration: underline;
-}
-
 .blt-list-image {
 	position: relative;
 	z-index: 1;
 	display: block;
 	overflow: hidden;
 	align-self: stretch;
-	aspect-ratio: 4 / 3;
 	border-radius: var(--blt-e-radius);
 	background: var(--blt-e-surface-sunken);
 }
@@ -712,6 +716,10 @@
 		flex-basis: 100%;
 		order: 3;
 		max-width: none;
+	}
+
+	.blt-list-event {
+		min-height: auto;
 	}
 }
 

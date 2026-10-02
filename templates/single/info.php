@@ -13,6 +13,7 @@
  * @var string $address
  * @var bool   $has_paid
  * @var string $price_from    Formatted lowest paid price.
+ * @var string $external_registration_url Set when a third-party site/microsite handles registration — the price row is hidden, since it reflects this plugin's own ticket types/payment processor, not whatever the external site actually charges.
  * @var bool   $show_calendar
  * @var string $ics_url
  * @var string $google_url
@@ -46,22 +47,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</li>
 	<?php endif; ?>
 
-	<li class="blt-event__info-item blt-event__info-item--price">
-		<span class="blt-event__info-icon"><?php echo BLT_Events_Templates::icon( 'tag' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed SVG. ?></span>
-		<span class="blt-event__info-text">
-			<?php
-			if ( $has_paid && $price_from ) {
-				printf(
-					/* translators: %s: lowest ticket price, formatted. */
-					esc_html__( 'From %s', 'blt-events' ),
-					'<strong class="blt-event__price">' . esc_html( $price_from ) . '</strong>'
-				);
-			} else {
-				echo '<strong class="blt-event__price">' . esc_html__( 'Free', 'blt-events' ) . '</strong>';
-			}
-			?>
-		</span>
-	</li>
+	<?php if ( empty( $external_registration_url ) ) : ?>
+		<li class="blt-event__info-item blt-event__info-item--price">
+			<span class="blt-event__info-icon"><?php echo BLT_Events_Templates::icon( 'tag' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed SVG. ?></span>
+			<span class="blt-event__info-text">
+				<?php
+				if ( $has_paid && $price_from ) {
+					printf(
+						/* translators: %s: lowest ticket price, formatted. */
+						esc_html__( 'From %s', 'blt-events' ),
+						'<strong class="blt-event__price">' . esc_html( $price_from ) . '</strong>'
+					);
+				} else {
+					echo '<strong class="blt-event__price">' . esc_html__( 'Free', 'blt-events' ) . '</strong>';
+				}
+				?>
+			</span>
+		</li>
+	<?php endif; ?>
 
 	<?php if ( $show_calendar && '' !== $date_label ) : ?>
 		<li class="blt-event__info-item blt-event__info-item--calendar">

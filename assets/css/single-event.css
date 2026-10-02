@@ -225,6 +225,24 @@
 	margin-bottom: 0;
 }
 
+/* Plain bold text reads as neutral/body-strength emphasis; a link kept
+   its own color regardless, since color is inherited and a theme's direct
+   `body a:where(...) { color: ... }` rule on the <a> itself always wins
+   over an inherited value from this <strong>/<b> wrapper. */
+.blt-event__description strong,
+.blt-event__description b {
+	color: var(--blt-e-neutral);
+}
+
+/* A theme's own `body a:where(...) { font-weight: ... }` sets font-weight
+   directly on every link (not just inherited), which otherwise overrides
+   the bold a <strong>/<b> wrapper would normally pass down to a link
+   nested inside it. */
+.blt-event__description strong a,
+.blt-event__description b a {
+	font-weight: inherit;
+}
+
 /* --- Sections (agenda, sponsors, location, registration) --- */
 /* All four sides set as physical longhands (not just padding-top): these
    are <section> elements, and frameworks like ACSS style bare <section>

@@ -889,14 +889,15 @@ class BLT_Events_Event_Metabox {
 	 * ---------------------------------------------------------------- */
 
 	public static function render_registration_config_box( $post ) {
-		$prefix            = BLT_EVENTS_PREFIX;
-		$capacity          = (int) get_post_meta( $post->ID, $prefix . 'capacity', true );
-		$fieldset_id       = get_post_meta( $post->ID, $prefix . 'fieldset_id', true );
-		$registration_open = get_post_meta( $post->ID, $prefix . 'registration_open', true ) === '1';
-		$cutoff_date       = get_post_meta( $post->ID, $prefix . 'registration_cutoff_date', true );
-		$cutoff_time       = get_post_meta( $post->ID, $prefix . 'registration_cutoff_time', true );
-		$require_approval  = get_post_meta( $post->ID, $prefix . 'require_approval', true ) === '1';
-		$group_discount    = get_post_meta( $post->ID, $prefix . 'group_discount', true );
+		$prefix                    = BLT_EVENTS_PREFIX;
+		$capacity                  = (int) get_post_meta( $post->ID, $prefix . 'capacity', true );
+		$fieldset_id               = get_post_meta( $post->ID, $prefix . 'fieldset_id', true );
+		$external_registration_url = get_post_meta( $post->ID, $prefix . 'external_registration_url', true );
+		$registration_open         = get_post_meta( $post->ID, $prefix . 'registration_open', true ) === '1';
+		$cutoff_date               = get_post_meta( $post->ID, $prefix . 'registration_cutoff_date', true );
+		$cutoff_time               = get_post_meta( $post->ID, $prefix . 'registration_cutoff_time', true );
+		$require_approval          = get_post_meta( $post->ID, $prefix . 'require_approval', true ) === '1';
+		$group_discount            = get_post_meta( $post->ID, $prefix . 'group_discount', true );
 
 		// New events collect every attendee's details by default; existing
 		// events keep whatever they had (missing meta means off).
@@ -931,6 +932,14 @@ class BLT_Events_Event_Metabox {
 			?>
 
 			<div id="blt-reg-config-fields" <?php echo $registration_open ? '' : 'style="display:none;"'; ?>>
+				<div class="blt-config-section">
+					<div class="blt-field">
+						<label class="blt-label" for="external_registration_url"><?php esc_html_e( 'External Registration URL', 'blt-events' ); ?></label>
+						<input type="url" class="blt-input" id="external_registration_url" name="external_registration_url" value="<?php echo esc_attr( $external_registration_url ); ?>" placeholder="https://example.com/register" />
+						<p class="blt-help"><?php esc_html_e( 'If a separate microsite or third-party platform handles registration for this event, enter its URL here. The Register button will link straight to it, and this event\'s built-in registration section will be hidden. Leave blank to use this plugin\'s own registration form.', 'blt-events' ); ?></p>
+					</div>
+				</div>
+
 				<div class="blt-config-section">
 					<div class="blt-config-section-head">
 						<span class="blt-label"><?php esc_html_e( 'Capacity', 'blt-events' ); ?></span>
@@ -1180,7 +1189,9 @@ class BLT_Events_Event_Metabox {
 			$last  = $days[ count( $days ) - 1 ];
 
 			update_post_meta( $post_id, $prefix . 'multi_day', '1' );
-			update_post_meta( $post_id, $prefix . 'event_days', wp_json_encode( $days ) );
+			// update_post_meta() unslashes its value, which would strip the
+			// JSON's escapes; slash it first so it round-trips intact.
+			update_post_meta( $post_id, $prefix . 'event_days', wp_slash( wp_json_encode( $days ) ) );
 			update_post_meta( $post_id, $prefix . 'event_date', $first['date'] );
 			update_post_meta( $post_id, $prefix . 'event_end_date', $last['date'] !== $first['date'] ? $last['date'] : '' );
 			update_post_meta( $post_id, $prefix . 'event_start_time', $first['start'] );
@@ -1276,7 +1287,9 @@ class BLT_Events_Event_Metabox {
 				);
 			}
 		}
-		update_post_meta( $post_id, $prefix . 'ticket_types', wp_json_encode( $ticket_types ) );
+		// update_post_meta() unslashes its value, which would strip the
+		// JSON's escapes; slash it first so it round-trips intact.
+		update_post_meta( $post_id, $prefix . 'ticket_types', wp_slash( wp_json_encode( $ticket_types ) ) );
 
 		// Agenda / schedule
 		update_post_meta( $post_id, $prefix . 'agenda_enabled', isset( $_POST['agenda_enabled'] ) ? '1' : '0' );
@@ -1302,7 +1315,9 @@ class BLT_Events_Event_Metabox {
 				);
 			}
 		}
-		update_post_meta( $post_id, $prefix . 'agenda', wp_json_encode( $agenda ) );
+		// update_post_meta() unslashes its value, which would strip the
+		// JSON's escapes; slash it first so it round-trips intact.
+		update_post_meta( $post_id, $prefix . 'agenda', wp_slash( wp_json_encode( $agenda ) ) );
 
 		// Presenters
 		update_post_meta( $post_id, $prefix . 'presenters_enabled', isset( $_POST['presenters_enabled'] ) ? '1' : '0' );
@@ -1329,7 +1344,9 @@ class BLT_Events_Event_Metabox {
 					'image_id' => absint( $row['image_id'] ?? 0 ),
 				);
 			}
-			update_post_meta( $post_id, $prefix . 'presenters', wp_json_encode( $presenters ) );
+			// update_post_meta() unslashes its value, which would strip the
+			// JSON's escapes; slash it first so it round-trips intact.
+			update_post_meta( $post_id, $prefix . 'presenters', wp_slash( wp_json_encode( $presenters ) ) );
 		}
 
 		// Sponsors. Only when the box was on the form, so a screen without it
@@ -1361,6 +1378,7 @@ class BLT_Events_Event_Metabox {
 
 		// Registration config
 		update_post_meta( $post_id, $prefix . 'registration_open', isset( $_POST['registration_open'] ) ? '1' : '0' );
+		update_post_meta( $post_id, $prefix . 'external_registration_url', esc_url_raw( $_POST['external_registration_url'] ?? '' ) );
 
 		$capacity = isset( $_POST['capacity_unlimited'] ) ? 0 : absint( $_POST['capacity'] ?? 0 );
 		update_post_meta( $post_id, $prefix . 'capacity', $capacity );
@@ -1399,7 +1417,9 @@ class BLT_Events_Event_Metabox {
 			'type'          => $gd_type,
 			'amount'        => $gd_amount,
 		);
-		update_post_meta( $post_id, $prefix . 'group_discount', wp_json_encode( $group_discount ) );
+		// update_post_meta() unslashes its value, which would strip the
+		// JSON's escapes; slash it first so it round-trips intact.
+		update_post_meta( $post_id, $prefix . 'group_discount', wp_slash( wp_json_encode( $group_discount ) ) );
 
 		// Additional options
 		update_post_meta( $post_id, $prefix . 'featured', isset( $_POST['event_featured'] ) ? '1' : '0' );

@@ -575,11 +575,10 @@
 
 /* --- Registration Closed / Sold Out --- */
 .blt-registration-closed {
-	max-width: 640px;
 	margin: 2rem auto;
 	padding: 2rem;
 	background: var(--blt-e-surface-alt);
-	border-radius: var(--blt-e-radius-lg);
+	border-radius: var(--blt-e-radius-sm);
 	text-align: center;
 	color: var(--blt-e-fg-muted);
 }
@@ -641,6 +640,10 @@
 .blt-event__registration .blt-surecart-form p,
 .blt-event__registration .blt-fluentcart-form p {
 	margin: 0;
+}
+
+.blt-event__registration .blt-registration-closed p {
+	text-wrap: balance;
 }
 
 .blt-icon {

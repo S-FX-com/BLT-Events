@@ -241,9 +241,10 @@ class BLT_Events_Single_Event {
 
 		$terms = get_the_terms( $event_id, 'event_category' );
 
-		$has_shortcode = has_shortcode( $event->post_content, 'blt_event_registration' ) || has_block( 'blt-events/registration-form', $event );
-		$show_featured = self::show_featured( $event_id ) && has_post_thumbnail( $event_id );
-		$featured      = has_post_thumbnail( $event_id ) ? get_the_post_thumbnail( $event_id, 'large', array( 'class' => 'blt-event__featured-img' ) ) : '';
+		$has_shortcode             = has_shortcode( $event->post_content, 'blt_event_registration' ) || has_block( 'blt-events/registration-form', $event );
+		$external_registration_url = get_post_meta( $event_id, '_blt_external_registration_url', true );
+		$show_featured             = self::show_featured( $event_id ) && has_post_thumbnail( $event_id );
+		$featured                  = has_post_thumbnail( $event_id ) ? get_the_post_thumbnail( $event_id, 'large', array( 'class' => 'blt-event__featured-img' ) ) : '';
 
 		$data = array(
 			'event'              => $event,
@@ -273,13 +274,18 @@ class BLT_Events_Single_Event {
 			'agenda'             => self::agenda_items( $event_id ),
 			'sponsors'           => self::sponsor_items( $event_id ),
 			'has_shortcode'      => $has_shortcode,
+			'external_registration_url' => $external_registration_url,
 			'registration_open'  => get_post_meta( $event_id, '_blt_registration_open', true ) === '1',
 			'has_paid'           => $range['has_paid'],
 			'price_from'         => $range['has_paid'] ? BLT_Events_Helpers::format_price( self::lowest_paid_price( $event_id ) ) : '',
 			'cta_label'          => apply_filters( 'blt_events_cta_label', $range['has_paid'] ? __( 'Buy tickets', 'blt-events' ) : __( 'Register', 'blt-events' ), $event_id, $range ),
-			// When the form sits inside the description there is no
-			// registration panel, so point at the form itself.
-			'cta_url'            => $has_shortcode ? '#blt-registration-' . $event_id : '#blt-event-registration',
+			// An external registration site always wins: no on-page panel or
+			// shortcode-embedded form exists to jump to. Otherwise, when the
+			// form sits inside the description there is no registration
+			// panel, so point at the form itself.
+			'cta_url'            => $external_registration_url
+				? $external_registration_url
+				: ( $has_shortcode ? '#blt-registration-' . $event_id : '#blt-event-registration' ),
 			'spots_left'         => BLT_Events_Helpers::spots_left( $event_id ),
 			'is_sold_out'        => BLT_Events_Helpers::is_sold_out( $event_id ),
 			'address'            => BLT_Events_Helpers::get_event_address( $event_id ),
