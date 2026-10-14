@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: BLT Events 2.4.7\n"
 "Report-Msgid-Bugs-To: https://github.com/S-FX-com/BLT-Events/issues\n"
-"POT-Creation-Date: 2026-10-14 18:02+0000\n"
+"POT-Creation-Date: 2026-10-14 18:05+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -689,7 +689,7 @@ msgstr ""
 #: includes/admin/class-event-migration.php:122
 #: includes/admin/class-setup.php:262
 #: includes/frontend/class-blocks.php:36
-#: includes/frontend/class-dynamic-tags.php:133
+#: includes/frontend/class-dynamic-tags.php:134
 msgid "BLT Events"
 msgstr ""
 
@@ -1258,7 +1258,7 @@ msgstr ""
 #: includes/class-helpers.php:525
 #: includes/cpt/class-event-cpt.php:226
 #: includes/cpt/class-event-cpt.php:356
-#: includes/frontend/class-dynamic-tags.php:109
+#: includes/frontend/class-dynamic-tags.php:111
 #: includes/shortcodes/class-calendar-shortcode.php:665
 #: includes/shortcodes/class-registration-shortcode.php:432
 msgid "Online"
@@ -1284,7 +1284,7 @@ msgstr ""
 #: includes/admin/class-registrations-list.php:538
 #: includes/cpt/class-event-cpt.php:228
 #: includes/cpt/class-event-cpt.php:358
-#: includes/frontend/class-dynamic-tags.php:112
+#: includes/frontend/class-dynamic-tags.php:114
 #: includes/shortcodes/class-calendar-shortcode.php:667
 msgid "Hybrid"
 msgstr ""
@@ -3433,11 +3433,11 @@ msgstr ""
 msgid "The registration form for one event: tickets, attendee details, coupons and payment."
 msgstr ""
 
-#: includes/frontend/class-dynamic-tags.php:48
+#: includes/frontend/class-dynamic-tags.php:50
 msgid "Event start date"
 msgstr ""
 
-#: includes/frontend/class-dynamic-tags.php:49
+#: includes/frontend/class-dynamic-tags.php:51
 msgid "Event location"
 msgstr ""
 

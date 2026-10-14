@@ -13,6 +13,8 @@
  * event, or the event a query loop is on) and print nothing on any other post
  * type. The tag list and the value rules are builder-agnostic; each builder is
  * a thin adapter around them. Bricks is wired up below.
+ *
+ * @package BLT_Events
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -33,9 +35,9 @@ class BLT_Events_Dynamic_Tags {
 		// Bricks. Registered unconditionally: the theme loads after plugins, so
 		// BRICKS_VERSION is not defined yet, and the filters never fire without it.
 		add_filter( 'bricks/dynamic_tags_list', array( __CLASS__, 'bricks_tags_list' ) );
-		add_filter( 'bricks/dynamic_data/render_tag', array( __CLASS__, 'bricks_render_tag' ), 20, 3 );
-		add_filter( 'bricks/dynamic_data/render_content', array( __CLASS__, 'bricks_render_content' ), 20, 3 );
-		add_filter( 'bricks/frontend/render_data', array( __CLASS__, 'bricks_render_content' ), 20, 3 );
+		add_filter( 'bricks/dynamic_data/render_tag', array( __CLASS__, 'bricks_render_tag' ), 20, 2 );
+		add_filter( 'bricks/dynamic_data/render_content', array( __CLASS__, 'bricks_render_content' ), 20, 2 );
+		add_filter( 'bricks/frontend/render_data', array( __CLASS__, 'bricks_render_content' ), 20, 2 );
 	}
 
 	/**
@@ -103,7 +105,7 @@ class BLT_Events_Dynamic_Tags {
 	 * @return string
 	 */
 	public static function event_location( $event_id ) {
-		$type = get_post_meta( $event_id, '_blt_event_type', true ) ?: 'in-person';
+		$type = (string) get_post_meta( $event_id, '_blt_event_type', true );
 
 		if ( 'online' === $type ) {
 			return __( 'Online', 'blt-events' );
@@ -112,12 +114,11 @@ class BLT_Events_Dynamic_Tags {
 			return __( 'Hybrid', 'blt-events' );
 		}
 
+		// In-person, and events saved before a type existed.
 		return BLT_Events_Helpers::get_event_address( $event_id );
 	}
 
-	/* --------------------------------------------------------------------
-	 * Bricks
-	 * ------------------------------------------------------------------ */
+	// Bricks adapter.
 
 	/**
 	 * Add the tags to Bricks' dynamic data picker.
@@ -143,10 +144,9 @@ class BLT_Events_Dynamic_Tags {
 	 *
 	 * @param string $tag     Tag including braces, e.g. {blt_event_date}.
 	 * @param mixed  $post    The post being rendered.
-	 * @param string $context text | link | image | video | media.
 	 * @return mixed
 	 */
-	public static function bricks_render_tag( $tag, $post = null, $context = 'text' ) {
+	public static function bricks_render_tag( $tag, $post = null ) {
 		if ( ! is_string( $tag ) ) {
 			return $tag;
 		}
@@ -161,10 +161,9 @@ class BLT_Events_Dynamic_Tags {
 	 *
 	 * @param string $content Content that may hold tags.
 	 * @param mixed  $post    The post being rendered.
-	 * @param string $context text | link | image | video | media.
 	 * @return string
 	 */
-	public static function bricks_render_content( $content, $post = null, $context = 'text' ) {
+	public static function bricks_render_content( $content, $post = null ) {
 		if ( ! is_string( $content ) ) {
 			return $content;
 		}
@@ -173,7 +172,7 @@ class BLT_Events_Dynamic_Tags {
 			$token = '{' . $name . '}';
 
 			if ( false !== strpos( $content, $token ) ) {
-				$content = str_replace( $token, self::bricks_render_tag( $token, $post, $context ), $content );
+				$content = str_replace( $token, self::bricks_render_tag( $token, $post ), $content );
 			}
 		}
 
