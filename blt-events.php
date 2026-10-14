@@ -137,6 +137,7 @@ spl_autoload_register( function ( $class ) {
 		'schema'                   => 'includes/frontend/class-schema.php',
 		'archive'                  => 'includes/frontend/class-archive.php',
 		'blocks'                   => 'includes/frontend/class-blocks.php',
+		'dynamic-tags'             => 'includes/frontend/class-dynamic-tags.php',
 		// REST API
 		'rest-registrations'       => 'includes/api/class-rest-registrations.php',
 		'rest-fieldsets'           => 'includes/api/class-rest-fieldsets.php',
@@ -208,10 +209,11 @@ function blt_events_init() {
 		BLT_Events_Event_Migration::init();
 	}
 
-	// Shortcodes and blocks
+	// Shortcodes, blocks and page builder dynamic tags
 	BLT_Events_Registration_Shortcode::init();
 	BLT_Events_Calendar_Shortcode::init();
 	BLT_Events_Blocks::init();
+	BLT_Events_Dynamic_Tags::init();
 
 	// Front-end styling mode and design tokens (registers the layer every
 	// other plugin stylesheet depends on, so it boots before them).
