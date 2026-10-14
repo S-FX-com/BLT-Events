@@ -87,6 +87,7 @@ Every action and filter the plugin exposes, grouped by area. Parameters are list
 | `blt_events_price_label` | filter | `$label, $range, $event_id` | Price text on cards |
 | `blt_events_event_date_label` / `blt_events_event_time_label` | filter | `$label, $event_id` | Formatted date/time labels |
 | `blt_events_format_price` | filter | `$string, $amount, $include_total` | Formatted price |
+| `blt_events_dynamic_tag_value` | filter | `$value, $name, $event_id` | Text a builder dynamic tag (`blt_event_date`, `blt_event_location`) prints for an event; escaped afterwards |
 | `blt_events_registration_html` | filter | `$html, $event` | Complete registration block |
 | `blt_events_registration_form_args` | filter | `$args, $event_id` | Data for the form template |
 | `blt_events_registration_ticket_rows` | filter | `$rows, $event_id` | Tickets listed on the Registration step, each with a `state` (`available`, `members`, `ended`, `upcoming`); unset rows to hide them |

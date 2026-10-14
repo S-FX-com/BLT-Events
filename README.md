@@ -50,6 +50,17 @@ Renders the form for one event. Inside an event page the ID is optional.
 
 Settings > Shortcodes & Blocks has a builder that composes the shortcode for you.
 
+### Page builder dynamic tags
+
+For Bricks Builder, the dynamic data picker has a **BLT Events** group. Use the tags in any text, heading or rich-text element on an event template, or inside a query loop over events:
+
+| Tag | Prints |
+|---|---|
+| `{blt_event_date}` | The event's start date, in the date format set under Settings > General |
+| `{blt_event_location}` | The venue and street address of an in-person event. Online and hybrid events print just `Online` or `Hybrid`, so a long join URL never overflows the element |
+
+Both print nothing on a post that isn't an event. The text can be changed with the `blt_events_dynamic_tag_value` filter.
+
 ## Customising
 
 ### Settings

@@ -2,6 +2,12 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- **Page builder dynamic tags** (Bricks Builder): `{blt_event_date}` prints the event's start date, and `{blt_event_location}` prints the full address of an in-person event but only `Online` or `Hybrid` for those event types, so a long join URL can't overflow the element. Both appear under a **BLT Events** group in the dynamic data picker.
+
 ## 2.4.7
 
 ### Added
