@@ -659,6 +659,25 @@ a.blt-event__presenter-name:focus-visible {
 	font-size: 1.4rem;
 }
 
+/* A bio makes the row tall; keep the photo at the top instead of centred. */
+.blt-event__presenter:has(.blt-event__presenter-bio) {
+	align-items: flex-start;
+}
+
+/* Clamped so a long bio doesn't stretch the sticky card; the full text
+   stays in the markup for screen readers. */
+.blt-event__presenter-bio {
+	display: -webkit-box;
+	margin: 0;
+	overflow: hidden;
+	color: var(--blt-e-neutral-semi-light);
+	font-size: 1.36rem;
+	line-height: 1.5;
+	white-space: pre-line;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+}
+
 /* Register button */
 .blt-event__cta {
 	display: flex;
@@ -709,8 +728,7 @@ a.blt-event__presenter-name:focus-visible {
 	font-weight: 700;
 }
 
-.blt-event__datebox-time,
-.blt-event__presenter-bio {
+.blt-event__datebox-time {
 	margin: 0;
 	color: var(--blt-event-muted);
 	font-size: 1.36rem;

@@ -1,7 +1,7 @@
 <?php
 /**
  * Speakers (the event's presenters) inside the event card: a round photo,
- * name and role for each. Rendered from the blt_events_single_sidebar
+ * name, role and bio for each. Rendered from the blt_events_single_sidebar
  * action by BLT_Events_Presenters::render_sidebar().
  *
  * Override: your-theme/blt-events/single/presenters.php
@@ -37,6 +37,9 @@ if ( empty( $presenters ) ) {
 					<?php endif; ?>
 					<?php if ( ! empty( $p['role'] ) ) : ?>
 						<span class="blt-event__presenter-role"><?php echo esc_html( $p['role'] ); ?></span>
+					<?php endif; ?>
+					<?php if ( ! empty( $p['bio'] ) ) : ?>
+						<span class="blt-event__presenter-bio"><?php echo esc_html( $p['bio'] ); ?></span>
 					<?php endif; ?>
 				</span>
 			</li>
