@@ -2,6 +2,12 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.4.11
+
+### Added
+
+- **Read full bio**: when a speaker's bio is cut off by the four-line clamp in the event card, a "Read full bio" link appears under it and opens the whole bio in a dialog with the speaker's photo, name and role. Short bios that fit don't show the link.
+
 ## 2.4.9
 
 ### Fixed

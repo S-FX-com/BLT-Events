@@ -678,6 +678,36 @@ a.blt-event__presenter-name:focus-visible {
 	-webkit-box-orient: vertical;
 }
 
+/* Fallback when the browser has no <dialog>: the bio unclamps in place. */
+.blt-event__presenter-bio.is-expanded {
+	display: block;
+	overflow: visible;
+	-webkit-line-clamp: unset;
+}
+
+.blt-event__presenter-more {
+	align-self: flex-start;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--blt-event-link);
+	font: inherit;
+	font-size: 1.36rem;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	cursor: pointer;
+}
+
+.blt-event__presenter-more[hidden] {
+	display: none;
+}
+
+.blt-event__presenter-more:focus-visible {
+	outline: 2px solid var(--blt-event-link);
+	outline-offset: 2px;
+}
+
 /* Register button */
 .blt-event__cta {
 	display: flex;
@@ -853,7 +883,8 @@ a.blt-event__presenter-name:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.blt-lightbox[open] {
+	.blt-lightbox[open],
+	.blt-bio-dialog[open] {
 		animation: none;
 	}
 
@@ -931,4 +962,101 @@ a.blt-event__presenter-name:focus-visible {
 
 .blt-lightbox__next {
 	right: 1rem;
+}
+
+/* --- Speaker bio dialog (shares the lightbox's close button) --- */
+.blt-bio-dialog {
+	box-sizing: border-box;
+	width: min(92vw, 640px);
+	max-height: 85vh;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	border-radius: var(--blt-e-radius);
+	background: var(--blt-e-surface);
+	box-shadow: var(--blt-e-shadow-lg);
+	color: var(--blt-e-neutral);
+	font-family: var(--blt-e-font);
+}
+
+/* Browsers without <dialog> would otherwise show every bio inline. */
+.blt-bio-dialog:not([open]) {
+	display: none;
+}
+
+.blt-bio-dialog[open] {
+	display: flex;
+	flex-direction: column;
+	animation: blt-lightbox-fade 0.2s ease;
+}
+
+.blt-bio-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.7);
+}
+
+/* The padding lives here so a click on the dialog itself is a backdrop click. */
+.blt-bio-dialog__inner {
+	display: flex;
+	flex-direction: column;
+	gap: var(--blt-e-space-s);
+	min-height: 0;
+	padding: var(--blt-e-space-m);
+	overflow-y: auto;
+}
+
+.blt-bio-dialog__head {
+	display: flex;
+	align-items: center;
+	gap: var(--blt-e-space-s);
+}
+
+.blt-bio-dialog__head .blt-event__presenter-photo {
+	width: 72px;
+	height: 72px;
+}
+
+.blt-bio-dialog__heading {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.blt-bio-dialog__name {
+	margin: 0;
+	color: var(--blt-e-neutral);
+	font-family: var(--blt-e-font-heading);
+	font-size: var(--blt-e-text-m);
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.blt-bio-dialog__name a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.blt-bio-dialog__name a:hover,
+.blt-bio-dialog__name a:focus-visible {
+	color: var(--blt-event-link);
+}
+
+.blt-bio-dialog__role {
+	margin: 0;
+	color: var(--blt-e-neutral-semi-dark);
+	font-size: 1.4rem;
+}
+
+.blt-bio-dialog__body {
+	color: var(--blt-e-neutral-semi-dark);
+	font-size: var(--blt-e-text-s);
+	line-height: 1.6;
+}
+
+.blt-bio-dialog__body p {
+	margin: 0 0 1em;
+}
+
+.blt-bio-dialog__body p:last-child {
+	margin-bottom: 0;
 }

@@ -57,8 +57,9 @@ class BLT_Events_Single_Event {
 	}
 
 	public static function register_assets() {
-		// The sponsor lightbox is behaviour, not styling: it loads in every
-		// styling mode, and only on events that show sponsors.
+		// The sponsor lightbox and speaker bio dialog are behaviour, not
+		// styling: they load in every styling mode, and only on events that
+		// show sponsors or speaker bios.
 		wp_register_script(
 			'blt-events-single',
 			BLT_EVENTS_PLUGIN_URL . 'assets/js/single-event.js',

@@ -244,6 +244,14 @@ class BLT_Events_Presenters {
 		 */
 		$presenters = apply_filters( 'blt_events_presenters', $presenters, $event_id );
 
+		// A bio that overflows its clamp opens in full in a dialog.
+		foreach ( (array) $presenters as $presenter ) {
+			if ( ! empty( $presenter['bio'] ) ) {
+				wp_enqueue_script( 'blt-events-single' );
+				break;
+			}
+		}
+
 		BLT_Events_Templates::include_template( 'single/presenters.php', array(
 			'event_id'   => $event_id,
 			'presenters' => $presenters,
