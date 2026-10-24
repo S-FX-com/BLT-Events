@@ -1,9 +1,9 @@
 <?php
 /**
  * Speakers (the event's presenters) inside the event card: a round photo,
- * name, role and bio for each. The bio is clamped in the card; when it
- * overflows, a "Read full bio" button opens the whole text in a <dialog>
- * (assets/js/single-event.js). Rendered from the blt_events_single_sidebar
+ * name and role for each. A speaker with a bio gets a "Read full bio" button
+ * that opens it in a <dialog> (assets/js/single-event.js), so several
+ * speakers don't stretch the card. Rendered from the blt_events_single_sidebar
  * action by BLT_Events_Presenters::render_sidebar().
  *
  * Override: your-theme/blt-events/single/presenters.php
@@ -44,9 +44,7 @@ $presenters = array_values( $presenters );
 						<span class="blt-event__presenter-role"><?php echo esc_html( $p['role'] ); ?></span>
 					<?php endif; ?>
 					<?php if ( ! empty( $p['bio'] ) ) : ?>
-						<span class="blt-event__presenter-bio"><?php echo esc_html( $p['bio'] ); ?></span>
-						<?php /* Shown by the script only when the bio is actually clamped. */ ?>
-						<button type="button" class="blt-event__presenter-more" data-blt-bio="blt-event-bio-<?php echo esc_attr( $event_id . '-' . $i ); ?>" hidden>
+						<button type="button" class="blt-event__presenter-more" data-blt-bio="blt-event-bio-<?php echo esc_attr( $event_id . '-' . $i ); ?>" aria-haspopup="dialog">
 							<?php esc_html_e( 'Read full bio', 'blt-events' ); ?>
 						</button>
 					<?php endif; ?>

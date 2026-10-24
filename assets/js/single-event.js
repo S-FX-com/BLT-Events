@@ -9,10 +9,9 @@
  *
  * Strings come from bltEventsLightbox (localized in PHP).
  *
- * Also the speaker bio dialog: a bio clamped in the event card shows its
- * "Read full bio" button only while the clamp actually cuts it off, and the
- * button opens the server-rendered <dialog> with the whole bio. Without
- * <dialog> support the clamp is lifted in place instead.
+ * Also the speaker bio dialog: a speaker's "Read full bio" button in the
+ * event card opens the server-rendered <dialog> with the bio. Without
+ * <dialog> support the dialog just shows in place under the speakers.
  */
 (function () {
 	"use strict";
@@ -142,51 +141,17 @@
 (function () {
 	"use strict";
 
-	var bios = document.querySelectorAll(".blt-event__presenter-bio");
-	if (!bios.length) {
-		return;
-	}
-
-	function moreButton(bio) {
-		var next = bio.nextElementSibling;
-		return next && next.hasAttribute("data-blt-bio") ? next : null;
-	}
-
-	// The card's width changes with the layout (it moves under the title
-	// below 992px), so whether a bio is clamped is re-checked on resize.
-	function sync() {
-		Array.prototype.forEach.call(bios, function (bio) {
-			var button = moreButton(bio);
-			if (button && !bio.classList.contains("is-expanded")) {
-				button.hidden = bio.scrollHeight <= bio.clientHeight + 1;
-			}
-		});
-	}
-
-	var pending = false;
-	window.addEventListener("resize", function () {
-		if (pending) {
-			return;
-		}
-		pending = true;
-		window.requestAnimationFrame(function () {
-			pending = false;
-			sync();
-		});
-	});
-	// Again once web fonts are in, since they change the bio's line count.
-	window.addEventListener("load", sync);
-	sync();
-
 	document.addEventListener("click", function (e) {
 		var button = e.target && e.target.closest ? e.target.closest("[data-blt-bio]") : null;
 		if (button) {
 			var dialog = document.getElementById(button.getAttribute("data-blt-bio"));
-			if (dialog && typeof dialog.showModal === "function") {
+			if (!dialog) {
+				return;
+			}
+			if (typeof dialog.showModal === "function") {
 				dialog.showModal();
 			} else {
-				button.previousElementSibling.classList.add("is-expanded");
-				button.hidden = true;
+				dialog.setAttribute("open", "");
 			}
 			return;
 		}

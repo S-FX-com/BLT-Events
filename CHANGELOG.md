@@ -2,6 +2,12 @@
 
 All notable changes to BLT Events. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.4.12
+
+### Changed
+
+- Speakers in the event card no longer show a bio preview, only a "Read full bio" link that opens the bio in its dialog, so an event with several speakers keeps a compact card. The link now shows for every speaker with a bio.
+
 ## 2.4.11
 
 ### Added
